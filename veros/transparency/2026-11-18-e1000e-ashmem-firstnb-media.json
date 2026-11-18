@@ -1,0 +1,92 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What VerOS NDIS and LAN gaps blocked Catalog e1000e (e1q62x64) from PingCheck after SHMEMOK, and how were they closed without proprietary RE?",
+  "allowedInputs": [
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatesharedmemory",
+      "where": "NdisAllocateSharedMemory signature and SharedMemoryHandle / VirtualAddress outs"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_shared_memory_parameters",
+      "where": "member order for Flags, Length, SGListBufferLength, SGListBuffer"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscurrentprocessorindex",
+      "where": "NdisCurrentProcessorIndex returns ULONG index"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissystemactiveprocessorcount",
+      "where": "NdisSystemActiveProcessorCount and KAFFINITY out"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismconfigmsixtableentry",
+      "where": "NdisMConfigMSIXTableEntry for soft-IRQ path"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex",
+      "where": "stub until buffer size is measured"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation",
+      "where": "stub until buffer size is measured"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nblapi/nf-nblapi-ndisallocatenetbufferandnetbufferlist",
+      "where": "combined allocate requires fAllocateNetBuffer pool and FirstNetBuffer"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer_list_data",
+      "where": "FirstNetBuffer at offset 8"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nblapi/ns-nblapi-net_buffer_list_pool_parameters",
+      "where": "size 0x10 layout including fAllocateNetBuffer"
+    },
+    {
+      "source": "sdk/include/psdk/ntddndis.h",
+      "where": "NDIS_OBJECT_HEADER"
+    },
+    {
+      "source": "sdk/include/xdk/iotypes.h",
+      "where": "SCATTER_GATHER_LIST / SCATTER_GATHER_ELEMENT"
+    },
+    {
+      "source": "sdk/include/ndk/amd64/ketypes.h",
+      "where": "KTRAP_FRAME GPR fields for MM FAULT print"
+    },
+    {
+      "source": "drivers/network/tcpip/datalink/lan.c",
+      "where": "NBL_FIRST_NET_BUFFER_AT 8 and synthetic NDIS6 IP 10.0.2.15"
+    },
+    {
+      "source": "output/e1000e-20261118T041602Z.log",
+      "where": "NDIS MISS seven names then SHMEMOK and Page Fault va 0"
+    },
+    {
+      "source": "output/e1000e-20261118T043336Z.log",
+      "where": "NDIS ASHMEM fail then INIT c0000001 after MISS stubs"
+    },
+    {
+      "source": "output/e1000e-20261118T043729Z.log",
+      "where": "NDIS ASHMEM 80 01 0040 and ASHB Length at 0x20 / SG at 0x38; MM FAULT va 0xA8 after MDLOK"
+    },
+    {
+      "source": "output/e1000e-20261118T044018Z.log",
+      "where": "same va 0xA8 with opaque ASHMEM cookie"
+    },
+    {
+      "source": "output/e1000e-20261118T044315Z.log",
+      "where": "INIT 00000000 and NDIS6 LAN without NDIS6 IP; RAWIP NOROUTE"
+    },
+    {
+      "source": "output/e1000e-20261118T044744Z.log",
+      "where": "NDIS6 MEDIA 00000001 -> connected; NDIS6 IP 10.0.2.15; PING CHECK done 2 2 and done 1 1"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/veros-ntfs/disk.qcow2",
+    "name": "Boot-E1000e",
+    "traceOrReplayId": "e1000e-20261118T044744Z",
+    "logSha256": "9c7750dbfd75f18d502d2a92ae4966523d15c609f3b705c5eb89b86367e7bb12"
+  }
+}

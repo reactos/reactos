@@ -1645,7 +1645,11 @@ BOOLEAN BindAdapter(
     /* Get the media state. NDIS 6 miniports often reject the NDIS 5
      * OID_GEN_MEDIA_CONNECT_STATUS query (output/netkvm-20261116T093855Z.log
      * printed NDIS OID c00000bb for 0x00010114); treat that as connected
-     * so BindAdapter can finish. Link-state OIDs are a later step. */
+     * so BindAdapter can finish. Link-state OIDs are a later step.
+     * output/e1000e-20261118T044315Z.log: NDIS6 LAN without NDIS6 IP, then
+     * RAWIP NOROUTE — query returned success with Disconnected (1).
+     * output/e1000e-20261118T044744Z.log: NDIS6 MEDIA 00000001 -> connected
+     * then NDIS6 IP 10.0.2.15 and PING CHECK done 2 2. */
     NdisStatus = NDISCall(Adapter,
                           NdisRequestQueryInformation,
                           OID_GEN_MEDIA_CONNECT_STATUS,
@@ -1660,6 +1664,9 @@ BOOLEAN BindAdapter(
             IPDestroyInterface(IF);
             return FALSE;
         }
+    } else if (Adapter->Ndis6 && MediaState != NdisMediaStateConnected) {
+        DbgPrint("NDIS6 MEDIA %08x -> connected\n", MediaState);
+        MediaState = NdisMediaStateConnected;
     }
 
     /* Indicate the current media state. NDIS 6 runs reconfigure here so

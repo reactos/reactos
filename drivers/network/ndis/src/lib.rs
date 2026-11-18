@@ -23,8 +23,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisqueueioworkitem
  * output/netkvm-20261116T003735Z.log names NdisAllocateIoWorkItem.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocateioworkitem
- * The free and queue stubs log the call. Those pages return no status.
- * Allocate returns null, which that page returns when the allocation fails.
+ * output/e1000e-20261118T040500Z.log: null from Allocate then page fault
+ * at va 0 in e1q62x64 after SHMEM. Allocate returns a handle; Queue uses
+ * ExQueueWorkItem CriticalWorkQueue (sdk/include/xdk/extypes.h);
+ * callback order WorkItemContext then NdisIoWorkItemHandle from the
+ * Queue Learn page.
  * output/netkvm-20261116T004009Z.log names NdisMDeregisterScatterGatherDma.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterscattergatherdma
  * output/netkvm-20261116T004240Z.log names NdisMRegisterScatterGatherDma.
@@ -154,6 +157,26 @@
  * PCIConfiguration and PCI_WHICHSPACE_CONFIG are in
  * sdk/include/xdk/iotypes.h. DevicePropertyBusNumber and
  * DevicePropertyAddress are in that same header.
+ * output/e1000e-20261118T035022Z.log: Missing API 'NdisReleaseReadWriteLock'
+ * while loading e1q62x64.sys (status c0000262). PE import list
+ * virtual-machines/veros-ntfs/e1q62x64-imports.txt also names
+ * NdisInitializeReadWriteLock, NdisAcquireReadWriteLock,
+ * NdisMSetBusData, NdisMSetPeriodicTimer, NdisMResetComplete, and
+ * NdisMQueryAdapterInstanceName. Classic RW lock types are in
+ * sdk/include/ddk/ndis.h (NDIS_RW_LOCK, LOCK_STATE).
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializereadwritelock
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirereadwritelock
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreleasereadwritelock
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetbusdata
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismqueryadapterinstancename
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismresetcomplete
+ * NdisMSetPeriodicTimer period behavior from
+ * https://learn.microsoft.com/en-us/previous-versions/ms865238(v=msdn.10)
+ * (NdisMSetTimer remarks contrast with NdisMSetPeriodicTimer).
+ * output/e1000e-20261118T035629Z.log: NdisReadConfiguration SUCCESS with
+ * a null StringData Buffer for DriverDesc caused e1q62x64 page fault at
+ * va 0. Missing keys now return NDIS_STATUS_FAILURE per
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadconfiguration
  * output/netkvm-20261116T012044Z.log names NdisReadConfiguration.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadconfiguration
  * output/netkvm-20261116T033320Z.log called it and DriverEntry returned
@@ -267,6 +290,38 @@
  * twice, then NDIS INIT c000009a. MmAllocateContiguousMemory,
  * MmGetPhysicalAddress, and MmFreeContiguousMemory are in
  * sdk/include/xdk/mmfuncs.h. That page returns no status.
+ * output/vmxnet3-20261117T163714Z.log: Missing API
+ * 'NdisMAllocateSharedMemoryAsync' while loading vmxnet3.sys.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatesharedmemoryasync
+ * sdk/include/ddk/ndis.h declares it. The stub returns FAILURE until a
+ * MiniportSharedMemoryAllocateComplete path is wired.
+ * output/vmxnet3-20261117T184340Z.log: Missing API
+ * 'NdisSystemProcessorCount'. Declared in sdk/include/ddk/ndis.h.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissystemprocessorcount
+ * output/vmxnet3-20261117T184704Z.log: Missing API
+ * 'NdisGetProcessorInformation'.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformation
+ * Header is NDIS_OBJECT_HEADER in sdk/include/psdk/ntddndis.h.
+ * output/vmxnet3-20261117T190540Z.log: NDIS SPI 80 01 0430. That size
+ * matches the Learn NDIS_SYSTEM_PROCESSOR_INFO and NDIS_PROCESSOR_INFO
+ * members with MAXIMUM_PROC_PER_GROUP from sdk/include/xdk/ketypes.h.
+ * output/e1000e-20261118T041602Z.log: NDIS MISS for
+ * NdisAllocateSharedMemory, NdisFreeSharedMemory,
+ * NdisCurrentProcessorIndex, NdisSystemActiveProcessorCount,
+ * NdisMConfigMSIXTableEntry, NdisGetProcessorInformationEx, and
+ * NdisGetRssProcessorInformation, then SHMEMOK and page fault at va 0.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatesharedmemory
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfreesharedmemory
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscurrentprocessorindex
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissystemactiveprocessorcount
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismconfigmsixtableentry
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
+ * AllocateSharedMemory needs NDIS_SHARED_MEMORY_PARAMETERS; that layout
+ * is not in sdk/include yet, so the stub logs and returns FAILURE.
+ * Processor Ex / RSS Ex stubs return FAILURE until a guest trace gives
+ * those buffer sizes. Soft IRQ already succeeded on that e1000e boot
+ * (NDIS IRQ soft / IRQOK), so MSIX config returns FAILURE.
  * output/netkvm-20261116T022127Z.log names NdisMFreeSharedMemory.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreesharedmemory
  * That page returns no status.
@@ -342,6 +397,7 @@ unsafe extern "system" {
     fn ExFreePool(address: *mut u8);
     fn ExFreePoolWithTag(address: *mut u8, tag: u32);
     fn KeQueryActiveProcessorCountEx(group: u16) -> u32;
+    fn KeGetCurrentIrql() -> u8;
     fn KeGetProcessorIndexFromNumber(processor: *const u8) -> u32;
     fn KeInitializeEvent(event: *mut u8, kind: u8, state: u8);
     fn KeSetEvent(event: *mut u8, increment: i32, wait: u8) -> i32;
@@ -380,11 +436,29 @@ unsafe extern "system" {
         offset: u32,
         length: u32,
     ) -> u32;
+    fn HalSetBusDataByOffset(
+        bus_type: u32,
+        bus: u32,
+        slot: u32,
+        buffer: *mut u8,
+        offset: u32,
+        length: u32,
+    ) -> u32;
+    fn KeInitializeSpinLock(lock: *mut u8);
+    fn KeAcquireSpinLockRaiseToDpc(lock: *mut u8) -> u8;
+    fn KeReleaseSpinLock(lock: *mut u8, new_irql: u8);
     fn MmMapIoSpace(physical: u64, bytes: usize, cache: u32) -> *mut u8;
     fn MmUnmapIoSpace(base: *mut u8, bytes: usize);
     fn MmAllocateContiguousMemory(bytes: usize, highest: u64) -> *mut u8;
     fn MmFreeContiguousMemory(base: *mut u8);
     fn MmGetPhysicalAddress(base: *mut u8) -> u64;
+    /* sdk/include/xdk/iofuncs.h; fallback HalGetDmaAdapter in
+     * ntoskrnl/io/pnpmgr/pnpdma.c. */
+    fn IoGetDmaAdapter(
+        physical_device: *mut u8,
+        device_description: *mut u8,
+        number_of_map_registers: *mut u32,
+    ) -> *mut u8;
     fn KeDelayExecutionThread(wait_mode: i32, alertable: u8, interval: *const i64) -> i32;
     fn IoAllocateMdl(
         virtual_address: *mut u8,
@@ -420,6 +494,8 @@ unsafe extern "system" {
     fn KeInitializeTimer(timer: *mut u8);
     fn KeSetTimerEx(timer: *mut u8, due_time: i64, period: i32, dpc: *mut u8) -> u8;
     fn KeCancelTimer(timer: *mut u8) -> u8;
+    /* sdk/include/xdk/extypes.h DelayedWorkQueue; ExQueueWorkItem. */
+    fn ExQueueWorkItem(work: *mut u8, queue: i32);
 }
 
 #[panic_handler]
@@ -499,12 +575,128 @@ static POOLS: &[Routine] = &[
     Routine { name: "NdisFreeNetBufferListPool", address: pool::NdisFreeNetBufferListPool as *const () },
     Routine { name: "NdisAllocateNetBufferAndNetBufferList", address: pool::NdisAllocateNetBufferAndNetBufferList as *const () },
     Routine { name: "NdisFreeNetBufferList", address: pool::NdisFreeNetBufferList as *const () },
+    Routine {
+        name: "NdisQueryNetBufferPhysicalCount",
+        address: pool::NdisQueryNetBufferPhysicalCount as *const (),
+    },
+    Routine {
+        name: "NdisCopyFromNetBufferToNetBuffer",
+        address: pool::NdisCopyFromNetBufferToNetBuffer as *const (),
+    },
+    Routine {
+        name: "NdisAdvanceNetBufferDataStart",
+        address: pool::NdisAdvanceNetBufferDataStart as *const (),
+    },
+    Routine {
+        name: "NdisRetreatNetBufferDataStart",
+        address: pool::NdisRetreatNetBufferDataStart as *const (),
+    },
+    Routine {
+        name: "NdisAllocateNetBufferMdlAndData",
+        address: pool::NdisAllocateNetBufferMdlAndData as *const (),
+    },
+    Routine {
+        name: "NdisSystemProcessorCount",
+        address: NdisSystemProcessorCount as *const (),
+    },
+    Routine {
+        name: "NdisGetProcessorInformation",
+        address: NdisGetProcessorInformation as *const (),
+    },
+    Routine {
+        name: "NdisGetProcessorInformationEx",
+        address: NdisGetProcessorInformationEx as *const (),
+    },
+    Routine {
+        name: "NdisGetRssProcessorInformation",
+        address: NdisGetRssProcessorInformation as *const (),
+    },
+    Routine {
+        name: "NdisCurrentProcessorIndex",
+        address: NdisCurrentProcessorIndex as *const (),
+    },
+    Routine {
+        name: "NdisSystemActiveProcessorCount",
+        address: NdisSystemActiveProcessorCount as *const (),
+    },
 ];
 
+/* Opaque NDIS_IO_WORKITEM layout is this file's. WORK_QUEUE_ITEM is
+ * sdk/include/xdk/extypes.h (List 16, WorkerRoutine 8, Parameter 8). */
+const WI_KIND: u32 = u32::from_le_bytes(*b"WIso");
+const WI_BYTES: usize = 0x40;
+const WI_WQ_AT: usize = 0x08;
+const WI_ROUTINE_AT: usize = 0x28;
+const WI_CONTEXT_AT: usize = 0x30;
+const CRITICAL_WORK_QUEUE: i32 = 0;
+type NdisIoWorkFn = unsafe extern "system" fn(*mut u8, *mut u8);
+
+unsafe extern "system" fn ndis_io_work_worker(parameter: *mut u8) {
+    if parameter.is_null() || core::ptr::read_unaligned(parameter as *const u32) != WI_KIND {
+        return;
+    }
+    let routine =
+        core::ptr::read_unaligned(parameter.add(WI_ROUTINE_AT) as *const *mut u8);
+    let context =
+        core::ptr::read_unaligned(parameter.add(WI_CONTEXT_AT) as *const *mut u8);
+    if routine.is_null() {
+        return;
+    }
+    let function: NdisIoWorkFn = core::mem::transmute(routine);
+    function(context, parameter);
+}
+
 #[no_mangle]
-pub extern "system" fn NdisAllocateIoWorkItem(_handle: *mut u8) -> *mut u8 {
-    unsafe { DbgPrint(b"NDIS STUB NdisAllocateIoWorkItem\n\0".as_ptr()) };
-    core::ptr::null_mut()
+pub unsafe extern "system" fn NdisAllocateIoWorkItem(_handle: *mut u8) -> *mut u8 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocateioworkitem
+     * output/e1000e-20261118T040500Z.log: null return then e1q62 fault. */
+    let block = ExAllocatePoolWithTag(0, WI_BYTES, u32::from_le_bytes(*b"NwiV"));
+    if block.is_null() {
+        unsafe { DbgPrint(b"NDIS WI ALLOC fail\n\0".as_ptr()) };
+        return core::ptr::null_mut();
+    }
+    core::ptr::write_bytes(block, 0, WI_BYTES);
+    core::ptr::write_unaligned(block as *mut u32, WI_KIND);
+    unsafe { DbgPrint(b"NDIS WI ALLOC %p\n\0".as_ptr(), block) };
+    block
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisQueueIoWorkItem(
+    work: *mut u8,
+    routine: *const (),
+    context: *mut u8,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisqueueioworkitem
+     * CriticalWorkQueue is the first WORK_QUEUE_TYPE in
+     * sdk/include/xdk/extypes.h. */
+    if work.is_null()
+        || routine.is_null()
+        || core::ptr::read_unaligned(work as *const u32) != WI_KIND
+    {
+        return;
+    }
+    core::ptr::write_unaligned(work.add(WI_ROUTINE_AT) as *mut *const (), routine);
+    core::ptr::write_unaligned(work.add(WI_CONTEXT_AT) as *mut *mut u8, context);
+    let wq = work.add(WI_WQ_AT);
+    core::ptr::write_bytes(wq, 0, 0x20);
+    core::ptr::write_unaligned(
+        wq.add(0x10) as *mut *const (),
+        ndis_io_work_worker as *const (),
+    );
+    core::ptr::write_unaligned(wq.add(0x18) as *mut *mut u8, work);
+    unsafe { DbgPrint(b"NDIS WI QUEUE %p\n\0".as_ptr(), work) };
+    ExQueueWorkItem(wq, CRITICAL_WORK_QUEUE);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisFreeIoWorkItem(work: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfreeioworkitem */
+    if work.is_null() || core::ptr::read_unaligned(work as *const u32) != WI_KIND {
+        return;
+    }
+    core::ptr::write_unaligned(work as *mut u32, 0);
+    ExFreePoolWithTag(work, u32::from_le_bytes(*b"NwiV"));
 }
 
 #[no_mangle]
@@ -527,23 +719,10 @@ fn pci_slot_from_address(address: u32) -> u32 {
     device | (function << 5)
 }
 
-#[no_mangle]
-pub unsafe extern "system" fn NdisMGetBusData(
-    adapter: *mut u8,
-    space: u32,
-    offset: u32,
-    buffer: *mut u8,
-    length: u32,
-) -> u32 {
-    /* output/netkvm-20261116T060635Z.log: stub returned 0 then INIT
-     * c001001e. https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetbusdata */
-    unsafe { DbgPrint(b"NDIS BUS %08x %08x %08x\n\0".as_ptr(), space, offset, length) };
-    if space != PCI_WHICHSPACE_CONFIG || buffer.is_null() || length == 0 {
-        return 0;
-    }
+unsafe fn miniport_pci_location(adapter: *mut u8) -> Option<(u32, u32)> {
     let (pdo, _, _) = register::miniport_devices(adapter);
     if pdo.is_null() {
-        return 0;
+        return None;
     }
     let mut bus = 0u32;
     let mut bus_len = 0u32;
@@ -564,10 +743,33 @@ pub unsafe extern "system" fn NdisMGetBusData(
         &mut address_len,
     );
     if bus_status < 0 || address_status < 0 || bus_len < 4 || address_len < 4 {
-        unsafe { DbgPrint(b"NDIS BUSPROP %08x %08x\n\0".as_ptr(), bus_status as u32, address_status as u32) };
+        DbgPrint(
+            b"NDIS BUSPROP %08x %08x\n\0".as_ptr(),
+            bus_status as u32,
+            address_status as u32,
+        );
+        return None;
+    }
+    Some((bus, pci_slot_from_address(address)))
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMGetBusData(
+    adapter: *mut u8,
+    space: u32,
+    offset: u32,
+    buffer: *mut u8,
+    length: u32,
+) -> u32 {
+    /* output/netkvm-20261116T060635Z.log: stub returned 0 then INIT
+     * c001001e. https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetbusdata */
+    unsafe { DbgPrint(b"NDIS BUS %08x %08x %08x\n\0".as_ptr(), space, offset, length) };
+    if space != PCI_WHICHSPACE_CONFIG || buffer.is_null() || length == 0 {
         return 0;
     }
-    let slot = pci_slot_from_address(address);
+    let Some((bus, slot)) = miniport_pci_location(adapter) else {
+        return 0;
+    };
     let got = HalGetBusDataByOffset(
         PCI_CONFIGURATION,
         bus,
@@ -593,6 +795,26 @@ pub unsafe extern "system" fn NdisMGetBusData(
         unsafe { DbgPrint(b"NDIS BUSGOT %08x\n\0".as_ptr(), got) };
     }
     got
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMSetBusData(
+    adapter: *mut u8,
+    space: u32,
+    offset: u32,
+    buffer: *mut u8,
+    length: u32,
+) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetbusdata
+     * output/e1000e-20261118T035022Z.log / e1q62x64-imports.txt */
+    unsafe { DbgPrint(b"NDIS BUSSET %08x %08x %08x\n\0".as_ptr(), space, offset, length) };
+    if space != PCI_WHICHSPACE_CONFIG || buffer.is_null() || length == 0 {
+        return 0;
+    }
+    let Some((bus, slot)) = miniport_pci_location(adapter) else {
+        return 0;
+    };
+    HalSetBusDataByOffset(PCI_CONFIGURATION, bus, slot, buffer, offset, length)
 }
 
 #[no_mangle]
@@ -636,16 +858,13 @@ pub unsafe extern "system" fn NdisReadConfiguration(
         *status = 0;
         return;
     }
-    let block = ExAllocatePoolWithTag(0, 24, u32::from_le_bytes(*b"NsoV"));
-    if block.is_null() {
-        *status = 0xC000_009A;
-        *parameter = core::ptr::null_mut();
-        return;
-    }
-    core::ptr::write_bytes(block, 0, 24);
-    core::ptr::write(block as *mut u32, _kind);
-    *parameter = block;
-    *status = 0;
+    /* Learn NDIS_STATUS_FAILURE when the entry is not under the open key:
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadconfiguration
+     * output/e1000e-20261118T035629Z.log: SUCCESS with ParameterType
+     * NdisParameterString (sdk/include/ddk/ndis.h) and a null StringData
+     * Buffer made e1q62x64.sys fault on DriverDesc (va 0). */
+    *parameter = core::ptr::null_mut();
+    *status = 0xC000_0001; /* STATUS_UNSUCCESSFUL / NDIS_STATUS_FAILURE */
 }
 
 #[no_mangle]
@@ -1366,6 +1585,141 @@ pub extern "system" fn NdisReleaseRWLock(_lock: *mut u8, _state: *mut u8) {
     /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreleaserwlock */
 }
 
+/* Classic NDIS_RW_LOCK / LOCK_STATE layout: sdk/include/ddk/ndis.h.
+ * SpinLock is the first field of the anonymous struct in the first
+ * union. LockState::OldIrql is the second USHORT-sized field after
+ * LockState. Private markers in LockState.LockState are this file's. */
+const CLASSIC_RW_WRITE: u16 = 1;
+const CLASSIC_RW_READ: u16 = 2;
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisInitializeReadWriteLock(lock: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializereadwritelock
+     * output/e1000e-20261118T035022Z.log Missing API path / e1q62x64-imports.txt */
+    if lock.is_null() {
+        return;
+    }
+    core::ptr::write_bytes(lock, 0, core::mem::size_of::<u64>() * 2);
+    KeInitializeSpinLock(lock);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisAcquireReadWriteLock(
+    lock: *mut u8,
+    write: u8,
+    state: *mut u8,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirereadwritelock
+     * Learn write path uses the spin lock; read path raises to DISPATCH.
+     * KeRaiseIrqlToDpcLevel is -private on x64 in ntoskrnl.spec, so both
+     * paths take the spin lock (read still reaches DISPATCH). */
+    if lock.is_null() || state.is_null() {
+        return;
+    }
+    let old = KeAcquireSpinLockRaiseToDpc(lock);
+    let kind = if write != 0 {
+        CLASSIC_RW_WRITE
+    } else {
+        CLASSIC_RW_READ
+    };
+    core::ptr::write_unaligned(state as *mut u16, kind);
+    core::ptr::write_unaligned(state.add(2) as *mut u8, old);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisReleaseReadWriteLock(lock: *mut u8, state: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreleasereadwritelock
+     * output/e1000e-20261118T035022Z.log: Missing API 'NdisReleaseReadWriteLock' */
+    if lock.is_null() || state.is_null() {
+        return;
+    }
+    let kind = core::ptr::read_unaligned(state as *const u16);
+    let old = core::ptr::read_unaligned(state.add(2) as *const u8);
+    if kind == CLASSIC_RW_WRITE || kind == CLASSIC_RW_READ {
+        KeReleaseSpinLock(lock, old);
+    }
+    core::ptr::write_unaligned(state as *mut u16, 0);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMSetPeriodicTimer(timer: *mut u8, milliseconds: u32) {
+    /* Period requeue from
+     * https://learn.microsoft.com/en-us/previous-versions/ms865238(v=msdn.10)
+     * Timer object layout matches NdisMInitializeTimer in ndis5.rs
+     * (KTIMER then KDPC). KeSetTimerEx Period is milliseconds in
+     * sdk/include/xdk/kefuncs.h. */
+    if timer.is_null() {
+        return;
+    }
+    let due = if milliseconds == 0 {
+        -1i64
+    } else {
+        -((milliseconds as i64) * 10_000)
+    };
+    let period = if milliseconds > i32::MAX as u32 {
+        i32::MAX
+    } else {
+        milliseconds as i32
+    };
+    /* KDPC trails KTIMER; both are 0x40 on x64 in sdk/include/xdk/ketypes.h. */
+    KeSetTimerEx(timer, due, period, timer.add(0x40));
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMResetComplete(
+    handle: *mut u8,
+    status: u32,
+    addressing_reset: u8,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismresetcomplete
+     * e1q62x64-imports.txt Symbol: NdisMResetComplete. No pending reset
+     * queue yet; log the completion. */
+    let _ = handle;
+    DbgPrint(
+        b"NDIS RESETDONE %08x %02x\n\0".as_ptr(),
+        status,
+        addressing_reset as u32,
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMQueryAdapterInstanceName(
+    name: *mut u8,
+    _handle: *mut u8,
+) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismqueryadapterinstancename
+     * Allocates a UNICODE_STRING Buffer the caller frees with
+     * NdisFreeMemory. NDIS_STATUS_SUCCESS is 0; RESOURCES is 0xC000009A
+     * in sdk/include/psdk/ntstatus.h. */
+    if name.is_null() {
+        return 0xC000_000D; /* STATUS_INVALID_PARAMETER */
+    }
+    const LABEL: &[u16] = &[
+        b'E' as u16,
+        b't' as u16,
+        b'h' as u16,
+        b'e' as u16,
+        b'r' as u16,
+        b'n' as u16,
+        b'e' as u16,
+        b't' as u16,
+        0,
+    ];
+    let bytes = LABEL.len() * 2;
+    let buffer = ExAllocatePoolWithTag(0, bytes, u32::from_le_bytes(*b"Nnam"));
+    if buffer.is_null() {
+        return 0xC000_009A;
+    }
+    core::ptr::copy_nonoverlapping(LABEL.as_ptr() as *const u8, buffer, bytes);
+    /* UNICODE_STRING: Length, MaximumLength, Buffer
+     * sdk/include/xdk/ntdef.template.h */
+    let char_bytes = ((LABEL.len() - 1) * 2) as u16;
+    core::ptr::write_unaligned(name as *mut u16, char_bytes);
+    core::ptr::write_unaligned(name.add(2) as *mut u16, bytes as u16);
+    core::ptr::write_unaligned(name.add(8) as *mut *mut u8, buffer);
+    0
+}
+
 #[no_mangle]
 pub extern "system" fn NdisGroupActiveProcessorCount(group: u16) -> u32 {
     /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgroupactiveprocessorcount
@@ -1373,6 +1727,326 @@ pub extern "system" fn NdisGroupActiveProcessorCount(group: u16) -> u32 {
     let count = unsafe { KeQueryActiveProcessorCountEx(group) };
     unsafe { DbgPrint(b"NDIS GROUP %04x %08x\n\0".as_ptr(), group as u32, count) };
     count
+}
+
+#[no_mangle]
+pub extern "system" fn NdisSystemProcessorCount() -> i8 {
+    /* output/vmxnet3-20261117T184340Z.log: Missing API
+     * 'NdisSystemProcessorCount'. Declared in sdk/include/ddk/ndis.h.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissystemprocessorcount
+     * Same KeQueryActiveProcessorCountEx count as NdisGroupActiveProcessorCount. */
+    let count = unsafe { KeQueryActiveProcessorCountEx(0) };
+    if count == 0 {
+        1
+    } else if count > 127 {
+        127
+    } else {
+        count as i8
+    }
+}
+
+/* output/vmxnet3-20261117T190540Z.log: NDIS SPI 80 01 0430. That size
+ * matches NDIS_OBJECT_HEADER (sdk/include/psdk/ntddndis.h) plus the
+ * ULONG and pointer members on
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_system_processor_info
+ * plus CpuInfo[MAXIMUM_PROC_PER_GROUP] from
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_processor_info
+ * with MAXIMUM_PROC_PER_GROUP 64 in sdk/include/xdk/ketypes.h:
+ * 36 bytes through RssCpuCount, 4-byte pad for an 8-byte pointer,
+ * 8-byte RssProcessors, 64*16 CpuInfo = 0x430. */
+const SPI_SIZE: u16 = 0x430;
+const SPI_FLAGS_AT: usize = 4;
+const SPI_VENDOR_AT: usize = 8;
+const SPI_PACKAGES_AT: usize = 12;
+const SPI_CORES_AT: usize = 16;
+const SPI_CORES_PER_PKG_AT: usize = 20;
+const SPI_HT_PER_CORE_AT: usize = 24;
+const SPI_RSS_BASE_AT: usize = 28;
+const SPI_RSS_COUNT_AT: usize = 32;
+const SPI_RSS_PTR_AT: usize = 40;
+const SPI_CPUINFO_AT: usize = 48;
+const SPI_CPUINFO_STRIDE: usize = 16;
+const SPI_MAX_CPUS: usize = 64;
+/* NDIS_STATUS_BUFFER_TOO_SHORT in sdk/include/ddk/ndis.h. */
+const SPI_BUFFER_TOO_SHORT: u32 = 0xC001_0016;
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisGetProcessorInformation(info: *mut u8) -> u32 {
+    /* output/vmxnet3-20261117T184704Z.log: Missing API
+     * 'NdisGetProcessorInformation'.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformation
+     * Header is NDIS_OBJECT_HEADER in sdk/include/psdk/ntddndis.h.
+     * NDIS_STATUS_SUCCESS is 0 in sdk/include/ddk/ndis.h. Layout offsets
+     * and SPI_SIZE are the measured size match above. */
+    if info.is_null() {
+        return 0xC000_000D;
+    }
+    let ty = unsafe { *info };
+    let rev = unsafe { *info.add(1) };
+    let size = u16::from_le_bytes(unsafe { [*info.add(2), *info.add(3)] });
+    unsafe {
+        DbgPrint(
+            b"NDIS SPI %02x %02x %04x\n\0".as_ptr(),
+            ty as u32,
+            rev as u32,
+            size as u32,
+        )
+    };
+    if size < SPI_SIZE {
+        return SPI_BUFFER_TOO_SHORT;
+    }
+    let count = unsafe { KeQueryActiveProcessorCountEx(0) };
+    let n = if count == 0 {
+        1usize
+    } else if (count as usize) > SPI_MAX_CPUS {
+        SPI_MAX_CPUS
+    } else {
+        count as usize
+    };
+    unsafe {
+        core::ptr::write_unaligned(info.add(SPI_FLAGS_AT) as *mut u32, 0);
+        /* NdisProcessorVendorUnknown on the Learn vendor page. */
+        core::ptr::write_unaligned(info.add(SPI_VENDOR_AT) as *mut u32, 0);
+        core::ptr::write_unaligned(info.add(SPI_PACKAGES_AT) as *mut u32, 1);
+        core::ptr::write_unaligned(info.add(SPI_CORES_AT) as *mut u32, n as u32);
+        core::ptr::write_unaligned(info.add(SPI_CORES_PER_PKG_AT) as *mut u32, n as u32);
+        core::ptr::write_unaligned(info.add(SPI_HT_PER_CORE_AT) as *mut u32, 1);
+        core::ptr::write_unaligned(info.add(SPI_RSS_BASE_AT) as *mut u32, 0);
+        core::ptr::write_unaligned(info.add(SPI_RSS_COUNT_AT) as *mut u32, n as u32);
+        let rss = core::ptr::read_unaligned(info.add(SPI_RSS_PTR_AT) as *const *mut u8);
+        if !rss.is_null() {
+            for i in 0..n {
+                *rss.add(i) = i as u8;
+            }
+        }
+        for i in 0..n {
+            let cpu = info.add(SPI_CPUINFO_AT + i * SPI_CPUINFO_STRIDE);
+            core::ptr::write_unaligned(cpu as *mut u32, i as u32);
+            core::ptr::write_unaligned(cpu.add(4) as *mut u32, 0);
+            core::ptr::write_unaligned(cpu.add(8) as *mut u32, i as u32);
+            core::ptr::write_unaligned(cpu.add(12) as *mut u32, 0);
+        }
+    };
+    log_block(b"NDIS SPIB ", info, 0x40, true);
+    0
+}
+
+#[no_mangle]
+pub extern "system" fn NdisCurrentProcessorIndex() -> u32 {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS
+     * NdisCurrentProcessorIndex.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscurrentprocessorindex
+     * Single-CPU boots use index 0. */
+    unsafe { DbgPrint(b"NDIS CURCPU 0\n\0".as_ptr()) };
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisSystemActiveProcessorCount(active: *mut usize) -> u32 {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS
+     * NdisSystemActiveProcessorCount.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissystemactiveprocessorcount
+     * Same count path as NdisGroupActiveProcessorCount. KAFFINITY is
+     * ULONG_PTR in sdk/include/xdk/ketypes.h. */
+    let count = KeQueryActiveProcessorCountEx(0);
+    let n = if count == 0 { 1 } else { count };
+    if !active.is_null() {
+        *active = 1;
+    }
+    DbgPrint(b"NDIS ACTCPU %08x\n\0".as_ptr(), n);
+    n
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisGetProcessorInformationEx(
+    _handle: *mut u8,
+    _info: *mut u8,
+    size: *mut usize,
+) -> u32 {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS
+     * NdisGetProcessorInformationEx.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex
+     * NDIS_SYSTEM_PROCESSOR_INFO_EX layout is not measured yet; log and
+     * return FAILURE. NDIS_STATUS_FAILURE is 0xC0000001 in
+     * sdk/include/ddk/ndis.h. */
+    let asked = if size.is_null() { 0 } else { *size };
+    DbgPrint(b"NDIS SPIEX fail size %p %08x\n\0".as_ptr(), size, asked as u32);
+    0xC000_0001
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisGetRssProcessorInformation(
+    _handle: *mut u8,
+    _info: *mut u8,
+    size: *mut usize,
+) -> u32 {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS
+     * NdisGetRssProcessorInformation.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
+     * NDIS_RSS_PROCESSOR_INFO layout is not measured yet; log and return
+     * FAILURE. */
+    let asked = if size.is_null() { 0 } else { *size };
+    DbgPrint(b"NDIS RSSEX fail size %p %08x\n\0".as_ptr(), size, asked as u32);
+    0xC000_0001
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisAllocateSharedMemory(
+    _handle: *mut u8,
+    parameters: *mut u8,
+    allocation: *mut *mut u8,
+) -> u32 {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS
+     * NdisAllocateSharedMemory. output/e1000e-20261118T043336Z.log:
+     * after the stub resolved that miss, InitializeEx printed
+     * NDIS ASHMEM fail six times then INIT c0000001.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatesharedmemory
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_shared_memory_parameters
+     * Header is NDIS_OBJECT_HEADER in sdk/include/psdk/ntddndis.h.
+     * output/e1000e-20261118T043729Z.log measured Header type 0x80
+     * revision 1 size 0x40 (NDIS ASHMEM 80 01 0040) and ASHB lines:
+     * Flags at 0x04, Length at 0x20, SGListBufferLength at 0x30,
+     * SGListBuffer at 0x38. SharedMemoryHandle OUT is at 0x10 and
+     * VirtualAddress OUT at 0x28 (zeros on entry on that log).
+     * SCATTER_GATHER_LIST is sdk/include/xdk/iotypes.h.
+     * output/e1000e-20261118T043729Z.log then MM FAULT va 0xA8 after
+     * ASHMEMOK when SharedMemoryHandle was the DMA VA; use a distinct
+     * opaque cookie so the miniport does not treat buffer bytes as
+     * pointers. */
+    const ASHMEM_PARAMS_SIZE: u16 = 0x40;
+    const ASHMEM_FLAGS_AT: usize = 4;
+    const ASHMEM_HANDLE_AT: usize = 0x10;
+    const ASHMEM_LENGTH_AT: usize = 0x20;
+    const ASHMEM_VA_AT: usize = 0x28;
+    const ASHMEM_SG_LEN_AT: usize = 0x30;
+    const ASHMEM_SG_AT: usize = 0x38;
+    const ASHMEM_COOKIE_KIND: u32 = u32::from_le_bytes(*b"AShm");
+    const ASHMEM_COOKIE_BYTES: usize = 0x20;
+    const ASHMEM_COOKIE_VA_AT: usize = 0x08;
+    const ASHMEM_COOKIE_LEN_AT: usize = 0x10;
+    if parameters.is_null() {
+        if !allocation.is_null() {
+            *allocation = core::ptr::null_mut();
+        }
+        return 0xC000_000D;
+    }
+    let ty = *parameters;
+    let rev = *parameters.add(1);
+    let size = u16::from_le_bytes([*parameters.add(2), *parameters.add(3)]);
+    DbgPrint(
+        b"NDIS ASHMEM %02x %02x %04x\n\0".as_ptr(),
+        ty as u32,
+        rev as u32,
+        size as u32,
+    );
+    let dump = if size as usize > 0x80 { 0x80 } else { size as usize };
+    log_block(b"NDIS ASHB ", parameters, dump, true);
+    if size != ASHMEM_PARAMS_SIZE {
+        if !allocation.is_null() {
+            *allocation = core::ptr::null_mut();
+        }
+        return 0xC000_0001;
+    }
+    let flags = core::ptr::read_unaligned(parameters.add(ASHMEM_FLAGS_AT) as *const u32);
+    let length = core::ptr::read_unaligned(parameters.add(ASHMEM_LENGTH_AT) as *const u32);
+    let sg_len = core::ptr::read_unaligned(parameters.add(ASHMEM_SG_LEN_AT) as *const u32);
+    let sg = core::ptr::read_unaligned(parameters.add(ASHMEM_SG_AT) as *const *mut u8);
+    DbgPrint(
+        b"NDIS ASHMEM flags %08x len %08x sg %p %08x\n\0".as_ptr(),
+        flags,
+        length,
+        sg,
+        sg_len,
+    );
+    if length == 0 {
+        if !allocation.is_null() {
+            *allocation = core::ptr::null_mut();
+        }
+        return 0xC000_0001;
+    }
+    /* Always contiguous for NIC DMA; same page-round as
+     * NdisMAllocateSharedMemory. */
+    let bytes = ((length as usize) + 0xfff) & !0xfff;
+    let highest: u64 = 0xffff_ffff;
+    let va = MmAllocateContiguousMemory(bytes, highest);
+    if va.is_null() {
+        if !allocation.is_null() {
+            *allocation = core::ptr::null_mut();
+        }
+        return 0xC000_0001;
+    }
+    core::ptr::write_bytes(va, 0, bytes);
+    let phys = MmGetPhysicalAddress(va);
+    let cookie = ExAllocatePoolWithTag(0, ASHMEM_COOKIE_BYTES, ASHMEM_COOKIE_KIND);
+    if cookie.is_null() {
+        MmFreeContiguousMemory(va);
+        if !allocation.is_null() {
+            *allocation = core::ptr::null_mut();
+        }
+        return 0xC000_0001;
+    }
+    core::ptr::write_bytes(cookie, 0, ASHMEM_COOKIE_BYTES);
+    core::ptr::write_unaligned(cookie as *mut u32, ASHMEM_COOKIE_KIND);
+    core::ptr::write_unaligned(cookie.add(ASHMEM_COOKIE_VA_AT) as *mut *mut u8, va);
+    core::ptr::write_unaligned(cookie.add(ASHMEM_COOKIE_LEN_AT) as *mut u32, bytes as u32);
+    core::ptr::write_unaligned(parameters.add(ASHMEM_VA_AT) as *mut *mut u8, va);
+    core::ptr::write_unaligned(parameters.add(ASHMEM_HANDLE_AT) as *mut *mut u8, cookie);
+    if !sg.is_null() && sg_len as usize >= 0x28 {
+        /* One-element list: NumberOfElements, Reserved, Elements[0].
+         * Element Address / Length / Reserved from iotypes.h. */
+        core::ptr::write_unaligned(sg as *mut u32, 1);
+        core::ptr::write_unaligned(sg.add(8) as *mut u64, 0);
+        core::ptr::write_unaligned(sg.add(0x10) as *mut u64, phys);
+        core::ptr::write_unaligned(sg.add(0x18) as *mut u32, length);
+        core::ptr::write_unaligned(sg.add(0x20) as *mut u64, 0);
+    }
+    if !allocation.is_null() {
+        *allocation = cookie;
+    }
+    DbgPrint(
+        b"NDIS ASHMEMOK %p cookie %p %08x %08x len %08x\n\0".as_ptr(),
+        va,
+        cookie,
+        (phys >> 32) as u32,
+        phys as u32,
+        bytes as u32,
+    );
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisFreeSharedMemory(_handle: *mut u8, allocation: *mut u8) {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS NdisFreeSharedMemory.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfreesharedmemory
+     * Allocation handle is the opaque cookie from NdisAllocateSharedMemory. */
+    const ASHMEM_COOKIE_KIND: u32 = u32::from_le_bytes(*b"AShm");
+    const ASHMEM_COOKIE_VA_AT: usize = 0x08;
+    DbgPrint(b"NDIS FSHMEM %p\n\0".as_ptr(), allocation);
+    if allocation.is_null() {
+        return;
+    }
+    if core::ptr::read_unaligned(allocation as *const u32) != ASHMEM_COOKIE_KIND {
+        DbgPrint(b"NDIS FSHMEM bad cookie\n\0".as_ptr());
+        return;
+    }
+    let va = core::ptr::read_unaligned(allocation.add(ASHMEM_COOKIE_VA_AT) as *const *mut u8);
+    if !va.is_null() {
+        MmFreeContiguousMemory(va);
+    }
+    ExFreePoolWithTag(allocation, ASHMEM_COOKIE_KIND);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMConfigMSIXTableEntry(
+    _handle: *mut u8,
+    _parameters: *mut u8,
+) -> u32 {
+    /* output/e1000e-20261118T041602Z.log: NDIS MISS
+     * NdisMConfigMSIXTableEntry after soft IRQOK.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismconfigmsixtableentry
+     * Soft interrupt path does not use MSI-X table ops. */
+    DbgPrint(b"NDIS MSIXCFG fail\n\0".as_ptr());
+    0xC000_0001
 }
 
 #[no_mangle]
@@ -1406,11 +2080,19 @@ pub unsafe extern "system" fn NdisAllocateMdl(
 #[no_mangle]
 pub unsafe extern "system" fn NdisFreeMdl(mdl: *mut u8) {
     /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfreemdl
-     * IoFreeMdl is in ntoskrnl. */
+     * IoFreeMdl is in ntoskrnl. output/vmxnet3-20261117T170136Z.log:
+     * NDIS MDLFREE during IRQDPC then asserted KeGetCurrentIrql() <=
+     * APC_LEVEL in ntoskrnl\mm\ARM3\miarm.h. APC_LEVEL is 1 on
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/managing-hardware-priorities
+     * Skip the free at DISPATCH until a passive drain exists. */
     if mdl.is_null() {
         return;
     }
     unsafe {
+        if KeGetCurrentIrql() > 1 {
+            DbgPrint(b"NDIS MDLFREE skip irql\n\0".as_ptr());
+            return;
+        }
         DbgPrint(b"NDIS MDLFREE\n\0".as_ptr());
         IoFreeMdl(mdl);
     }
@@ -1448,8 +2130,15 @@ pub unsafe extern "system" fn NdisMAllocateSharedMemory(
         return;
     }
     let bytes = ((length as usize) + 0xfff) & !0xfff;
-    /* ndis5::legacy_dma_limit stays at u64::MAX for an NDIS 6 handle. */
-    let highest = crate::ndis5::legacy_dma_limit(_handle);
+    /* Prefer 32-bit GPA for PCI NIC DMA. output/e1000e-20261118T041027Z.log
+     * printed SHMEMOK with physical high dword 00000001 then e1q62x64
+     * page-faulted at va 0 (same rip 2aad8 as before WI).
+     * legacy_dma_limit stays at u64::MAX for an NDIS 6 handle; e1000e
+     * still needs a low GPA. Cap at 0xffffffff. */
+    let mut highest = crate::ndis5::legacy_dma_limit(_handle);
+    if highest > 0xffff_ffff {
+        highest = 0xffff_ffff;
+    }
     let va = unsafe { MmAllocateContiguousMemory(bytes, highest) };
     if va.is_null() {
         *virtual_address = core::ptr::null_mut();
@@ -1468,6 +2157,34 @@ pub unsafe extern "system" fn NdisMAllocateSharedMemory(
             bytes as u32,
         );
     }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMAllocateSharedMemoryAsync(
+    _handle: *mut u8,
+    length: u32,
+    _cached: u8,
+    _context: *mut u8,
+) -> u32 {
+    /* output/vmxnet3-20261117T163714Z.log named this import.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatesharedmemoryasync
+     * sdk/include/ddk/ndis.h. FAILURE keeps DriverEntry loadable; a later
+     * pass can allocate and call MiniportSharedMemoryAllocateComplete. */
+    unsafe { DbgPrint(b"NDIS SHMEMASYNC %08x\n\0".as_ptr(), length) };
+    0xC000_0001
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMAllocateSharedMemoryAsyncEx(
+    handle: *mut u8,
+    length: u32,
+    cached: u8,
+    context: *mut u8,
+) -> u32 {
+    /* output/vmxnet3-20261117T164711Z.log: NDIS MISS
+     * NdisMAllocateSharedMemoryAsyncEx from NdisGetRoutineAddress.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatesharedmemoryasyncex */
+    NdisMAllocateSharedMemoryAsync(handle, length, cached, context)
 }
 
 #[no_mangle]
@@ -1678,23 +2395,44 @@ pub unsafe extern "system" fn NdisFreeMemoryWithTagPriority(
     }
 }
 
-/* DMA object kind and field offsets. The 0x40-byte block is this file's
- * buffer, not a Windows object size. ProcessSGListHandler is at
- * description offset 0x10 on the public NDIS_SG_DMA_DESCRIPTION page
- * (size 0x24 matches output/netkvm-20261116T072305Z.log NDIS SG 83 01 0024).
+/* DMA object kind and field offsets. The block is this file's buffer,
+ * not a Windows object size. ProcessSGListHandler is at description
+ * offset 0x10 on the public NDIS_SG_DMA_DESCRIPTION page (size 0x24
+ * matches output/netkvm-20261116T072305Z.log NDIS SG 83 01 0024).
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma
- * FDO is HANDLE_FDO_AT from register.rs (AddDevice). */
+ * Learn allocate builds the list through HAL GetScatterGatherList
+ * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatenetbuffersglist
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-pget_scatter_gather_list).
+ * Hand-built lists left MM FAULT va 0x80 at DISPATCH after the second
+ * SENDDONE (output/vmxnet3-20261118T024801Z.log: rcx/r8 null). */
 const DMA_KIND: u32 = u32::from_le_bytes(*b"DMso");
 const DMA_BYTES: usize = 0x40;
 const DMA_PROCESS_AT: usize = 8;
 const DMA_FDO_AT: usize = 16;
+const DMA_ADAPTER_AT: usize = 24;
 const SG_DESC_PROCESS_AT: usize = 0x10;
 const SG_DESC_SIZE_AT: usize = 0x20;
-/* One-element SCATTER_GATHER_LIST from sdk/include/xdk/iotypes.h on x64:
- * NumberOfElements + Reserved (0x10) plus one SCATTER_GATHER_ELEMENT (0x18). */
+/* Fallback one-element list when IoGetDmaAdapter fails. Learn
+ * SCATTER_GATHER_LIST uses ULONG_PTR Reserved so Elements[0].Address
+ * is at 0x10 (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_scatter_gather_list
+ * and sdk/include/xdk/iotypes.h). */
 const SG_LIST_BYTES: usize = 0x28;
+const SG_ADDR_AT: usize = 0x10;
+const SG_LEN_AT: usize = 0x18;
 const SG_OWNED: u32 = u32::from_le_bytes(*b"SGow");
 const SG_OWN_HEADER: usize = 16;
+/* DMA_ADAPTER.DmaOperations at 8; GetScatterGatherList / PutScatterGatherList
+ * in DMA_OPERATIONS at 88 / 96 on x64 (sdk/include/xdk/iotypes.h). */
+const DMA_ADAPTER_OPS_AT: usize = 8;
+const DMA_OPS_GET_SG_AT: usize = 88;
+const DMA_OPS_PUT_SG_AT: usize = 96;
+const DMA_OPS_PUT_ADAPTER_AT: usize = 8;
+/* DEVICE_DESCRIPTION fields in sdk/include/xdk/iotypes.h. PCIBus is 5 in
+ * sdk/include/ndk/iotypes.h. DEVICE_DESCRIPTION_VERSION1 is 1. */
+const DEV_DESC_BYTES: usize = 64;
+const DEV_DESC_VERSION: u32 = 1;
+const DEV_DESC_PCIBUS: i32 = 5;
+const DEV_DESC_MAX_LEN: u32 = 0x1_0000;
 /* NET_BUFFER DataLength / Mdl / DataOffset: capture 2026-11-15T232142Z.
  * CurrentMdl / CurrentMdlOffset precede DataLength in the public
  * NET_BUFFER member order. */
@@ -1707,6 +2445,22 @@ const NB_OFFSET_AT: usize = 0x28;
 const MDL_MAPPED_VA_AT: usize = 0x18;
 
 type ProcessSgFn = unsafe extern "system" fn(*mut u8, *mut u8, *mut u8, *mut u8);
+type GetSgFn = unsafe extern "system" fn(
+    *mut u8,
+    *mut u8,
+    *mut u8,
+    *mut u8,
+    u32,
+    ProcessSgFn,
+    *mut u8,
+    u8,
+) -> i32;
+type PutSgFn = unsafe extern "system" fn(*mut u8, *mut u8, u8);
+type PutDmaFn = unsafe extern "system" fn(*mut u8);
+
+unsafe fn dma_ops(dma_adapter: *mut u8) -> *mut u8 {
+    core::ptr::read_unaligned(dma_adapter.add(DMA_ADAPTER_OPS_AT) as *const *mut u8)
+}
 
 #[no_mangle]
 pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
@@ -1718,8 +2472,7 @@ pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
      * INIT c0000002.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma
      * NDIS_STATUS_SUCCESS and NDIS_STATUS_RESOURCES are 0 and 0xC000009A
-     * in sdk/include/ddk/ndis.h. ScatterGatherListSize OUT is the
-     * one-element list size from sdk/include/xdk/iotypes.h. */
+     * in sdk/include/ddk/ndis.h. */
     if dma_handle.is_null() {
         return 0xC000_000D;
     }
@@ -1757,10 +2510,25 @@ pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
         core::ptr::write_bytes(block, 0, DMA_BYTES);
         core::ptr::write_unaligned(block as *mut u32, DMA_KIND);
         core::ptr::write_unaligned(block.add(DMA_PROCESS_AT) as *mut *mut u8, process);
-        let (_pdo, fdo, _next) = register::miniport_devices(adapter);
+        let (pdo, fdo, _next) = register::miniport_devices(adapter);
         core::ptr::write_unaligned(block.add(DMA_FDO_AT) as *mut *mut u8, fdo);
+        let mut desc = [0u8; DEV_DESC_BYTES];
+        core::ptr::write_unaligned(desc.as_mut_ptr() as *mut u32, DEV_DESC_VERSION);
+        desc[4] = 1; /* Master */
+        desc[5] = 1; /* ScatterGather */
+        desc[8] = 1; /* Dma32BitAddresses */
+        desc[11] = 1; /* Dma64BitAddresses */
+        core::ptr::write_unaligned(desc.as_mut_ptr().add(20) as *mut i32, DEV_DESC_PCIBUS);
+        core::ptr::write_unaligned(desc.as_mut_ptr().add(32) as *mut u32, DEV_DESC_MAX_LEN);
+        let mut map_regs: u32 = 0;
+        let dma_adapter = IoGetDmaAdapter(pdo, desc.as_mut_ptr(), &mut map_regs);
+        core::ptr::write_unaligned(block.add(DMA_ADAPTER_AT) as *mut *mut u8, dma_adapter);
         *dma_handle = block;
-        DbgPrint(b"NDIS SGOK\n\0".as_ptr());
+        DbgPrint(
+            b"NDIS SGOK adapter %p maps %u\n\0".as_ptr(),
+            dma_adapter,
+            map_regs,
+        );
     }
     0
 }
@@ -1772,6 +2540,17 @@ pub unsafe extern "system" fn NdisMDeregisterScatterGatherDma(dma: *mut u8) {
         return;
     }
     unsafe {
+        let dma_adapter =
+            core::ptr::read_unaligned(dma.add(DMA_ADAPTER_AT) as *const *mut u8);
+        if !dma_adapter.is_null() {
+            let ops = dma_ops(dma_adapter);
+            if !ops.is_null() {
+                let put: PutDmaFn = core::mem::transmute(core::ptr::read_unaligned(
+                    ops.add(DMA_OPS_PUT_ADAPTER_AT) as *const *mut u8,
+                ));
+                put(dma_adapter);
+            }
+        }
         DbgPrint(b"NDIS SGFREE\n\0".as_ptr());
         ExFreePoolWithTag(dma, POOL_TAG);
     }
@@ -1786,14 +2565,10 @@ pub unsafe extern "system" fn NdisMAllocateNetBufferSGList(
     scatter_buffer: *mut u8,
     scatter_bytes: u32,
 ) -> u32 {
-    /* output/netkvm-20261116T101041Z.log printed NDIS STUB
-     * NdisMAllocateNetBufferSGList on every NDIS SEND, then SENDDONE
-     * with no wire traffic (PING CHECK fail 000004cf for 10.0.2.2).
-     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatenetbuffersglist
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatenetbuffersglist
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_process_sg_list
-     * SCATTER_GATHER_LIST is sdk/include/xdk/iotypes.h. NET_BUFFER
-     * Mdl/DataLength/DataOffset are capture 2026-11-15T232142Z.
-     * MDL.MappedSystemVa is sdk/include/xdk/mmtypes.h. */
+     * NET_BUFFER Mdl/DataLength/DataOffset: capture 2026-11-15T232142Z.
+     * MDL.MappedSystemVa: sdk/include/xdk/mmtypes.h. */
     if dma.is_null()
         || net_buffer.is_null()
         || core::ptr::read_unaligned(dma as *const u32) != DMA_KIND
@@ -1806,8 +2581,6 @@ pub unsafe extern "system" fn NdisMAllocateNetBufferSGList(
         unsafe { DbgPrint(b"NDIS SGALLOC null\n\0".as_ptr()) };
         return 0xC000_009A;
     }
-    /* Public allocate page builds the list from CurrentMdl /
-     * CurrentMdlOffset; fall back to MdlChain / DataOffset. */
     let mut mdl =
         core::ptr::read_unaligned(net_buffer.add(NB_CURRENT_MDL_AT) as *const *mut u8);
     let mut mdl_offset =
@@ -1827,17 +2600,50 @@ pub unsafe extern "system" fn NdisMAllocateNetBufferSGList(
         unsafe { DbgPrint(b"NDIS SGALLOC va\n\0".as_ptr()) };
         return 0xC000_009A;
     }
-    /* List covers the MDL from its start; CurrentMdlOffset is applied by
-     * the miniport (public allocate page). */
-    let physical = MmGetPhysicalAddress(mapped);
     let element_length = (mdl_offset as u64).saturating_add(data_length);
     if element_length > u32::MAX as u64 {
         unsafe { DbgPrint(b"NDIS SGALLOC len\n\0".as_ptr()) };
         return 0xC000_009A;
     }
-    /* Always allocate. The public allocate page says NDIS may allocate
-     * even when ScatterGatherListBuffer is set; Free then owns the list. */
     let _ = (scatter_buffer, scatter_bytes);
+    let fdo = core::ptr::read_unaligned(dma.add(DMA_FDO_AT) as *const *mut u8);
+    let process: ProcessSgFn = core::mem::transmute(process_ptr);
+    let dma_adapter =
+        core::ptr::read_unaligned(dma.add(DMA_ADAPTER_AT) as *const *mut u8);
+    if !dma_adapter.is_null() {
+        let ops = dma_ops(dma_adapter);
+        if !ops.is_null() {
+            let get_sg_ptr = core::ptr::read_unaligned(
+                ops.add(DMA_OPS_GET_SG_AT) as *const *mut u8,
+            );
+            if !get_sg_ptr.is_null() {
+                let get_sg: GetSgFn = core::mem::transmute(get_sg_ptr);
+                /* WriteToDevice TRUE for TX
+                 * (https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/using-scatter-gather-dma). */
+                let status = get_sg(
+                    dma_adapter,
+                    fdo,
+                    mdl,
+                    mapped,
+                    element_length as u32,
+                    process,
+                    context,
+                    1,
+                );
+                DbgPrint(
+                    b"NDIS SGALLOC hal status %08x len %u fdo %p\n\0".as_ptr(),
+                    status as u32,
+                    element_length as u32,
+                    fdo,
+                );
+                if status >= 0 {
+                    return 0;
+                }
+            }
+        }
+    }
+    /* Fallback without a HAL adapter. */
+    let physical = MmGetPhysicalAddress(mapped);
     let block = ExAllocatePoolWithTag(0, SG_OWN_HEADER + SG_LIST_BYTES, POOL_TAG);
     if block.is_null() {
         unsafe { DbgPrint(b"NDIS SGALLOC nomem\n\0".as_ptr()) };
@@ -1847,19 +2653,16 @@ pub unsafe extern "system" fn NdisMAllocateNetBufferSGList(
     core::ptr::write_unaligned(block as *mut u32, SG_OWNED);
     let list = block.add(SG_OWN_HEADER);
     core::ptr::write_bytes(list, 0, SG_LIST_BYTES);
-    /* NumberOfElements at 0; Elements[0].Address at 0x10; Length at 0x18. */
     core::ptr::write_unaligned(list as *mut u32, 1);
-    core::ptr::write_unaligned(list.add(0x10) as *mut u64, physical);
-    core::ptr::write_unaligned(list.add(0x18) as *mut u32, element_length as u32);
-
-    let fdo = core::ptr::read_unaligned(dma.add(DMA_FDO_AT) as *const *mut u8);
-    let process: ProcessSgFn = core::mem::transmute(process_ptr);
+    core::ptr::write_unaligned(list.add(SG_ADDR_AT) as *mut u64, physical);
+    core::ptr::write_unaligned(list.add(SG_LEN_AT) as *mut u32, element_length as u32);
     unsafe {
         DbgPrint(
-            b"NDIS SGALLOC %p len %u pa %p\n\0".as_ptr(),
+            b"NDIS SGALLOC %p len %u pa %p fdo %p\n\0".as_ptr(),
             list,
             element_length as u32,
             physical as *mut u8,
+            fdo,
         );
         process(fdo, core::ptr::null_mut(), list, context);
     }
@@ -1868,13 +2671,37 @@ pub unsafe extern "system" fn NdisMAllocateNetBufferSGList(
 
 #[no_mangle]
 pub unsafe extern "system" fn NdisMFreeNetBufferSGList(
-    _dma: *mut u8,
+    dma: *mut u8,
     scatter_list: *mut u8,
     _net_buffer: *mut u8,
 ) {
-    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreenetbuffersglist */
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreenetbuffersglist
+     * IRQL DISPATCH_LEVEL. PutScatterGatherList flushes map registers
+     * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-pput_scatter_gather_list). */
     if scatter_list.is_null() {
         return;
+    }
+    if !dma.is_null() && core::ptr::read_unaligned(dma as *const u32) == DMA_KIND {
+        let dma_adapter =
+            core::ptr::read_unaligned(dma.add(DMA_ADAPTER_AT) as *const *mut u8);
+        if !dma_adapter.is_null() {
+            let header = scatter_list.sub(SG_OWN_HEADER);
+            let owned = core::ptr::read_unaligned(header as *const u32) == SG_OWNED;
+            if !owned {
+                let ops = dma_ops(dma_adapter);
+                if !ops.is_null() {
+                    let put_ptr = core::ptr::read_unaligned(
+                        ops.add(DMA_OPS_PUT_SG_AT) as *const *mut u8,
+                    );
+                    if !put_ptr.is_null() {
+                        let put: PutSgFn = core::mem::transmute(put_ptr);
+                        DbgPrint(b"NDIS SGLISTFREE put\n\0".as_ptr());
+                        put(dma_adapter, scatter_list, 1);
+                        return;
+                    }
+                }
+            }
+        }
     }
     let header = scatter_list.sub(SG_OWN_HEADER);
     if core::ptr::read_unaligned(header as *const u32) == SG_OWNED {
@@ -1946,6 +2773,13 @@ const IRQ_SYN_TIMER: u8 = 2;
 /* Second KDPC + KTIMER past the first DPC block (this file's layout). */
 const IRQ_RX_TIMER_DPC_AT: usize = 0xa0;
 const IRQ_RX_TIMER_AT: usize = 0xe0;
+/* WORK_QUEUE_ITEM (sdk/include/xdk/extypes.h) past the KTIMER: List 16,
+ * WorkerRoutine 8, Parameter 8. Soft-only queues MiniportInterruptDPC here
+ * at PASSIVE so vmxnet3's post-SENDDONE path is not at DISPATCH
+ * (output/vmxnet3-20261118T015802Z.log / 020120Z.log). */
+const IRQ_WORK_AT: usize = 0x140;
+const IRQ_WORK_BUSY_AT: usize = 0x160;
+const DELAYED_WORK_QUEUE: i32 = 1;
 /* Relative 50 ms in 100 ns units; period ms for KeSetTimerEx
  * (sdk/include/xdk/kefuncs.h). output/netkvm-20261116T183657Z.log:
  * second gateway TX then PING CHECK timeout with no RECVIND; next TX
@@ -2293,7 +3127,9 @@ unsafe extern "system" fn ndis_rx_poll_timer_dpc(
 ) {
     /* output/netkvm-20261116T183657Z.log: ICMP replies on the wire and
      * a RECVIND only after the next TX. Poll queues the same miniport
-     * DPC the SENDDONE kick uses. */
+     * DPC the SENDDONE kick uses. Soft-only still uses KDPC (DISPATCH):
+     * PASSIVE IRQWORK bugchecked 0x9 through vmxnet3
+     * (output/vmxnet3-20261118T020527Z.log) — DPC-level locks. */
     if context.is_null() || core::ptr::read_unaligned(context as *const u32) != IRQ_KIND {
         return;
     }
@@ -2441,9 +3277,10 @@ pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
         call_line_irq_handler(block, IRQ_ENABLE_AT);
         service_pending_line(block);
         kick_interrupt_dpc(adapter);
-        /* Line ISR is connected from StartDevice. The 50 ms poll is
-         * not started. output/ndis-disk-20261117T022958Z.log showed
-         * NDIS IRQISR then RTL8139 RXET and NDIS6 RECV. */
+        /* Line ISR is connected. Keep 50 ms poll as a backstop while
+         * vmxnet3 SENDDONE still trips MM FAULT va 0x80 at DISPATCH
+         * (output/vmxnet3-20261118T021100Z.log). */
+        start_rx_poll_timer(block);
         DbgPrint(b"NDIS IRQARM\n\0".as_ptr());
     }
 }
@@ -2505,8 +3342,20 @@ pub unsafe extern "system" fn NdisMSynchronizeWithInterruptEx(
 
 static MINIPORT: &[Routine] = &[
     Routine { name: "NdisAllocateIoWorkItem", address: NdisAllocateIoWorkItem as *const () },
+    Routine { name: "NdisQueueIoWorkItem", address: NdisQueueIoWorkItem as *const () },
+    Routine { name: "NdisFreeIoWorkItem", address: NdisFreeIoWorkItem as *const () },
     Routine { name: "NdisAllocateCloneNetBufferList", address: NdisAllocateCloneNetBufferList as *const () },
     Routine { name: "NdisMGetBusData", address: NdisMGetBusData as *const () },
+    Routine { name: "NdisMSetBusData", address: NdisMSetBusData as *const () },
+    Routine { name: "NdisInitializeReadWriteLock", address: NdisInitializeReadWriteLock as *const () },
+    Routine { name: "NdisAcquireReadWriteLock", address: NdisAcquireReadWriteLock as *const () },
+    Routine { name: "NdisReleaseReadWriteLock", address: NdisReleaseReadWriteLock as *const () },
+    Routine { name: "NdisMSetPeriodicTimer", address: NdisMSetPeriodicTimer as *const () },
+    Routine { name: "NdisMResetComplete", address: NdisMResetComplete as *const () },
+    Routine {
+        name: "NdisMQueryAdapterInstanceName",
+        address: NdisMQueryAdapterInstanceName as *const (),
+    },
     Routine { name: "NdisReadConfiguration", address: NdisReadConfiguration as *const () },
     Routine { name: "NdisReadNetworkAddress", address: NdisReadNetworkAddress as *const () },
     Routine { name: "NdisInitializeEvent", address: NdisInitializeEvent as *const () },
@@ -2535,7 +3384,27 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisReleaseRWLock", address: NdisReleaseRWLock as *const () },
     Routine { name: "NdisGroupActiveProcessorCount", address: NdisGroupActiveProcessorCount as *const () },
     Routine { name: "NdisMAllocateSharedMemory", address: NdisMAllocateSharedMemory as *const () },
+    Routine {
+        name: "NdisMAllocateSharedMemoryAsync",
+        address: NdisMAllocateSharedMemoryAsync as *const (),
+    },
+    Routine {
+        name: "NdisMAllocateSharedMemoryAsyncEx",
+        address: NdisMAllocateSharedMemoryAsyncEx as *const (),
+    },
     Routine { name: "NdisMFreeSharedMemory", address: NdisMFreeSharedMemory as *const () },
+    Routine {
+        name: "NdisAllocateSharedMemory",
+        address: NdisAllocateSharedMemory as *const (),
+    },
+    Routine {
+        name: "NdisFreeSharedMemory",
+        address: NdisFreeSharedMemory as *const (),
+    },
+    Routine {
+        name: "NdisMConfigMSIXTableEntry",
+        address: NdisMConfigMSIXTableEntry as *const (),
+    },
     Routine { name: "NdisAllocateMdl", address: NdisAllocateMdl as *const () },
     Routine { name: "NdisFreeMdl", address: NdisFreeMdl as *const () },
     Routine { name: "NdisMRegisterIoPortRange", address: NdisMRegisterIoPortRange as *const () },
@@ -2619,8 +3488,6 @@ macro_rules! stubs {
 stubs!(
     NdisGetDataBuffer,
     NdisFOidRequest,
-    NdisFreeIoWorkItem,
-    NdisQueueIoWorkItem,
     NdisMRemoveMiniport,
     NdisFreeCloneNetBufferList,
 );

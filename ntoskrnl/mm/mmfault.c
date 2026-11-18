@@ -1,9 +1,27 @@
 /*
- * COPYRIGHT:       See COPYING in the top directory
  * PROJECT:         ReactOS kernel
+ * LICENSE:         GNU General Public License, version 2 or later (GPL-2.0-or-later)
  * FILE:            ntoskrnl/mm/mmfault.c
  * PURPOSE:         Kernel memory management functions
+ * COPYRIGHT:       See COPYING in the top directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * High-IRQL user-VA fault print: output/vmxnet3-20261118T021905Z.log
+ * (MM FAULT irql 2 va 0000000000000080) after NDIS SENDDONE queued.
+ * Trap rip/rsp: output/vmxnet3-20261118T023051Z.log
+ * (rip FFFFF88070394827 = vmxnet3.sys+0xC827 at FFFFF88070388000).
+ * RSP walk: output/vmxnet3-20261118T023816Z.log (rsp[7] = failing NBL).
+ * GPR print targets the null base for va 0x80 (KTRAP_FRAME in
+ * sdk/include/ndk/amd64/ketypes.h).
+ * Null-page at PASSIVE: output/e1000e-20261118T041602Z.log hit
+ * Memory at 0x0 / e1q62x64.sys:2aad8 after SHMEMOK with no MM FAULT
+ * gpr lines (InitializeEx is PASSIVE; prior dump required IRQL >
+ * APC_LEVEL). Dump the same trap fields for Address < PAGE_SIZE at
+ * any IRQL.
  */
 
 /* INCLUDES *******************************************************************/
@@ -267,6 +285,62 @@ MmAccessFault(IN ULONG FaultCode,
         else
         {
             /* Could this be a VAD fault from user-mode? */
+            /* output/vmxnet3-20261118T021905Z.log / 022441Z.log: after
+             * NDIS SENDDONE queued, MM FAULT irql 2 va 0x80 then APC_LEVEL
+             * in miarm.h. Print trap PC and a short stack before the lock.
+             * output/e1000e-20261118T041602Z.log: same null-page path at
+             * PASSIVE after SHMEMOK; dump when Address < PAGE_SIZE too. */
+            if ((KeGetCurrentIrql() > APC_LEVEL) ||
+                ((ULONG_PTR)Address < PAGE_SIZE))
+            {
+                ULONG i;
+                ULONG_PTR Pc = 0;
+                ULONG_PTR Sp = 0;
+                PKTRAP_FRAME TrapFrame = (PKTRAP_FRAME)TrapInformation;
+
+                if (TrapInformation)
+                {
+                    Pc = KeGetTrapFramePc(TrapInformation);
+                    Sp = KeGetTrapFrameStackRegister(TrapInformation);
+                }
+                DbgPrint("MM FAULT irql %u va %p mode %u rip %p rsp %p\n",
+                         KeGetCurrentIrql(),
+                         Address,
+                         (ULONG)Mode,
+                         (PVOID)Pc,
+                         (PVOID)Sp);
+                if (TrapFrame)
+                {
+                    /* sdk/include/ndk/amd64/ketypes.h KTRAP_FRAME */
+                    DbgPrint("MM FAULT gpr rax %p rcx %p rdx %p\n",
+                             (PVOID)TrapFrame->Rax,
+                             (PVOID)TrapFrame->Rcx,
+                             (PVOID)TrapFrame->Rdx);
+                    DbgPrint("MM FAULT gpr r8 %p r9 %p r10 %p r11 %p\n",
+                             (PVOID)TrapFrame->R8,
+                             (PVOID)TrapFrame->R9,
+                             (PVOID)TrapFrame->R10,
+                             (PVOID)TrapFrame->R11);
+                    DbgPrint("MM FAULT gpr rbx %p rsi %p rdi %p rbp %p\n",
+                             (PVOID)TrapFrame->Rbx,
+                             (PVOID)TrapFrame->Rsi,
+                             (PVOID)TrapFrame->Rdi,
+                             (PVOID)TrapFrame->Rbp);
+                }
+                /* RtlCaptureStackBackTrace printed nothing at DISPATCH on
+                 * output/vmxnet3-20261118T023051Z.log. Walk trap RSP slots.
+                 * output/vmxnet3-20261118T023816Z.log: rsp[7] matched NBL. */
+                if (Sp != 0)
+                {
+                    for (i = 0; i < 12; i++)
+                    {
+                        ULONG_PTR Slot;
+
+                        Slot = *(PULONG_PTR)(Sp + (i * sizeof(ULONG_PTR)));
+                        DbgPrint("MM FAULT rsp[%u] %p\n", i, (PVOID)Slot);
+                    }
+                }
+            }
             MiLockProcessWorkingSetShared(PsGetCurrentProcess(), PsGetCurrentThread());
             Vad = MiLocateVad(&PsGetCurrentProcess()->VadRoot, Address);
 
