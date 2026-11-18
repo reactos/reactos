@@ -9,7 +9,7 @@ param(
     [string]$Iso = "",
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
     [int]$TimeoutSec = 1200,
-    [string]$Qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe",
+    [string]$Qemu = "",
     [string]$Plugin = "",
     [string]$Map = "",
     [string]$OutputDir = "",
@@ -18,6 +18,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "Resolve-VerosPaths.ps1")
+$BuildenvRoot = Resolve-VerosBuildenvRoot -SourceRoot $SourceRoot
 
 if (-not $OutputDir) {
     $OutputDir = Join-Path $SourceRoot "output"
@@ -27,14 +29,11 @@ New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 if (-not $Iso) {
     $Iso = Join-Path $SourceRoot "build-amd64\bootcd.iso"
 }
-if (-not $PSBoundParameters.ContainsKey("Qemu")) {
-    $localQemu = Join-Path (Split-Path $SourceRoot -Parent) "tools\qemu\qemu-system-x86_64.exe"
-    if (Test-Path $localQemu) {
-        $Qemu = $localQemu
-    }
+if (-not $Qemu) {
+    $Qemu = Resolve-VerosQemuExe -SourceRoot $SourceRoot
 }
-if (-not (Test-Path $Qemu)) {
-    Write-Error "QEMU was not found at $Qemu"
+if (-not $Qemu -or -not (Test-Path $Qemu)) {
+    Write-Error "QEMU was not found under the buildenv tools\qemu folder."
 }
 if (-not (Test-Path $Iso)) {
     Write-Error "ISO was not found at $Iso. Run Build-Bootcd.ps1 first."
@@ -115,7 +114,7 @@ if ($result -eq "hang") {
     exit 2
 }
 
-$installedDisk = Join-Path (Split-Path $SourceRoot -Parent) "virtual-machines\veros-ntfs\disk.qcow2"
+$installedDisk = Join-Path $BuildenvRoot "virtual-machines\veros-ntfs\disk.qcow2"
 if (-not (Test-Path $installedDisk)) {
     Write-Host "Installed disk was not found at $installedDisk"
     exit 0

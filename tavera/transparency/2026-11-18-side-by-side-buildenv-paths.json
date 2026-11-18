@@ -1,0 +1,27 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How do the amd64 build and NDIS miniport link find tools and legacy NDIS 5 exports after source and buildenv sit side by side?",
+  "allowedInputs": [
+    "Reported: the checkout layout is a shared parent with sibling buildenv/, source/, website/, update-server/, and capture-log/ folders instead of nesting source under buildenv",
+    "tools/pipeline/Resolve-VerosPaths.ps1 and sdk/cmake/VerosBuildenv.cmake locate env.cmd and tools/ in the parent or a sibling buildenv/ folder",
+    "drivers/network/ndis/ndis.spec before commit 39343a89a02 already listed NdisAllocateMemory, NdisTerminateWrapper, NdisInitUnicodeString, NdisGetSharedDataAlignment, NdisMSetTimer, NdisScheduleWorkItem, NdisCancelTimer, NdisInitializeTimer, NdisMAllocateMapRegisters, and NdisMRegisterUnloadHandler",
+    "sdk/include/ddk/ndis.h already declares those names in this tree",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememory",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisterminatewrapper",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitunicodestring",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetshareddataalignment",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsettimer",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisscheduleworkitem",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscanceltimer",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializetimer",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatemapregisters",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterunloadhandler",
+    "sdk/include/xdk/extypes.h WORK_QUEUE_ITEM and sdk/include/ddk/ndis.h NDIS_WORK_ITEM already in this tree",
+    "Reported: output/boot-smoke-20261118T102311Z.log printed VerOS NT 0.1.1-amd64-dev after the relocated bootcd build"
+  ],
+  "harness": {
+    "guest": "amd64 live CD, 8192 MB, 4 CPUs, TCG, display none",
+    "name": "boot-smoke",
+    "traceOrReplayId": "Reported: output/boot-smoke-20261118T102311Z.log VerOS NT 0.1.1-amd64-dev banner"
+  }
+}

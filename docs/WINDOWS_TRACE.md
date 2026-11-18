@@ -4,9 +4,9 @@ This is the truth source for Windows 10 22H2 x64 call behavior. The traces are p
 
 ## Tools
 
-- Install and capture use `C:\Program Files\qemu\qemu-system-x86_64.exe`.
+- Install and capture use the buildenv `tools\qemu\qemu-system-x86_64.exe` resolved by `tools/pipeline/Resolve-VerosPaths.ps1`, then `%ProgramFiles%\qemu` if that file is missing.
 - `qemu-system-x86_64.exe` is the VerOS boot binary. The daily boot passes `-accel tcg`.
-- The x86_64 binary has WHPX and TCG. The guest is the powered-off VMware UEFI VM `D:\VMware\Windows 10 x64\Windows 10 x64.vmdk`. Capture opens that VMDK directly with OVMF, NVMe, and `-accel tcg -snapshot -m 8192 -smp 4`. The plugin instruments TCG only. The VerOS NT boot uses the same memory and CPU count.
+- The x86_64 binary has WHPX and TCG. The Windows guest disk is the buildenv `virtual-machines\win10-22h2\disk.qcow2` (or a path you pass). Capture uses OVMF, NVMe, and `-accel tcg -snapshot -m 8192 -smp 4`. The plugin instruments TCG only. The VerOS NT boot uses the same memory and CPU count.
 
 ## Commands
 
@@ -17,12 +17,7 @@ This is the truth source for Windows 10 22H2 x64 call behavior. The traces are p
 .\tools\windows-trace\Test-TraceCorpus.ps1
 ```
 
-Defaults on this machine:
-
-- ISO: `D:\ISO\Windows_10_22H2_English_x64.iso`
-- Office: `C:\Users\RyanWilson\Downloads\LibreOffice_26.2.1_Win_x86-64.msi`
-- Browser: `C:\Users\RyanWilson\Downloads\Firefox Installer.exe`
-- Guest agent and the virtio serial driver: `D:\ISO\virtio-win-0.1.271.iso`
+Pass local ISO and installer paths as script parameters. They are not hardcoded in the scripts.
 
 Logs are `output/windows-trace/*.jsonl`. The capture disk is the VMware VMDK. `-snapshot` keeps those trace writes off the VMware file.
 

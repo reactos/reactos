@@ -8,7 +8,7 @@ alwaysApply: false
 
 - Compile with RosBE 2.2.1 and Clang 18.1.8. `ARCH=amd64` is the only supported OS build. 32-bit applications run on that boot. The daily boot config is Clang 18.1.8, amd64, Debug, target `bootcd`. Boot tests use QEMU 11.1.0.
 - `tools/pipeline/Build-Bootcd.ps1` writes `build-amd64/bootcd.iso`.
-- `tools/pipeline/Test-Boot.ps1` runs `qemu-system-x86_64.exe` with the accelerator, memory, and CPU count in [windows-capture.mdc](windows-capture.mdc). It uses `tools\qemu` in the parent of this checkout when that folder exists, otherwise `C:\Program Files\qemu\qemu-system-x86_64.exe`. Do not pass `-accel whpx`.
+- `tools/pipeline/Test-Boot.ps1` runs `qemu-system-x86_64.exe` with the accelerator, memory, and CPU count in [windows-capture.mdc](windows-capture.mdc). It resolves QEMU through `tools/pipeline/Resolve-VerosPaths.ps1` (`tools\qemu` under the parent or sibling `buildenv/`, then `%ProgramFiles%\qemu`). Do not pass `-accel whpx`.
 - Load `tools/qemu-harness/abi.dll` with `-plugin`. It logs `SYSENTER`, `SYSCALL`, `INT 2E`, and calls into mapped `ntoskrnl`, `hal`, and `wdf` exports.
 - Serial logs, plugin JSONL, and crash JSON go under `output/`. Do not commit `build/` or `output/`.
 - Commands and the WHPX follow-up are in `docs/LOCAL_BUILD.md`.

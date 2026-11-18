@@ -1,6 +1,6 @@
 spec2def(lldp.sys lldp.spec)
 
-get_filename_component(VEROS_CHECKOUT "${REACTOS_SOURCE_DIR}" DIRECTORY)
+include(${REACTOS_SOURCE_DIR}/sdk/cmake/VerosBuildenv.cmake)
 set(LLDP_RUST_LIB "${CMAKE_CURRENT_BINARY_DIR}/rust/x86_64-pc-windows-gnu/release/liblldp.a")
 set(LLDP_CARGO "${VEROS_CHECKOUT}/tools/rust/cargo/bin/cargo.exe")
 set(LLDP_GCC "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-gcc.exe")

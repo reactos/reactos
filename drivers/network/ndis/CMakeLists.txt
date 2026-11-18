@@ -1,6 +1,6 @@
 spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
-get_filename_component(VEROS_CHECKOUT "${REACTOS_SOURCE_DIR}" DIRECTORY)
+include(${REACTOS_SOURCE_DIR}/sdk/cmake/VerosBuildenv.cmake)
 set(NDIS_RUST_LIB "${CMAKE_CURRENT_BINARY_DIR}/rust/x86_64-pc-windows-gnu/release/libndis.a")
 set(NDIS_CARGO "${VEROS_CHECKOUT}/tools/rust/cargo/bin/cargo.exe")
 set(NDIS_GCC "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-gcc.exe")

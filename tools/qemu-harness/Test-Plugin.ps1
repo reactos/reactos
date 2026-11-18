@@ -7,27 +7,49 @@
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$Qemu = "C:\Program Files\qemu\qemu-system-i386.exe"
+    [string]$Qemu = ""
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $SourceRoot "tools\pipeline\Resolve-VerosPaths.ps1")
 $here = $PSScriptRoot
 $out = Join-Path $SourceRoot "output\plugin-test"
 New-Item -ItemType Directory -Force -Path $out | Out-Null
+
+if (-not $Qemu) {
+    $localI386 = Resolve-VerosToolPath -SourceRoot $SourceRoot -RelativePath "tools\qemu\qemu-system-i386.exe"
+    if (Test-Path -LiteralPath $localI386) {
+        $Qemu = (Resolve-Path -LiteralPath $localI386).Path
+    }
+    else {
+        foreach ($base in @($env:ProgramFiles, ${env:ProgramFiles(x86)})) {
+            if (-not $base) { continue }
+            $fallback = Join-Path $base "qemu\qemu-system-i386.exe"
+            if (Test-Path -LiteralPath $fallback) {
+                $Qemu = (Resolve-Path -LiteralPath $fallback).Path
+                break
+            }
+        }
+    }
+}
+if (-not $Qemu -or -not (Test-Path $Qemu)) {
+    Write-Error "QEMU i386 was not found under the buildenv tools\qemu folder."
+}
 
 function Find-Gcc64 {
     $names = @(
         "x86_64-w64-mingw32-gcc.exe",
         "gcc.exe"
     )
-    $dirs = @(
-        "C:\RosBE\amd64\bin",
-        "D:\RosBE\amd64\bin",
-        "C:\RosBE\bin",
-        "D:\RosBE\bin",
-        "C:\msys64\mingw64\bin",
-        "C:\Program Files\Git\mingw64\bin"
-    )
+    $dirs = New-Object System.Collections.Generic.List[string]
+    $rosbe = Resolve-VerosRosbeRoot -SourceRoot $SourceRoot
+    if ($rosbe) {
+        $dirs.Add((Join-Path $rosbe "amd64\bin")) | Out-Null
+        $dirs.Add((Join-Path $rosbe "bin")) | Out-Null
+    }
+    if ($env:ProgramFiles) {
+        $dirs.Add((Join-Path $env:ProgramFiles "Git\mingw64\bin")) | Out-Null
+    }
     foreach ($dir in $dirs) {
         foreach ($name in $names) {
             $path = Join-Path $dir $name
@@ -77,7 +99,7 @@ $err = Join-Path $out "qemu.err"
 $dllFwd = $dll -replace '\\', '/'
 $logFwd = $log -replace '\\', '/'
 $mapFwd = $map -replace '\\', '/'
-$bios = "C:\Program Files\qemu\share"
+$bios = Join-Path (Split-Path $Qemu -Parent) "share"
 $qemuArgs = "-accel tcg -L `"$bios`" -m 64 -fda `"$img`" -boot a -display none -no-reboot -plugin `"file=$dllFwd,log=$logFwd,map=$mapFwd`""
 $proc = Start-Process -FilePath $Qemu -ArgumentList $qemuArgs -PassThru -RedirectStandardError $err -WindowStyle Hidden
 if (-not $proc.WaitForExit(15000)) {

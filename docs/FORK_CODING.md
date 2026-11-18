@@ -2,7 +2,7 @@
 
 C and C++ in this tree follow [CODING_STYLE.md](../CODING_STYLE.md), [.clang-format](../.clang-format), and the commit guidance in [CONTRIBUTING.md](../CONTRIBUTING.md). Do not keep a second C style. Wine-synced files in `media/doc/WINESYNC.txt` and third-party files in `media/doc/3rd Party Files.txt` are not reformatted.
 
-The project goal is that an application Windows 10 22H2 x64 can run installs and runs. A WDK-built driver keeps its calling convention, and the kernel services the exports it already calls. The roadmap is the [milestones on GitHub](https://github.com/rjwil1086/verosng/milestones).
+The project goal is that an application Windows 10 22H2 x64 can run installs and runs. A WDK-built driver keeps its calling convention, and the kernel services the exports it already calls. The roadmap is the [milestones on GitHub](https://github.com/taveraos/taveraos/milestones).
 
 ## Open source
 

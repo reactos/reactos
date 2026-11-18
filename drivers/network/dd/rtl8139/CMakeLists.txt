@@ -1,6 +1,6 @@
 spec2def(rtl8139.sys rtl8139.spec)
 
-get_filename_component(VEROS_CHECKOUT "${REACTOS_SOURCE_DIR}" DIRECTORY)
+include(${REACTOS_SOURCE_DIR}/sdk/cmake/VerosBuildenv.cmake)
 set(RTL_RUST_LIB "${CMAKE_CURRENT_BINARY_DIR}/rust/x86_64-pc-windows-gnu/release/librtl8139.a")
 set(RTL_CARGO "${VEROS_CHECKOUT}/tools/rust/cargo/bin/cargo.exe")
 set(RTL_GCC "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-gcc.exe")

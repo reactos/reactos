@@ -21,20 +21,26 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "Resolve-VerosPaths.ps1")
+$BuildenvRoot = Resolve-VerosBuildenvRoot -SourceRoot $SourceRoot
+$WorkspaceRoot = Split-Path -Parent $SourceRoot
 
 function Resolve-UpdateServer {
-    $checkout = Split-Path $SourceRoot -Parent
-    $configPath = Join-Path $checkout "veros-update.json"
     $resolved = @{
         BootstrapUrl = "https://bootstrap.invalid"
         UpdateUrl = "https://update.invalid"
         PublishUrl = "http://127.0.0.1:9080"
     }
-    if (Test-Path $configPath) {
+    foreach ($configPath in @(
+            (Join-Path $BuildenvRoot "veros-update.json"),
+            (Join-Path $WorkspaceRoot "veros-update.json")
+        )) {
+        if (-not (Test-Path $configPath)) { continue }
         $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
         if ($cfg.bootstrapUrl) { $resolved.BootstrapUrl = [string]$cfg.bootstrapUrl }
         if ($cfg.updateUrl) { $resolved.UpdateUrl = [string]$cfg.updateUrl }
         if ($cfg.publishUrl) { $resolved.PublishUrl = [string]$cfg.publishUrl }
+        break
     }
     if ($BootstrapUrl) { $resolved.BootstrapUrl = $BootstrapUrl }
     if ($UpdateUrl) { $resolved.UpdateUrl = $UpdateUrl }
@@ -54,13 +60,7 @@ function Find-RosBE {
     if ($Hint -and (Test-Path (Join-Path $Hint "rosbe-gcc-env.cmd"))) {
         return (Resolve-Path $Hint).Path
     }
-    $local = Join-Path (Split-Path $SourceRoot -Parent) "tools\rosbe"
-    foreach ($candidate in @($local, "C:\RosBE", "D:\RosBE", "$env:SystemDrive\RosBE")) {
-        if (Test-Path (Join-Path $candidate "rosbe-gcc-env.cmd")) {
-            return $candidate
-        }
-    }
-    return $null
+    return Resolve-VerosRosbeRoot -SourceRoot $SourceRoot
 }
 
 if ($Arch -ne "amd64") {
@@ -84,22 +84,13 @@ if ($ClientOnly -or $RepackOnly) {
 } else {
 $buildArgs = "--build `"$BuildDir`" --target bootcd"
 $runner = Join-Path $BuildDir "build-bootcd.cmd"
-$clang = $null
-$localClang = Join-Path (Split-Path $SourceRoot -Parent) "tools\clang\bin\clang.exe"
-foreach ($candidate in @(
-    $localClang,
-    "D:\LLVM-18\clang+llvm-18.1.8-x86_64-pc-windows-msvc\bin\clang.exe",
-    "C:\Program Files\LLVM\bin\clang.exe"
-)) {
-    if (Test-Path $candidate) { $clang = $candidate; break }
+$clangBin = Resolve-VerosClangBin -SourceRoot $SourceRoot
+if (-not $clangBin) {
+    Write-Error "amd64 needs Clang under the buildenv tools\clang\bin. RosBE's amd64 GCC was built without plugin support, so it cannot compile this tree."
 }
-if (-not $clang) {
-    Write-Error "amd64 needs Clang. RosBE's amd64 GCC was built without plugin support, so it cannot compile this tree."
-}
-$clangBin = Split-Path $clang -Parent
 $toolchain = Join-Path $SourceRoot "toolchain-clang.cmake"
 $cmakeArgs = "-S `"$SourceRoot`" -B `"$BuildDir`" -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=`"$toolchain`" -DARCH:STRING=amd64 -DCMAKE_BUILD_TYPE=Debug -DENABLE_CCACHE:BOOL=0"
-$envCmd = Join-Path (Split-Path $SourceRoot -Parent) "env.cmd"
+$envCmd = Join-Path $BuildenvRoot "env.cmd"
 if (-not (Test-Path $envCmd)) {
     Write-Error "The build environment was not found at $envCmd. Run Setup-BuildEnvironment.ps1."
 }
@@ -153,6 +144,10 @@ function Get-UpdaterInputHash {
 
 function Sync-UpdaterClient {
     param([string]$ClientRoot, [string]$Track, [string]$PublishUrl)
+    if (-not (Test-Path -LiteralPath (Join-Path $ClientRoot "Cargo.toml"))) {
+        Write-Warning "Updater client was not found at $ClientRoot. Skipping updater packaging."
+        return
+    }
     $dist = Join-Path $ClientRoot "dist"
     New-Item -ItemType Directory -Force -Path $dist | Out-Null
     $hash = Get-UpdaterInputHash -ClientRoot $ClientRoot
@@ -164,24 +159,28 @@ function Sync-UpdaterClient {
             return
         }
     }
-    $checkout = Split-Path (Split-Path $ClientRoot -Parent) -Parent
-    $env:RUSTUP_HOME = Join-Path $checkout "tools\rust\rustup"
-    $env:CARGO_HOME = Join-Path $checkout "tools\rust\cargo"
+    $env:RUSTUP_HOME = Join-Path $BuildenvRoot "tools\rust\rustup"
+    $env:CARGO_HOME = Join-Path $BuildenvRoot "tools\rust\cargo"
     $env:CARGO_TARGET_DIR = Join-Path $ClientRoot "target"
     $env:RUSTUP_TOOLCHAIN = "1.99.1-x86_64-pc-windows-gnu"
-    $clang = Join-Path $checkout "tools\clang\bin"
+    $clang = Join-Path $BuildenvRoot "tools\clang\bin"
     $shim = Join-Path $ClientRoot "dist\toolchain"
     New-Item -ItemType Directory -Force -Path $shim | Out-Null
     Copy-Item (Join-Path $clang "llvm-dlltool.exe") (Join-Path $shim "dlltool.exe") -Force
-    $mingw = Join-Path $checkout "tools\rosbe\amd64\bin"
-    $env:PATH = "$shim;$mingw;$env:PATH"
+    $mingw = Join-Path $BuildenvRoot "tools\rosbe\amd64\bin"
+    $cargoBin = Join-Path $env:CARGO_HOME "bin"
+    $env:PATH = "$shim;$mingw;$cargoBin;$env:PATH"
     $gcc = Join-Path $mingw "x86_64-w64-mingw32-gcc.exe"
     $env:CC = $gcc
     $env:CC_x86_64_pc_windows_gnu = $gcc
     $rustGcc = Join-Path $env:RUSTUP_HOME "toolchains\1.99.1-x86_64-pc-windows-gnu\lib\rustlib\x86_64-pc-windows-gnu\bin\self-contained\x86_64-w64-mingw32-gcc.exe"
     $env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = $rustGcc
     $env:RUSTFLAGS = "-C link-self-contained=yes"
-    & cargo build --release --target x86_64-pc-windows-gnu --manifest-path (Join-Path $ClientRoot "Cargo.toml")
+    $cargo = Join-Path $cargoBin "cargo.exe"
+    if (-not (Test-Path -LiteralPath $cargo)) {
+        Write-Error "cargo was not found at $cargo. Run Setup-BuildEnvironment.ps1."
+    }
+    & $cargo build --release --target x86_64-pc-windows-gnu --manifest-path (Join-Path $ClientRoot "Cargo.toml")
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $built = Join-Path $ClientRoot "target\x86_64-pc-windows-gnu\release"
     foreach ($name in @("verosupd-setup.exe", "uninstall.exe", "recover.exe", "verosupdsvc.exe", "verosperfsvc.exe", "verosupd.exe", "veroshook.dll")) {
@@ -230,6 +229,10 @@ function Sync-UpdaterClient {
 function Install-UpdaterClient {
     param([string]$ClientRoot, [string]$Reactos)
     $setup = Join-Path $ClientRoot "dist\verosupd-setup.exe"
+    if (-not (Test-Path -LiteralPath $setup)) {
+        Write-Warning "Updater setup was not found at $setup. Skipping updater install into the image."
+        return
+    }
     & $setup /image $Reactos
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
@@ -320,7 +323,7 @@ function Repack-Bootcd {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-$Checkout = Split-Path $SourceRoot -Parent
+$Checkout = $WorkspaceRoot
 $ClientRoot = Join-Path $Checkout "update-server\client"
 $Reactos = Join-Path $BuildDir "reactos"
 if (-not $RepackOnly) {

@@ -7,17 +7,22 @@
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$Iso = "D:\ISO\Windows_10_22H2_English_x64.iso",
-    [string]$OfficeInstaller = "C:\Users\RyanWilson\Downloads\LibreOffice_26.2.1_Win_x86-64.msi",
-    [string]$BrowserInstaller = "C:\Users\RyanWilson\Downloads\Firefox Installer.exe",
-    [string]$VirtioIso = "D:\ISO\virtio-win-0.1.271.iso",
-    [string]$Qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe",
+    [string]$Iso = "",
+    [string]$OfficeInstaller = "",
+    [string]$BrowserInstaller = "",
+    [string]$VirtioIso = "",
+    [string]$Qemu = "",
     [int]$ImageIndex = 0,
     [int]$TimeoutSec = 9000,
     [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $SourceRoot "tools\pipeline\Resolve-VerosPaths.ps1")
+$BuildenvRoot = Resolve-VerosBuildenvRoot -SourceRoot $SourceRoot
+if (-not $Iso) { $Iso = Join-Path $BuildenvRoot "iso\Windows_10_22H2_English_x64.iso" }
+if (-not $VirtioIso) { $VirtioIso = Join-Path $BuildenvRoot "downloads\virtio-win-0.1.271.iso" }
+if (-not $Qemu) { $Qemu = Resolve-VerosQemuExe -SourceRoot $SourceRoot }
 $out = Join-Path $SourceRoot "output\windows"
 $payload = Join-Path $out "payload"
 $disk = Join-Path $out "win10.qcow2"
@@ -29,7 +34,7 @@ if ((Test-Path $marker) -and -not $Force) {
     exit 0
 }
 foreach ($need in @($Iso, $OfficeInstaller, $BrowserInstaller, $VirtioIso, $Qemu)) {
-    if (-not (Test-Path $need)) { Write-Error "Missing $need" }
+    if (-not $need -or -not (Test-Path $need)) { Write-Error "Missing $need" }
 }
 
 function Find-ImageIndex {
@@ -205,7 +210,8 @@ if /I "%W%"=="office" start "" "C:\Program Files\LibreOffice\program\soffice.exe
 if /I "%W%"=="browser" start "" "C:\Program Files\Mozilla Firefox\firefox.exe" about:blank
 '@ | Set-Content -Path (Join-Path $payload "trace-workload.cmd") -Encoding ASCII
 
-$seven = Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\7z.exe"
+$seven = Join-Path $BuildenvRoot "tools\7zip\7z.exe"
+if (-not (Test-Path $seven)) { $seven = Join-Path $env:ProgramFiles "7-Zip\7z.exe" }
 if (-not (Test-Path $seven)) { $seven = "7z" }
 & $seven x $VirtioIso "-o$out\virtio" "guest-agent\qemu-ga-x86_64.msi" "vioserial\w10\amd64\*" -y | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $payload "vioser") | Out-Null

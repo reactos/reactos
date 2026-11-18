@@ -4,7 +4,7 @@ VerOS NT is my hobby. It's my fork of [ReactOS](https://github.com/reactos/react
 
 These builds are alpha. I run them in a virtual machine so I can see what breaks. Don't install this on a machine you use.
 
-Right now the work is boot, NTFS, drivers, and the calls an application makes. The plan is the [milestones on GitHub](https://github.com/rjwil1086/verosng/milestones). The number in the title is the order, and I close a milestone there when that work is done.
+Right now the work is boot, NTFS, drivers, and the calls an application makes. The plan is the [milestones on GitHub](https://github.com/taveraos/taveraos/milestones). The number in the title is the order, and I close a milestone there when that work is done.
 
 ## How I record Windows
 
@@ -57,12 +57,12 @@ From the source tree:
 .\tools\pipeline\Test-Boot.ps1
 ```
 
-`Build-Bootcd.ps1` writes `build-amd64\bootcd.iso`. It looks for RosBE and Clang in the parent `tools` folder first, then `D:\RosBE`, `C:\RosBE`, `D:\LLVM-18`, or `C:\Program Files\LLVM`. `Test-Boot.ps1` looks for QEMU in that same `tools` folder, then `C:\Program Files\qemu`. `build-amd64/` and `output/` stay untracked.
+`Build-Bootcd.ps1` writes `build-amd64\bootcd.iso`. `tools/pipeline/Resolve-VerosPaths.ps1` finds the buildenv folder (parent of this checkout, or a sibling `buildenv/`) on whatever drive the tree sits on, then uses that folder's `tools\rosbe`, `tools\clang`, and `env.cmd`. `Test-Boot.ps1` uses the same discovery for `tools\qemu`, then `%ProgramFiles%\qemu` if needed. `build-amd64/` and `output/` stay untracked.
 
 ## License
 
 The license is [GPL-2.0](COPYING). There is no warranty. If a file header names a different license, that header wins. A new userland DLL is LGPL-2.1-or-later. Any other new file is GPL-2.0-or-later. Code that came from other projects keeps the license it came with. The name, path, version, license, and upstream site for each one are in [media/doc/3rd Party Files.txt](media/doc/3rd%20Party%20Files.txt). Wine code is LGPL-2.1 or later unless a file header says otherwise. The modules are listed in [media/doc/WINESYNC.txt](media/doc/WINESYNC.txt).
 
-Upstream is [reactos/reactos](https://github.com/reactos/reactos). This fork is [rjwil1086/verosng](https://github.com/rjwil1086/verosng).
+Upstream is [reactos/reactos](https://github.com/reactos/reactos). This fork is [taveraos/taveraos](https://github.com/taveraos/taveraos).
 
 VerOS NT is my trademark. Windows is a registered trademark of Microsoft Corporation. ReactOS is a registered trademark of ReactOS Deutschland e.V. I use those names to say what this is compared with and where the tree came from. I don't use their logos. Microsoft and the ReactOS Project have not licensed or endorsed this fork.

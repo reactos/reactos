@@ -12,8 +12,8 @@ param(
     [string]$SourceRoot = "",
     [string]$Iso = "",
     [string]$Disk = "",
-    [string]$Qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe",
-    [string]$QemuImg = "C:\Program Files\qemu\qemu-img.exe",
+    [string]$Qemu = "",
+    [string]$QemuImg = "",
     [string]$OutputDir = "",
     [string]$AppsDir = ""
 )
@@ -23,6 +23,7 @@ $ErrorActionPreference = "Stop"
 if (-not $SourceRoot) {
     $SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 }
+. (Join-Path $PSScriptRoot "Resolve-VerosPaths.ps1")
 
 if (-not $OutputDir) {
     $OutputDir = Join-Path $SourceRoot "output\install"
@@ -35,8 +36,14 @@ if (-not $Disk) {
 if (-not $Iso) {
     $Iso = Join-Path $SourceRoot "build-amd64\bootcd.iso"
 }
-if (-not (Test-Path $Qemu)) {
-    Write-Error "QEMU was not found at $Qemu"
+if (-not $Qemu) {
+    $Qemu = Resolve-VerosQemuExe -SourceRoot $SourceRoot
+}
+if (-not $Qemu -or -not (Test-Path $Qemu)) {
+    Write-Error "QEMU was not found under the buildenv tools\qemu folder."
+}
+if (-not $QemuImg) {
+    $QemuImg = Join-Path (Split-Path $Qemu -Parent) "qemu-img.exe"
 }
 if (-not (Test-Path $QemuImg)) {
     Write-Error "qemu-img was not found at $QemuImg"
@@ -67,7 +74,7 @@ $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
 $serial = Join-Path $OutputDir "serial-$Mode-$stamp.log"
 $qemuLog = Join-Path $OutputDir "qemu-$Mode-$stamp.log"
 $serialFwd = ($serial -replace '\\', '/')
-$bios = "C:\Program Files\qemu\share"
+$bios = Join-Path (Split-Path $Qemu -Parent) "share"
 $diskArg = "-drive `"file=$Disk,format=qcow2,if=ide,index=0,media=disk`""
 
 $argLine = "-accel tcg -L `"$bios`" -m 8192 -smp 4 -no-reboot -display gtk -name `"VerOS NT`" -serial `"file:$serialFwd`" $diskArg"

@@ -7,8 +7,8 @@
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$Disk = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path "virtual-machines\win10-22h2\disk.qcow2"),
-    [string]$Qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe",
+    [string]$Disk = "",
+    [string]$Qemu = "",
     [string]$SyscallMap = "",
     [int]$TimeoutSec = 5400,
     [int]$QgaPort = 4711,
@@ -16,9 +16,16 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-if (-not $PSBoundParameters.ContainsKey("Qemu")) {
-    $localQemu = Join-Path (Split-Path $SourceRoot -Parent) "tools\qemu\qemu-system-x86_64.exe"
-    if (Test-Path $localQemu) { $Qemu = $localQemu }
+. (Join-Path $SourceRoot "tools\pipeline\Resolve-VerosPaths.ps1")
+$BuildenvRoot = Resolve-VerosBuildenvRoot -SourceRoot $SourceRoot
+if (-not $Disk) {
+    $Disk = Join-Path $BuildenvRoot "virtual-machines\win10-22h2\disk.qcow2"
+}
+if (-not $Qemu) {
+    $Qemu = Resolve-VerosQemuExe -SourceRoot $SourceRoot
+}
+if (-not $Qemu) {
+    Write-Error "QEMU was not found under the buildenv tools\qemu folder."
 }
 $QemuShare = Join-Path (Split-Path $Qemu) "share"
 $out = Join-Path $SourceRoot "output\windows"
