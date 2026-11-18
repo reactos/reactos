@@ -319,9 +319,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
  * AllocateSharedMemory needs NDIS_SHARED_MEMORY_PARAMETERS; that layout
  * is not in sdk/include yet, so the stub logs and returns FAILURE.
- * Processor Ex / RSS Ex stubs return FAILURE until a guest trace gives
- * those buffer sizes. Soft IRQ already succeeded on that e1000e boot
- * (NDIS IRQ soft / IRQOK), so MSIX config returns FAILURE.
+ * Processor Ex / RSS Ex stay out of NdisGetRoutineAddress until a guest
+ * log measures those buffers (output/vmxnet3-20261118T052250Z.log:
+ * RSSEX FAILURE made FILTER c000009a). Soft IRQ already succeeded on
+ * that e1000e boot (NDIS IRQ soft / IRQOK), so MSIX config returns
+ * FAILURE.
  * output/netkvm-20261116T022127Z.log names NdisMFreeSharedMemory.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreesharedmemory
  * That page returns no status.
@@ -603,14 +605,15 @@ static POOLS: &[Routine] = &[
         name: "NdisGetProcessorInformation",
         address: NdisGetProcessorInformation as *const (),
     },
-    Routine {
-        name: "NdisGetProcessorInformationEx",
-        address: NdisGetProcessorInformationEx as *const (),
-    },
-    Routine {
-        name: "NdisGetRssProcessorInformation",
-        address: NdisGetRssProcessorInformation as *const (),
-    },
+    /* Do not publish NdisGetProcessorInformationEx or
+     * NdisGetRssProcessorInformation through NdisGetRoutineAddress.
+     * output/vmxnet3-20261118T013944Z.log: those names MISS, then
+     * NDIS SPI / NDIS FILTER 00000000 and START. output/vmxnet3-
+     * 20261118T052250Z.log: after the RSSEX stub resolved the miss,
+     * NDIS RSSEX fail and NDIS FILTER c000009a blocked
+     * IRP_MN_FILTER_RESOURCE_REQUIREMENTS. Keep the PE exports for
+     * direct imports; leave GetRoutineAddress as MISS until the RSS
+     * info buffer size is measured on a guest log. */
     Routine {
         name: "NdisCurrentProcessorIndex",
         address: NdisCurrentProcessorIndex as *const (),
@@ -1866,12 +1869,13 @@ pub unsafe extern "system" fn NdisGetProcessorInformationEx(
     /* output/e1000e-20261118T041602Z.log: NDIS MISS
      * NdisGetProcessorInformationEx.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex
-     * NDIS_SYSTEM_PROCESSOR_INFO_EX layout is not measured yet; log and
-     * return FAILURE. NDIS_STATUS_FAILURE is 0xC0000001 in
-     * sdk/include/ddk/ndis.h. */
+     * Layout is not measured yet. PE export only; GetRoutineAddress
+     * leaves this name as MISS (see POOLS comment). Return
+     * NDIS_STATUS_BUFFER_TOO_SHORT from sdk/include/ddk/ndis.h so a
+     * direct import with Size 0 does not look like a hard FAILURE. */
     let asked = if size.is_null() { 0 } else { *size };
-    DbgPrint(b"NDIS SPIEX fail size %p %08x\n\0".as_ptr(), size, asked as u32);
-    0xC000_0001
+    DbgPrint(b"NDIS SPIEX short size %p %08x\n\0".as_ptr(), size, asked as u32);
+    SPI_BUFFER_TOO_SHORT
 }
 
 #[no_mangle]
@@ -1883,11 +1887,14 @@ pub unsafe extern "system" fn NdisGetRssProcessorInformation(
     /* output/e1000e-20261118T041602Z.log: NDIS MISS
      * NdisGetRssProcessorInformation.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
-     * NDIS_RSS_PROCESSOR_INFO layout is not measured yet; log and return
-     * FAILURE. */
+     * returns SUCCESS or BUFFER_TOO_SHORT. output/vmxnet3-
+     * 20261118T052250Z.log: returning FAILURE here made Filter return
+     * c000009a. PE export only; GetRoutineAddress leaves this name as
+     * MISS so Filter uses SPI again (output/vmxnet3-20261118T013944Z.log).
+     * Direct imports with Size 0 get BUFFER_TOO_SHORT. */
     let asked = if size.is_null() { 0 } else { *size };
-    DbgPrint(b"NDIS RSSEX fail size %p %08x\n\0".as_ptr(), size, asked as u32);
-    0xC000_0001
+    DbgPrint(b"NDIS RSSEX short size %p %08x\n\0".as_ptr(), size, asked as u32);
+    SPI_BUFFER_TOO_SHORT
 }
 
 #[no_mangle]
