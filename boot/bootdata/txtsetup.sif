@@ -625,6 +625,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040A = kbdsp.dll
 0000080A = kbdla.dll
 0000040B = kbdfi.dll
+0000083B = kbdfi1.dll
 0000040C = kbdfr.dll
 0000080C = kbdbe.dll
 00000C0C = kbdfc.dll
