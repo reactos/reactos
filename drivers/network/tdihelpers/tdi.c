@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS Ancillary Function Driver
  * FILE:        tdihelpers/tdi.c
  * PURPOSE:     Transport Driver Interface functions
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/09-2000 Created
  *   20251021 Moved to tdihelpers since it is used by 2 drivers (AFD, NETIO) now
@@ -185,7 +187,8 @@ NTSTATUS TdiOpenAddressFile(
     RtlCopyMemory(EaInfo->EaName,
                   TdiTransportAddress,
                   TDI_TRANSPORT_ADDRESS_LENGTH);
-    EaInfo->EaValueLength = sizeof(TA_IP_ADDRESS);
+    /* TA_IP6_ADDRESS in sdk/include/psdk/tdi.h is larger than TA_IP_ADDRESS. */
+    EaInfo->EaValueLength = (USHORT)TaLengthOfTransportAddress(Name);
     Address =
         (PTRANSPORT_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH + 1); /* 0-terminated */
     TaCopyTransportAddressInPlace( Address, Name );

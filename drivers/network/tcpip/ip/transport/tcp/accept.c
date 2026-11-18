@@ -3,7 +3,9 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        transport/tcp/accept.c
  * PURPOSE:     Transmission Control Protocol Listen/Accept code
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Art Yerkes (arty@users.sf.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   arty 12/21/2004 Created
  */
@@ -37,7 +39,7 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
                                                  &ipaddr,
                                                  &RemoteAddress->Address[0].Address[0].sin_port));
 
-    RemoteAddress->Address[0].Address[0].in_addr = ipaddr.addr;
+    RemoteAddress->Address[0].Address[0].in_addr = ip_addr_get_ip4_u32(&ipaddr);
 
     return Status;
 }
@@ -61,7 +63,8 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
     TI_DbgPrint(DEBUG_TCP, ("Connection->SocketContext %x\n",
         Connection->SocketContext));
 
-    AddressToBind.addr = Connection->AddressFile->Address.Address.IPv4Address;
+    ip_addr_set_ip4_u32_val(AddressToBind,
+        Connection->AddressFile->Address.Address.IPv4Address);
 
     Status = TCPTranslateError(LibTCPBind(Connection,
                                           &AddressToBind,

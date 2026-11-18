@@ -3,9 +3,19 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        tcpip/address.c
  * PURPOSE:     Routines for handling addresses
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * IPv6 unspecified (::) and loopback (::1) from RFC 4291 Sections 2.5.2
+ * and 2.5.3 (https://www.rfc-editor.org/rfc/rfc4291). Link-local fe80::/64
+ * and modified EUI-64 from Sections 2.5.6 and Appendix A. Solicited-node
+ * multicast from Section 2.7.1. TDI_ADDRESS_IP6 is sdk/include/psdk/tdi.h.
+ * source/output/ndis-disk-20261117T014026Z.log printed
+ * "IPV6 XCHG udp fail 995": the datagram receive filter rejected that
+ * address type before the echo could complete the pending recv.
  */
 
 #include "precomp.h"
@@ -46,8 +56,15 @@ PCHAR A2S(
 	break;
 
     case IP_ADDRESS_V6:
-	/* FIXME: IPv6 is not supported */
-	strcpy(p, "(IPv6 address not supported)");
+	sprintf(p, "%x:%x:%x:%x:%x:%x:%x:%x",
+		WN2H(Address->Address.IPv6Address[0]),
+		WN2H(Address->Address.IPv6Address[1]),
+		WN2H(Address->Address.IPv6Address[2]),
+		WN2H(Address->Address.IPv6Address[3]),
+		WN2H(Address->Address.IPv6Address[4]),
+		WN2H(Address->Address.IPv6Address[5]),
+		WN2H(Address->Address.IPv6Address[6]),
+		WN2H(Address->Address.IPv6Address[7]));
 	break;
     }
     return p;
@@ -76,6 +93,21 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
 	    BitTest >>= 1;
 	}
 	return Prefix;
+    } else if (Netmask->Type == IP_ADDRESS_V6) {
+	UINT i;
+
+	for (i = 0; i < 8; i++) {
+	    USHORT Word = WN2H(Netmask->Address.IPv6Address[i]);
+	    USHORT BitTest = 0x8000;
+
+	    while (BitTest != 0) {
+		if ((Word & BitTest) == 0)
+		    return Prefix;
+		Prefix++;
+		BitTest >>= 1;
+	    }
+	}
+	return Prefix;
     } else {
 	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n",
 				     Netmask->Type));
@@ -89,6 +121,16 @@ VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source,
         Network->Type = Netmask->Type;
 	Network->Address.IPv4Address =
 	    Source->Address.IPv4Address & Netmask->Address.IPv4Address;
+    } else if (Netmask->Type == IP_ADDRESS_V6 &&
+               Source->Type == IP_ADDRESS_V6) {
+	UINT i;
+
+	Network->Type = IP_ADDRESS_V6;
+	for (i = 0; i < 8; i++) {
+	    Network->Address.IPv6Address[i] =
+		(USHORT)(Source->Address.IPv6Address[i] &
+		         Netmask->Address.IPv6Address[i]);
+	}
     } else {
 	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n",
 				     Netmask->Type));
@@ -110,6 +152,96 @@ VOID IPAddressFree(
 }
 
 
+BOOLEAN AddrIsIPv6Loopback(
+    PIP_ADDRESS Address)
+/*
+ * FUNCTION: Return whether Address is the IPv6 loopback ::1
+ * ARGUMENTS:
+ *     Address = Pointer to an IP address structure
+ * RETURNS:
+ *     TRUE if Address is ::1 (RFC 4291 Section 2.5.3)
+ */
+{
+    UINT i;
+
+    if (Address->Type != IP_ADDRESS_V6)
+        return FALSE;
+
+    for (i = 0; i < 7; i++)
+    {
+        if (Address->Address.IPv6Address[i] != 0)
+            return FALSE;
+    }
+
+    return Address->Address.IPv6Address[7] == WH2N(0x0001);
+}
+
+BOOLEAN AddrIsIPv6LinkLocal(
+    PIP_ADDRESS Address)
+/*
+ * FUNCTION: Return whether Address is in fe80::/10 (RFC 4291 Section 2.5.6)
+ */
+{
+    USHORT First;
+
+    if (Address->Type != IP_ADDRESS_V6)
+        return FALSE;
+
+    First = WN2H(Address->Address.IPv6Address[0]);
+    return (First & 0xFFC0) == 0xFE80;
+}
+
+BOOLEAN AddrFormLinkLocalEui64(
+    PIP_ADDRESS Address,
+    PUCHAR MacAddress,
+    UINT MacLength)
+/*
+ * FUNCTION: Form fe80::/64 link-local from a 48-bit MAC (RFC 4291 Appendix A)
+ */
+{
+    UCHAR Eui[8];
+
+    if (!MacAddress || MacLength != 6)
+        return FALSE;
+
+    /* Modified EUI-64: flip U/L bit, insert FF FE (RFC 4291 Appendix A). */
+    Eui[0] = (UCHAR)(MacAddress[0] ^ 0x02);
+    Eui[1] = MacAddress[1];
+    Eui[2] = MacAddress[2];
+    Eui[3] = 0xFF;
+    Eui[4] = 0xFE;
+    Eui[5] = MacAddress[3];
+    Eui[6] = MacAddress[4];
+    Eui[7] = MacAddress[5];
+
+    AddrInitIPv6(Address,
+                 WH2N(0xFE80), 0, 0, 0,
+                 WH2N((USHORT)((Eui[0] << 8) | Eui[1])),
+                 WH2N((USHORT)((Eui[2] << 8) | Eui[3])),
+                 WH2N((USHORT)((Eui[4] << 8) | Eui[5])),
+                 WH2N((USHORT)((Eui[6] << 8) | Eui[7])));
+    return TRUE;
+}
+
+VOID AddrSolicitedNodeMulticast(
+    PIP_ADDRESS Multicast,
+    PIP_ADDRESS Unicast)
+/*
+ * FUNCTION: FF02::1:FFxx:xxxx from the last 24 bits (RFC 4291 Section 2.7.1)
+ */
+{
+    USHORT H6, H7;
+
+    H6 = WN2H(Unicast->Address.IPv6Address[6]);
+    H7 = WN2H(Unicast->Address.IPv6Address[7]);
+
+    AddrInitIPv6(Multicast,
+                 WH2N(0xFF02), 0, 0, 0, 0,
+                 WH2N(0x0001),
+                 WH2N((USHORT)(0xFF00 | (H6 & 0x00FF))),
+                 WH2N(H7));
+}
+
 BOOLEAN AddrIsUnspecified(
     PIP_ADDRESS Address)
 /*
@@ -120,13 +252,22 @@ BOOLEAN AddrIsUnspecified(
  *     TRUE if the IP address is an unspecified address, FALSE if not
  */
 {
+    UINT i;
+
     switch (Address->Type) {
         case IP_ADDRESS_V4:
             return (Address->Address.IPv4Address == 0 ||
                     Address->Address.IPv4Address == 0xFFFFFFFF);
 
         case IP_ADDRESS_V6:
-        /* FIXME: IPv6 is not supported */
+            /* :: (RFC 4291 Section 2.5.2) */
+            for (i = 0; i < 8; i++)
+            {
+                if (Address->Address.IPv6Address[i] != 0)
+                    return FALSE;
+            }
+            return TRUE;
+
         default:
             return FALSE;
     }
@@ -166,6 +307,21 @@ NTSTATUS AddrGetAddress(
 		AddrInitIPv4(Address, ValidAddr->in_addr);
 		return STATUS_SUCCESS;
 	    }
+            break;
+
+        case TDI_ADDRESS_TYPE_IP6:
+            if (CurAddr->AddressLength >= TDI_ADDRESS_LENGTH_IP6)
+            {
+                PTDI_ADDRESS_IP6 ValidAddr = (PTDI_ADDRESS_IP6)CurAddr->Address;
+
+                *Port = ValidAddr->sin6_port;
+                Address->Type = IP_ADDRESS_V6;
+                RtlCopyMemory(Address->Address.IPv6Address,
+                              ValidAddr->sin6_addr,
+                              sizeof(IPv6_RAW_ADDRESS));
+                return STATUS_SUCCESS;
+            }
+            break;
 	}
     }
 
@@ -189,6 +345,24 @@ NTSTATUS AddrBuildAddress(
   PTDI_ADDRESS_IP ValidAddr;
   PTA_ADDRESS TdiAddress = &TaAddress->Address[0];
 
+  if (TdiAddress->AddressType == TDI_ADDRESS_TYPE_IP6) {
+      PTDI_ADDRESS_IP6 Addr6;
+
+      if (TdiAddress->AddressLength < TDI_ADDRESS_LENGTH_IP6) {
+          TI_DbgPrint
+              (MID_TRACE,("AddressLength %x, Not valid (expected %x)\n",
+                          TdiAddress->AddressLength, TDI_ADDRESS_LENGTH_IP6));
+          return STATUS_INVALID_ADDRESS;
+      }
+
+      Addr6 = (PTDI_ADDRESS_IP6)TdiAddress->Address;
+      Address->Type = IP_ADDRESS_V6;
+      RtlCopyMemory(Address->Address.IPv6Address,
+                    Addr6->sin6_addr,
+                    sizeof(IPv6_RAW_ADDRESS));
+      *Port = Addr6->sin6_port;
+      return STATUS_SUCCESS;
+  }
   if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP) {
       TI_DbgPrint
 	  (MID_TRACE,("AddressType %x, Not valid\n", TdiAddress->AddressType));

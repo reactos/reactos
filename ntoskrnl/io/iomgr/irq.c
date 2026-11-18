@@ -3,7 +3,15 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/iomgr/irq.c
  * PURPOSE:         I/O Wrappers (called Completion Ports) for Kernel Queues
+ * COPYRIGHT:       Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ *
+ * IoGetAffinityInterrupt: declared in sdk/include/xdk/iofuncs.h;
+ * GROUP_AFFINITY in sdk/include/xdk/ntbasedef.h; Number on KINTERRUPT in
+ * sdk/include/ndk/ketypes.h; STATUS_INVALID_PARAMETER and group-0 affinity from
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/iointex/nf-iointex-wdmlibiogetaffinityinterrupt
+ * output/e1000e-20261118T034236Z.log: Missing API 'IoGetAffinityInterrupt'
  */
 
 /* INCLUDES *****************************************************************/
@@ -229,6 +237,37 @@ IoDisconnectInterruptEx(
     //FIXME: This eventually will need to handle more cases
     if (Parameters->ConnectionContext.InterruptObject)
         IoDisconnectInterrupt(Parameters->ConnectionContext.InterruptObject);
+}
+
+/*
+ * Declared in sdk/include/xdk/iofuncs.h. KINTERRUPT::Number is the connected
+ * processor index in sdk/include/ndk/ketypes.h. Learn WdmlibIoGetAffinityInterrupt
+ * returns STATUS_INVALID_PARAMETER for a bad InterruptObject and fills a
+ * GROUP_AFFINITY (group 0 by default):
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/iointex/nf-iointex-wdmlibiogetaffinityinterrupt
+ * output/e1000e-20261118T034236Z.log: Missing API 'IoGetAffinityInterrupt'
+ * while loading e1q62x64.sys (status c0000262).
+ */
+NTSTATUS
+NTAPI
+IoGetAffinityInterrupt(
+    _In_ PKINTERRUPT InterruptObject,
+    _Out_ PGROUP_AFFINITY GroupAffinity)
+{
+    if ((InterruptObject == NULL) || (GroupAffinity == NULL))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RtlZeroMemory(GroupAffinity, sizeof(*GroupAffinity));
+    GroupAffinity->Group = 0;
+    if ((InterruptObject->Number >= 0) &&
+        (InterruptObject->Number < (CCHAR)(sizeof(KAFFINITY) * 8)))
+    {
+        GroupAffinity->Mask = ((KAFFINITY)1) << InterruptObject->Number;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

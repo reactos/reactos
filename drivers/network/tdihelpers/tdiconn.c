@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
+ *                   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/tdihelpers/tdiconn.c
  * PURPOSE:          Ancillary functions driver
  * PROGRAMMER:       Art Yerkes (ayerkes@speakeasy.net)
+ *                   Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  * 20040708 Created
  * 20251021 Moved to tdihelpers since it is used by 2 drivers (AFD, NETIO) now
@@ -24,6 +26,8 @@ UINT TdiAddressSizeFromType( UINT AddressType ) {
     switch( AddressType ) {
     case TDI_ADDRESS_TYPE_IP:
         return TDI_ADDRESS_LENGTH_IP;
+    case TDI_ADDRESS_TYPE_IP6:
+        return TDI_ADDRESS_LENGTH_IP6;
     case TDI_ADDRESS_TYPE_APPLETALK:
         return TDI_ADDRESS_LENGTH_APPLETALK;
     case TDI_ADDRESS_TYPE_NETBIOS:

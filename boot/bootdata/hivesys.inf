@@ -1899,22 +1899,33 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; RTL8139 NDIS 6 miniport. Group NDIS is after NDIS Wrapper, so ndis.sys is already loaded.
-HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139n","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139n","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139n","ImagePath",0x00020000,"system32\drivers\rtl8139n.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139n","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139n","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139","ImagePath",0x00020000,"system32\drivers\rtl8139.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Rtl8139","Type",0x00010001,0x00000001
 
 ; NDIS user-mode I/O protocol, the transport the WLAN service uses.
-; ndisuio.sys is not on the boot CD. Start 4 is SERVICE_DISABLED.
+; ndisuio.sys ships on the boot CD for raw NDIS. Start 1 loads with NDIS.
 ; https://learn.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-changeserviceconfiga
 ; Without a Linkage\Bind value, NDIS binds it to every adapter.
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ImagePath",0x00020000,"system32\drivers\ndisuio.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","DisplayName",0x00000000,"NDIS Usermode I/O Protocol"
+
+; LLDP NDIS 6 protocol skeleton (IEEE 802.1AB-2016 EtherType 0x88CC).
+; Start 3 is SERVICE_DEMAND_START so the stub does not auto-load until
+; protocol registration and bind are implemented and accepted.
+; https://learn.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-changeserviceconfiga
+HKLM,"SYSTEM\CurrentControlSet\Services\Lldp","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Lldp","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Lldp","ImagePath",0x00020000,"system32\drivers\lldp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Lldp","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Lldp","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Lldp","DisplayName",0x00000000,"LLDP Protocol"
 
 ; NetLogon
 HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,%NETLOGON_SERVICE%

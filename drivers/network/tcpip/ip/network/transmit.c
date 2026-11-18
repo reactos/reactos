@@ -241,6 +241,56 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE)
     /* Fetch path MTU now, because it may change */
     TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", NCE->Interface->MTU));
 
+    /* PrepareNextFragment still assumes an IPv4 header. IPv6 datagrams that
+     * fit the path MTU are sent as a single fragment without rewriting
+     * FlagsFragOfs/Checksum. Fragmentation for IPv6 is a later step. */
+    if (IPPacket->Type == IP_ADDRESS_V6)
+    {
+        PIPFRAGMENT_CONTEXT IFC;
+        NDIS_STATUS NdisStatus;
+        PVOID Data;
+        UINT InSize;
+
+        if (IPPacket->TotalSize > NCE->Interface->MTU)
+        {
+            IPPacket->Free(IPPacket);
+            return STATUS_INVALID_BUFFER_SIZE;
+        }
+
+        IFC = ExAllocatePoolWithTag(NonPagedPool, sizeof(*IFC), IFC_TAG);
+        if (!IFC)
+        {
+            IPPacket->Free(IPPacket);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        NdisStatus = AllocatePacketWithBuffer(&IFC->NdisPacket, NULL,
+                                              IPPacket->TotalSize);
+        if (!NT_SUCCESS(NdisStatus))
+        {
+            IPPacket->Free(IPPacket);
+            ExFreePoolWithTag(IFC, IFC_TAG);
+            return NdisStatus;
+        }
+
+        GetDataPtr(IFC->NdisPacket, 0, (PCHAR *)&Data, &InSize);
+        RtlCopyMemory(Data, IPPacket->Header, IPPacket->TotalSize);
+        KeInitializeEvent(&IFC->Event, NotificationEvent, FALSE);
+        IFC->NCE = NCE;
+
+        NdisStatus = IPSendFragment(IFC->NdisPacket, NCE, IFC);
+        if (NT_SUCCESS(NdisStatus))
+        {
+            KeWaitForSingleObject(&IFC->Event, Executive, KernelMode, FALSE, NULL);
+            NdisStatus = IFC->Status;
+        }
+
+        FreeNdisPacket(IFC->NdisPacket);
+        ExFreePoolWithTag(IFC, IFC_TAG);
+        IPPacket->Free(IPPacket);
+        return NdisStatus;
+    }
+
     return SendFragments(IPPacket, NCE, NCE->Interface->MTU);
 }
 

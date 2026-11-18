@@ -1,0 +1,29 @@
+---
+description: What to do when a session sees forbidden material
+alwaysApply: true
+---
+
+# Exposure
+
+Stop the moment a forbidden input under [clean-room.mdc](clean-room.mdc) or [clean-room-third-party-sources.mdc](clean-room-third-party-sources.mdc) appears: a search result, page, file, paste, or tool output that shows leaked source, the Windows Research Kernel, disassembly, decompiler output, symbol data, or WDK or SDK header text.
+
+Do not read further. Do not summarize it, quote it, or keep any of it in a scratch file. Do not continue the component it touches in this session.
+
+Tell Ryan in chat with:
+
+- the date
+- the URL or file path where it appeared, with no content from it
+- the component and the files the session was working on
+- whether any patch was already written after it appeared
+
+Append the same lines to `contamination-log.md` at the project root, outside `source/`. Do not commit that file.
+
+A component named in the log is written again in a new session that has not seen the material and is not given the log entry's details beyond the component name. Discard any uncommitted hunk written after the exposure. Ryan decides what happens to a committed one.
+
+Searching for a Windows function name is where this most often happens. Prefer `site:learn.microsoft.com` and in-tree search first. Skip results on code-hosting sites that are not Wine, ReactOS, or this fork.
+
+```text
+Right: stop, report the URL and the component, log it, leave the hunk unwritten
+Wrong: "only skimmed it" and keep going
+Wrong: quoting the leaked function in chat to show what was seen
+```

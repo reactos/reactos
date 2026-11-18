@@ -11,10 +11,12 @@ list(APPEND SOURCE
     network/address.c
     network/arp.c
     network/checksum.c
+    network/dhcp6.c
     network/icmp.c
     network/interface.c
     network/ip.c
     network/loopback.c
+    network/ndp.c
     network/neighbor.c
     network/ports.c
     network/receive.c

@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should VerOS form an Ethernet link-local IPv6 address, resolve neighbors for off-loopback ICMPv6, and enable lwIP dual-stack TCP without breaking IPv4?",
+  "allowedInputs": [
+    "RFC 4291 IP Version 6 Addressing Architecture https://www.rfc-editor.org/rfc/rfc4291 Sections 2.5.6 2.7.1 Appendix A",
+    "RFC 4861 Neighbor Discovery for IP version 6 https://www.rfc-editor.org/rfc/rfc4861 Sections 4.3 4.4 4.6 7.2",
+    "RFC 2464 Transmission of IPv6 Packets over Ethernet Networks https://www.rfc-editor.org/rfc/rfc2464 Section 7",
+    "RFC 8200 Internet Protocol Version 6 Specification https://www.rfc-editor.org/rfc/rfc8200 Section 8.1",
+    "RFC 8415 Dynamic Host Configuration Protocol for IPv6 https://www.rfc-editor.org/rfc/rfc8415 Sections 5.1 7.1-7.3 18",
+    "drivers/network/tcpip/ip/network/icmp.c ICMP6Receive IPv6PseudoChecksum",
+    "drivers/network/tcpip/ip/network/loopback.c ::1 NCE",
+    "drivers/network/tcpip/ip/transport/tcp/if.c TCPSendDataCallback IPv4 output pattern",
+    "drivers/network/tcpip/include/lwip/lwipopts.h prior LWIP_ARP 0",
+    "Reported: QEMU user-net/SLIRP does not provide a usable DHCPv6 server for guest address assignment; tap or bridged with an external DHCPv6 server is required for that path"
+  ]
+}

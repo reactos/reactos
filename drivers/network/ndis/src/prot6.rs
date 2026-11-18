@@ -30,8 +30,9 @@
  * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_bind_parameters);
  * on x64 AdapterName is at offset 16. NdisMedium802_3 is 0 in
  * sdk/include/ddk/ndis.h. LanRegisterProtocol6 is the VerOS tcpip entry
- * that calls NdisRegisterProtocolDriver. NDIS 5 stays until this path
- * and rtl8139n NDIS 6 both carry traffic; then NDIS 5 is removed.
+ * that calls NdisRegisterProtocolDriver. Phase C removed the NDIS 5
+ * tcpip bridge; output/ndis-disk-20261116T203348Z.log and
+ * output/netkvm-20261116T203635Z.log carry PingCheck on NDIS 6.
  */
 
 use core::ptr;
@@ -309,7 +310,10 @@ pub fn indicate_receive(adapter: *mut u8, lists: *mut u8, port: u32, count: u32,
      * NDIS6 LAN; LanReceiveNbl6 saw a null context and returned without
      * NdisReturnNetBufferLists, which starved later indicates.
      * call_return_net_buffer_lists no-ops when the return slot is null
-     * (NDIS CHECK throwaway handles). */
+     * (NDIS CHECK throwaway handles).
+     * Fan out to secondary opens (lldp.sys) before tcpip so they can
+     * copy EtherType 0x88CC; tcpip still owns NdisReturnNetBufferLists
+     * (output/ndis-disk-20261116T214838Z.log had LLDP TX with no RX). */
     let binding = binding_for_adapter(adapter);
     let context = binding_context(binding);
     if context.is_null() || lists.is_null() {
@@ -319,6 +323,14 @@ pub fn indicate_receive(adapter: *mut u8, lists: *mut u8, port: u32, count: u32,
         }
         return;
     }
+    let primary_protocol = unsafe {
+        if !binding.is_null() {
+            ptr::read_unaligned(binding.add(24) as *const *mut u8) /* BINDING_PROTOCOL_AT */
+        } else {
+            ptr::null_mut()
+        }
+    };
+    protocol::indicate_secondary(adapter, lists, port, count, flags, primary_protocol);
     unsafe {
         receive_nbls(context, lists, port, count, flags);
     }
@@ -372,16 +384,16 @@ fn fill_protocol_name(name: *const UnicodeString) {
 }
 
 fn fill_adapter_name() {
-    /* Placeholder adapter name until the miniport publishes one. */
-    let text: [u16; 14] = [
+    /* NdisOpenAdapterEx may ignore the name; keep a generic device string. */
+    let text: [u16; 16] = [
         b'\\' as u16, b'D' as u16, b'e' as u16, b'v' as u16, b'i' as u16, b'c' as u16,
-        b'e' as u16, b'\\' as u16, b'N' as u16, b'e' as u16, b't' as u16, b'K' as u16,
-        b'V' as u16, b'M' as u16,
+        b'e' as u16, b'\\' as u16, b'E' as u16, b't' as u16, b'h' as u16, b'e' as u16,
+        b'r' as u16, b'n' as u16, b'e' as u16, b't' as u16,
     ];
     unsafe {
         ADAPTER_NAME_BUF = [0; 32];
-        ADAPTER_NAME_BUF[..14].copy_from_slice(&text);
-        ADAPTER_NAME.length = 28;
+        ADAPTER_NAME_BUF[..16].copy_from_slice(&text);
+        ADAPTER_NAME.length = 32;
         ADAPTER_NAME.maximum_length = 64;
         ADAPTER_NAME.buffer = ADAPTER_NAME_BUF.as_mut_ptr();
     }
@@ -432,6 +444,14 @@ pub unsafe extern "system" fn LanRegisterProtocol6(name: *const UnicodeString) -
         PROTOCOL_HANDLE = handle;
     }
     status as i32
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn VerosBindReadyProtocols() {
+    /* Call from tcpip after LanSetBindAdapter6 / LanSetReceiveNbl6.
+     * output/ndis-disk-20261116T200400Z.log: BINDALL succeeded but
+     * NDIS6 LAN never ran because BIND6 was still null. */
+    protocol::bind_ready_protocols();
 }
 
 #[no_mangle]

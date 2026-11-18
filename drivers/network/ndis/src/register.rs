@@ -23,6 +23,12 @@
  * the probe method, not a Windows field.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
+ * output/e1000e-20261118T040036Z.log: NDIS HDR af 02 0030 then INIT
+ * c000000d; accept that measured hardware-assist attributes header.
+ * output/e1000-20261118T050916Z.log: after IRQOK, NDIS HDR 9f 01 00d8
+ * then NDIS INIT c0000001. Accept that measured general-attributes
+ * header so InitializeEx can continue (e1000e used 9f 02 00e0).
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_hardware_assist_attributes
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatereceivenetbufferlists
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismoidrequestcomplete
@@ -112,8 +118,10 @@
  * Header, then Flags, then AllocatedResources
  * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_init_parameters).
  * NDIS_OBJECT_HEADER is 4 bytes in sdk/include/psdk/ntddndis.h. Flags is
- * a ULONG. On x64 that puts AllocatedResources at offset 8. That offset
- * is this derivation, not a Windows dump of that structure.
+ * a ULONG. On x64 that puts AllocatedResources at offset 8 and
+ * MiniportAddDeviceContext at 0x18. Those offsets are this derivation,
+ * not a Windows dump of that structure. output/vmxnet3-20261117T170136Z.log
+ * printed the add context beside AllocatedResources before HDR 9e.
  * NDIS_RESOURCE_LIST is CM_PARTIAL_RESOURCE_LIST in
  * sdk/include/ddk/ndis.h. The StartDevice IRP carries CM_RESOURCE_LIST;
  * PartialResourceList sits after Count, InterfaceType, and BusNumber in
@@ -141,6 +149,18 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_add_device
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetdeviceproperty
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetbusdata
+ * output/netkvm-20261116T142828Z.log: OIDFILTER 0000000b then
+ * OIDFILTER 00000000, then a page fault in netkvm.sys. NDIS_PACKET_TYPE_*
+ * bits are in sdk/include/ddk/ndis.h. Public ParaNdis_DeviceFiltersUpdateRxMode
+ * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_Common.cpp)
+ * enables CTRL_RX NOUNI when DIRECTED is clear.
+ * A null pointer at HANDLE_LEGACY_AT keeps the NDIS 6 initialize, send,
+ * OID, and return paths. NdisMRegisterMiniport stores legacy state there.
+ * sdk/include/ddk/ndis.h declares that entry point. The zero run it sits
+ * in is capture 2026-11-16T053108Z.
+ * output/vmxnet3-20261117T164711Z.log: NDIS REG 8a 02 0098 VER 06 1e /
+ * 06 14 / 06 01 and 8a 01 0088 VER 06 00 then DriverEntry 0xc0010004.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_driver_characteristics
  */
 
 use core::ptr;
@@ -177,10 +197,28 @@ const ATTR_ADD_SIZE: u16 = 0x14;
  * An earlier Windows try of type 0x9F revision 0 size 4 did not return.
  * A later Windows try of type 0x9F revision 2 size 0xE0 after an
  * accepted 0x9E size 0x1C also did not return. Do not call either
- * 0x9F shape again. */
+ * 0x9F shape again.
+ * output/e1000-20261118T050916Z.log printed NDIS HDR 9f 01 00d8 then
+ * NDIS INIT c0000001; accept that measured revision/size pair too. */
 const ATTR_GENERAL_TYPE: u8 = 0x9F;
 const ATTR_GENERAL_REVISION: u8 = 2;
 const ATTR_GENERAL_SIZE: u16 = 0xE0;
+const ATTR_GENERAL_REVISION_E1000: u8 = 1;
+const ATTR_GENERAL_SIZE_E1000: u16 = 0xD8;
+/* output/vmxnet3-20261117T165908Z.log: NDIS HDR a0 01 0028 then
+ * NDIS5 ERR c000138e and INIT c000000d. Accept that measured header.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_offload_attributes */
+const ATTR_OFFLOAD_TYPE: u8 = 0xA0;
+const ATTR_OFFLOAD_REVISION: u8 = 1;
+const ATTR_OFFLOAD_SIZE: u16 = 0x28;
+/* output/e1000e-20261118T040036Z.log: after accepted 9f/a0,
+ * NDIS HDR af 02 0030 then NDIS INIT c000000d. Accept that measured
+ * header so InitializeEx can continue. Member list for hardware-assist
+ * attributes:
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_hardware_assist_attributes */
+const ATTR_HWASSIST_TYPE: u8 = 0xAF;
+const ATTR_HWASSIST_REVISION: u8 = 2;
+const ATTR_HWASSIST_SIZE: u16 = 0x30;
 const INVALID_PARAMETER: u32 = 0xC000_000D;
 /* Capture 2026-11-15T161901Z: ReturnNetBufferListsHandler / indicate
  * delivery offset on the miniport characteristics. */
@@ -239,6 +277,24 @@ const HANDLE_RES_AT: usize = 0x178;
 const HANDLE_IRQ_AT: usize = 0x180;
 /* Zero run after dword 1 at 0x190: MiniportAdapterContext from 0x9E. */
 const HANDLE_ADAPTER_CTX_AT: usize = 0x198;
+/* Free dword after the adapter context pointer, before the measured
+ * tail at 0x1E0 (capture 2026-11-16T053108Z zero run). Stores the last
+ * non-zero OID_GEN_CURRENT_PACKET_FILTER applied to this adapter. */
+const HANDLE_PACKET_FILTER_AT: usize = 0x1A0;
+/* Capture 2026-11-16T053108Z zero run ends at the tail dword 0x1E0.
+ * NDIS 6 leaves this pointer null. NdisMRegisterMiniport stores the
+ * legacy state here; call_initialize, send, OID, and return leave the
+ * NDIS 6 body alone when it is null. */
+const HANDLE_LEGACY_AT: usize = 0x1A8;
+/* output/vmxnet3-20261117T165111Z.log: NDIS HDR a4 01 0014 body carries
+ * MiniportAddDeviceContext at offset 8. Passed back in init parameters.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_add_device_registration_attributes */
+const HANDLE_ADD_CTX_AT: usize = 0x1B0;
+/* DEVICE_OBJECT.Flags on x64: DeviceExtension is at 0x40 in this file;
+ * Flags sits at 0x30 in sdk/include/xdk/iotypes.h member order.
+ * DO_DEVICE_INITIALIZING is 0x80 in that header. */
+const DEVICE_FLAGS_AT: usize = 0x30;
+const DO_DEVICE_INITIALIZING: u32 = 0x80;
 /* IO_STACK_LOCATION.Parameters starts after the 4 UCHAR header fields on
  * x64 with pointer alignment, in sdk/include/xdk/iotypes.h. StartDevice
  * stores AllocatedResources then AllocatedResourcesTranslated. */
@@ -250,6 +306,22 @@ const CM_PARTIAL_AT: usize = 12;
 /* AllocatedResources at offset 8: see file header. Public member order
  * after NDIS_OBJECT_HEADER and Flags; not a Windows-measured layout. */
 const INIT_RESOURCES_AT: usize = 8;
+/* MiniportAddDeviceContext follows IMDeviceInstanceContext on
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_init_parameters
+ * Same Header+Flags+pointer packing as INIT_RESOURCES_AT: Resources at
+ * 8, IM at 0x10, AddDeviceContext at 0x18. output/vmxnet3-20261117T170136Z.log
+ * printed NDIS INIT res ... add FFFFFA8295676A60 then NDIS HDR 9e;
+ * output/vmxnet3-20261117T193419Z.log had no add and INIT c0000001.
+ * output/vmxnet3-20261117T205545Z.log: ADD_CTX set, Header still zero,
+ * NDIS5 ERR c000138e before any HDR. Trial Type 0x80 failed the same
+ * way on output/vmxnet3-20261117T213907Z.log. Type 0x81 Revision 1
+ * Size 0x40 on output/vmxnet3-20261117T214351Z.log printed NDIS HDR 9e
+ * then INIT 00000000. Size 0x40 is the Learn member list with x64
+ * pointers after Header+Flags. */
+const INIT_ADD_CTX_AT: usize = 0x18;
+const INIT_HDR_TYPE: u8 = 0x81;
+const INIT_HDR_REVISION: u8 = 1;
+const INIT_HDR_SIZE: u16 = 0x40;
 /* Capture 2026-11-16T045900Z: type 0x92, revision 1, size 0x2C. */
 const OPT_TYPE: u8 = 0x92;
 const OPT_REVISION: u8 = 1;
@@ -311,6 +383,10 @@ unsafe extern "system" {
     fn IoCompleteRequest(irp: *mut u8, boost: i32);
     fn IoCallDriver(device: *mut u8, irp: *mut u8) -> i32;
     fn IoForwardIrpSynchronously(device: *mut u8, irp: *mut u8) -> u8;
+    fn KeGetCurrentIrql() -> u8;
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-exqueueworkitem
+     * WORK_QUEUE_ITEM in sdk/include/xdk/extypes.h. */
+    fn ExQueueWorkItem(work: *mut u8, queue: i32);
 }
 
 fn log_bytes(text: &[u8], kind: u8, revision: u8, size: u16) {
@@ -402,6 +478,39 @@ fn version_byte(chars: *const u8, size: u16, index: usize) -> Option<u8> {
 fn version_ok(chars: *const u8, size: u16) -> bool {
     version_byte(chars, size, VERSION_AT) == Some(VERSION_MAJOR)
         && version_byte(chars, size, VERSION_AT + 1) == Some(VERSION_MINOR)
+}
+
+fn minor_ok(minor: u8) -> bool {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_driver_characteristics
+     * lists these MinorNdisVersion values. 0x53 is NetKVM's measured 6.83. */
+    matches!(
+        minor,
+        0 | 1 | 20 | 30 | 40 | 50 | 51 | 60 | 70 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+            | 89
+    )
+}
+
+fn chars_copy_len(kind: u8, revision: u8, size: u16, chars: *const u8) -> Option<usize> {
+    /* output/vmxnet3-20261117T164711Z.log: NDIS REG 8a 02 0098 with
+     * VER 06 1e / 06 14 / 06 01, then 8a 01 0088 VER 06 00, then
+     * DriverEntry 0xc0010004 (BAD_VERSION). Public characteristics page
+     * names revision 1 size NDIS_SIZEOF_..._REVISION_1 and revision 2
+     * for DirectOid; measured sizes are 0x88 and 0x98. */
+    if kind != MP_TYPE {
+        return None;
+    }
+    let major = version_byte(chars, size, VERSION_AT)?;
+    let minor = version_byte(chars, size, VERSION_AT + 1)?;
+    if major != VERSION_MAJOR || !minor_ok(minor) {
+        return None;
+    }
+    match (revision, size) {
+        (3, s) if s as usize == MP_CHARS => Some(MP_CHARS),
+        (3, MP_CHARS_A0) => Some(MP_CHARS_A0 as usize),
+        (2, 0x98) => Some(0x98),
+        (1, 0x88) => Some(0x88),
+        _ => None,
+    }
 }
 
 fn netkvm_chars(kind: u8, revision: u8, size: u16, chars: *const u8) -> bool {
@@ -503,6 +612,33 @@ pub fn miniport_interrupt(handle: *mut u8) -> *mut u8 {
         return ptr::null_mut();
     }
     read_ptr(handle, HANDLE_IRQ_AT)
+}
+
+pub fn legacy_state(handle: *mut u8) -> *mut u8 {
+    if !is_mp_handle(handle) {
+        return ptr::null_mut();
+    }
+    read_ptr(handle, HANDLE_LEGACY_AT)
+}
+
+pub unsafe fn register_legacy_driver(driver_object: *mut u8, state: *mut u8) -> *mut u8 {
+    /* Same miniport handle shape NdisMRegisterMiniportDriver allocates.
+     * No NDIS 6 characteristics and no MiniportInitializeEx. AddDevice
+     * copies this block, including the legacy pointer. */
+    let handle = ExAllocatePoolWithTag(0, HANDLE_BYTES, POOL_TAG);
+    if handle.is_null() {
+        return ptr::null_mut();
+    }
+    ptr::write_bytes(handle, 0, HANDLE_BYTES);
+    *handle = HANDLE_TYPE;
+    *handle.add(1) = HANDLE_REVISION;
+    write_u16(handle, 2, HANDLE_BYTES as u16);
+    ptr::write_unaligned(handle.add(HANDLE_KIND_AT) as *mut u32, KIND_MP);
+    write_ptr(handle, HANDLE_DRIVER_AT, driver_object);
+    write_ptr(handle, HANDLE_LEGACY_AT, state);
+    set_add_device(driver_object);
+    unsafe { MP_DRIVER_HANDLE = handle };
+    handle
 }
 
 pub fn clear_interrupt(handle: *mut u8) {
@@ -665,9 +801,17 @@ fn call_opt_irp(adapter: *mut u8, offset: usize, irp: *mut u8) -> u32 {
     if slot.is_null() {
         return 0;
     }
+    /* MiniportFilterResourceRequirements / StartDevice take
+     * MiniportAddDeviceContext, not the NDIS handle
+     * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_add_device_registration_attributes).
+     * Fall back to the adapter handle when AddDevice did not set one. */
+    let mut context = read_ptr(adapter, HANDLE_ADD_CTX_AT);
+    if context.is_null() {
+        context = adapter;
+    }
     let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
         unsafe { core::mem::transmute(slot) };
-    unsafe { function(adapter, irp) }
+    unsafe { function(context, irp) }
 }
 
 unsafe extern "system" fn ndis_pnp(device: *mut u8, irp: *mut u8) -> i32 {
@@ -807,6 +951,11 @@ unsafe extern "system" fn ndis_add_device(driver_object: *mut u8, physical: *mut
         ExFreePoolWithTag(adapter, POOL_TAG);
         return status as i32;
     }
+    let flags = ptr::read_unaligned(device.add(DEVICE_FLAGS_AT) as *const u32);
+    ptr::write_unaligned(
+        device.add(DEVICE_FLAGS_AT) as *mut u32,
+        flags & !DO_DEVICE_INITIALIZING,
+    );
     0
 }
 
@@ -825,16 +974,15 @@ pub unsafe extern "system" fn NdisMRegisterMiniportDriver(
     log_bytes(b"NDIS REG %02x %02x %04x\n\0", kind, revision, size);
     log_version(chars, size);
     let netkvm = netkvm_chars(kind, revision, size, chars);
-    if netkvm {
+    let Some(copy_len) = chars_copy_len(kind, revision, size, chars) else {
+        if version_ok(chars, size) || netkvm {
+            return BAD_CHARACTERISTICS;
+        }
+        return BAD_VERSION;
+    };
+    if netkvm || copy_len != MP_CHARS {
         log_body(chars, size);
     }
-    if !version_ok(chars, size) && !netkvm {
-        return BAD_VERSION;
-    }
-    if !netkvm && (kind != MP_TYPE || revision != MP_REVISION || size as usize != MP_CHARS) {
-        return BAD_CHARACTERISTICS;
-    }
-    let copy_len = if netkvm { MP_CHARS_A0 as usize } else { MP_CHARS };
     let major = unsafe { *chars.add(VERSION_AT) };
     let minor = unsafe { *chars.add(VERSION_AT + 1) };
     let handle = ExAllocatePoolWithTag(0, HANDLE_BYTES, POOL_TAG);
@@ -868,7 +1016,7 @@ pub unsafe extern "system" fn NdisMRegisterMiniportDriver(
     let mut saved = [0u8; MP_CHARS];
     ptr::copy_nonoverlapping(chars, saved.as_mut_ptr(), copy_len);
     let status = call_slot(chars, handle, context);
-    if netkvm {
+    if netkvm || copy_len != MP_CHARS {
         unsafe { DbgPrint(b"NDIS SLOT %08x\n\0".as_ptr(), status) };
         log_handle(handle, saved.as_ptr(), copy_len, major, minor);
     }
@@ -879,7 +1027,9 @@ pub unsafe extern "system" fn NdisMRegisterMiniportDriver(
     set_add_device(driver_object);
     unsafe { MP_DRIVER_HANDLE = handle };
     *out_handle = handle;
-    if !netkvm {
+    /* Probe-only: size 0x120 runs InitializeEx here. NetKVM and vmxnet3
+     * reach InitializeEx from AddDevice (output/vmxnet3-20261117T164711Z.log). */
+    if copy_len == MP_CHARS {
         call_initialize(handle);
     }
     0
@@ -903,9 +1053,18 @@ fn store_start_resources(adapter: *mut u8, irp: *mut u8) {
     let partial = unsafe { chosen.add(CM_PARTIAL_AT) };
     write_ptr(adapter, HANDLE_RES_AT, partial);
     unsafe { DbgPrint(b"NDIS STARTRES %p\n\0".as_ptr(), partial) };
+    /* RegisterInterruptEx runs from the early initialize, before this
+     * StartDevice list exists. Connect now that the list is stored.
+     * output/ndis-disk-20261117T022457Z.log: NDIS IRQRES none, then
+     * NDIS STARTRES, and no NDIS IRQISR. */
+    unsafe { crate::connect_stored_interrupt(adapter) };
 }
 
 fn call_initialize(handle: *mut u8) {
+    if !legacy_state(handle).is_null() {
+        unsafe { crate::ndis5::start_legacy(handle) };
+        return;
+    }
     let chars_len = chars_len(handle);
     let slot = unsafe { slot_at(chars_ptr(handle), chars_len, INIT_SLOT) };
     if slot.is_null() {
@@ -916,12 +1075,25 @@ fn call_initialize(handle: *mut u8) {
         return;
     }
     unsafe { ptr::write_bytes(params, 0, INIT_BYTES) };
+    unsafe {
+        *params = INIT_HDR_TYPE;
+        *params.add(1) = INIT_HDR_REVISION;
+        ptr::write_unaligned(params.add(2) as *mut u16, INIT_HDR_SIZE);
+    };
     let resources = read_ptr(handle, HANDLE_RES_AT);
     write_ptr(params, INIT_RESOURCES_AT, resources);
+    let add_ctx = read_ptr(handle, HANDLE_ADD_CTX_AT);
+    write_ptr(params, INIT_ADD_CTX_AT, add_ctx);
     let context = read_ptr(handle, HANDLE_CONTEXT_AT);
     let function: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8) -> u32 =
         unsafe { core::mem::transmute(slot) };
-    unsafe { DbgPrint(b"NDIS INIT\n\0".as_ptr()) };
+    unsafe {
+        DbgPrint(
+            b"NDIS INIT res %p add %p\n\0".as_ptr(),
+            resources,
+            add_ctx,
+        )
+    };
     let status = unsafe { function(handle, context, params) };
     unsafe { DbgPrint(b"NDIS INIT %08x\n\0".as_ptr(), status) };
     unsafe { ExFreePoolWithTag(params, POOL_TAG) };
@@ -1061,9 +1233,26 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
         return 0;
     }
     if kind == ATTR_ADD_TYPE && revision == ATTR_ADD_REVISION && size == ATTR_ADD_SIZE {
+        if is_mp_handle(handle) {
+            let add_ctx = read_ptr(attributes as *mut u8, ATTR_CONTEXT_AT);
+            write_ptr(handle, HANDLE_ADD_CTX_AT, add_ctx);
+            unsafe { DbgPrint(b"NDIS ADDCTX %p\n\0".as_ptr(), add_ctx) };
+        }
         return 0;
     }
-    if kind == ATTR_GENERAL_TYPE && revision == ATTR_GENERAL_REVISION && size == ATTR_GENERAL_SIZE {
+    if kind == ATTR_GENERAL_TYPE
+        && ((revision == ATTR_GENERAL_REVISION && size == ATTR_GENERAL_SIZE)
+            || (revision == ATTR_GENERAL_REVISION_E1000 && size == ATTR_GENERAL_SIZE_E1000))
+    {
+        return 0;
+    }
+    if kind == ATTR_OFFLOAD_TYPE && revision == ATTR_OFFLOAD_REVISION && size == ATTR_OFFLOAD_SIZE {
+        return 0;
+    }
+    if kind == ATTR_HWASSIST_TYPE
+        && revision == ATTR_HWASSIST_REVISION
+        && size == ATTR_HWASSIST_SIZE
+    {
         return 0;
     }
     INVALID_PARAMETER
@@ -1094,6 +1283,10 @@ pub fn call_return_net_buffer_lists(adapter: *mut u8, lists: *mut u8, flags: u32
     if !is_mp_handle(adapter) || lists.is_null() {
         return;
     }
+    if !legacy_state(adapter).is_null() {
+        unsafe { crate::ndis5::return_legacy(lists) };
+        return;
+    }
     let chars_len = chars_len(adapter);
     let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, RETURN_SLOT) };
     if slot.is_null() {
@@ -1115,6 +1308,10 @@ pub fn call_send_net_buffer_lists(
     if !is_mp_handle(adapter) || lists.is_null() {
         return;
     }
+    if !legacy_state(adapter).is_null() {
+        unsafe { crate::ndis5::send_legacy(adapter, lists) };
+        return;
+    }
     let chars_len = chars_len(adapter);
     let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, SEND_SLOT) };
     if slot.is_null() {
@@ -1132,6 +1329,41 @@ pub fn call_send_net_buffer_lists(
     unsafe { function(adapter_ctx, lists, port, flags) };
 }
 
+/* DelayedWorkQueue in sdk/include/xdk/extypes.h. */
+const DELAYED_WORK_QUEUE: i32 = 1;
+/* WORK_QUEUE_ITEM is 32 bytes on x64 in sdk/include/xdk/extypes.h,
+ * then adapter, lists, flags. This file's context block. */
+const SEND_DONE_ITEM_BYTES: usize = 32;
+const SEND_DONE_CTX_BYTES: usize = 56;
+const SEND_DONE_ADAPTER_AT: usize = 32;
+const SEND_DONE_LISTS_AT: usize = 40;
+const SEND_DONE_FLAGS_AT: usize = 48;
+
+unsafe extern "system" fn send_done_worker(context: *mut u8) {
+    /* output/vmxnet3-20261117T214351Z.log: APC_LEVEL assert during
+     * IRQDPC complete. output/vmxnet3-20261117T220455Z.log: first
+     * passive complete worked; kick re-entered DPC. Soft-only
+     * (NDIS IRQCONN softonly) has no hardware IRQ, so kick once after
+     * the passive complete to drain the TX ring.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-exqueueworkitem */
+    if context.is_null() {
+        return;
+    }
+    let adapter = read_ptr(context, SEND_DONE_ADAPTER_AT);
+    let lists = read_ptr(context, SEND_DONE_LISTS_AT);
+    let flags = ptr::read_unaligned(context.add(SEND_DONE_FLAGS_AT) as *const u32);
+    DbgPrint(b"NDIS SENDDONE passive\n\0".as_ptr());
+    crate::prot6::complete_send(adapter, lists, flags);
+    /* Soft-only uses RXPOLL for TX drain; kick from the worker re-entered
+     * the DPC beside the second SENDDONE on output/vmxnet3-20261118T015524Z.log. */
+    ExFreePoolWithTag(context, POOL_TAG);
+}
+
+fn finish_send_complete(adapter: *mut u8, lists: *mut u8, flags: u32) {
+    crate::prot6::complete_send(adapter, lists, flags);
+    unsafe { crate::kick_interrupt_dpc(adapter) };
+}
+
 #[no_mangle]
 pub extern "system" fn NdisMSendNetBufferListsComplete(
     adapter: *mut u8,
@@ -1147,7 +1379,9 @@ pub extern "system" fn NdisMSendNetBufferListsComplete(
      * ParaNdis_ExactSendFailureStatus) can be told apart from success
      * without inventing a Status offset. The 256-byte window matches the
      * NET_BUFFER probe read in differential-tests/ndis-discovery/probe.c;
-     * it is not a Windows object size. Print each distinct hit once. */
+     * it is not a Windows object size. Print each distinct hit once.
+     * output/vmxnet3-20261117T214351Z.log asserted APC_LEVEL during
+     * IRQDPC complete; queue a work item when IRQL > APC_LEVEL. */
     unsafe {
         DbgPrint(
             b"NDIS SENDDONE %p %p %08x\n\0".as_ptr(),
@@ -1157,12 +1391,65 @@ pub extern "system" fn NdisMSendNetBufferListsComplete(
         );
         scan_send_complete_status(lists);
     };
-    crate::prot6::complete_send(adapter, lists, flags);
-    /* Deferred IoConnectInterrupt accepts but the line stays quiet for
-     * RX (output/netkvm-20261116T115651Z.log: two synthetic IRQDPC then
-     * many SENDDONE with no further IRQDPC). Kick the miniport DPC after
-     * each send complete so ARP/ICMP replies can be indicated. */
-    unsafe { crate::kick_interrupt_dpc(adapter) };
+    /* output/vmxnet3-20261118T030517Z.log: HAL GetScatterGatherList
+     * succeeded (SGALLOC hal status 0, SGLISTFREE put) and the second
+     * SENDDONE still faulted in vmxnet3+0xC827 after queue-return with
+     * rcx null. Deferral is not fixing the miniport path; complete the
+     * protocol at this IRQL without a kick (kick re-entered DPC on
+     * output/vmxnet3-20261118T015524Z.log). */
+    if unsafe { KeGetCurrentIrql() } > 1 {
+        unsafe {
+            dump_send_nbl(lists);
+            DbgPrint(b"NDIS SENDDONE sync\n\0".as_ptr());
+        };
+        crate::prot6::complete_send(adapter, lists, flags);
+        return;
+    }
+    finish_send_complete(adapter, lists, flags);
+}
+
+/* Member order on
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer_list
+ * with the Next/FirstNetBuffer union as 16 bytes on x64. */
+const NBL_NEXT_AT: usize = 0x00;
+const NBL_FIRST_NB_AT: usize = 0x08;
+const NBL_CONTEXT_AT: usize = 0x10;
+const NBL_MINIPORT_RESERVED0_AT: usize = 0x58;
+const NBL_MINIPORT_RESERVED1_AT: usize = 0x60;
+const NBL_SOURCE_HANDLE_AT: usize = 0x70;
+const NBL_FLAGS_AT: usize = 0x80;
+const NBL_STATUS_AT: usize = 0x84;
+
+unsafe fn dump_send_nbl(lists: *mut u8) {
+    if lists.is_null() {
+        DbgPrint(b"NDIS SENDNBL null\n\0".as_ptr());
+        return;
+    }
+    let next = read_ptr(lists, NBL_NEXT_AT);
+    let first = read_ptr(lists, NBL_FIRST_NB_AT);
+    let context = read_ptr(lists, NBL_CONTEXT_AT);
+    let mr0 = read_ptr(lists, NBL_MINIPORT_RESERVED0_AT);
+    let mr1 = read_ptr(lists, NBL_MINIPORT_RESERVED1_AT);
+    let source = read_ptr(lists, NBL_SOURCE_HANDLE_AT);
+    let nbl_flags = ptr::read_unaligned(lists.add(NBL_FLAGS_AT) as *const u32);
+    let status = ptr::read_unaligned(lists.add(NBL_STATUS_AT) as *const u32);
+    DbgPrint(
+        b"NDIS SENDNBL next %p nb %p ctx %p\n\0".as_ptr(),
+        next,
+        first,
+        context,
+    );
+    DbgPrint(
+        b"NDIS SENDNBL mr0 %p mr1 %p src %p\n\0".as_ptr(),
+        mr0,
+        mr1,
+        source,
+    );
+    DbgPrint(
+        b"NDIS SENDNBL flags %08x status %08x\n\0".as_ptr(),
+        nbl_flags,
+        status,
+    );
 }
 
 /* STATUS_NDIS_MEDIA_DISCONNECTED in sdk/include/psdk/ntstatus.h;
@@ -1224,6 +1511,9 @@ pub fn call_oid_request(adapter: *mut u8, request: *mut u8) -> u32 {
     if !is_mp_handle(adapter) || request.is_null() {
         return INVALID_PARAMETER;
     }
+    if !legacy_state(adapter).is_null() {
+        return unsafe { crate::ndis5::oid_legacy(adapter, request) };
+    }
     let chars_len = chars_len(adapter);
     let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, OID_SLOT) };
     if slot.is_null() {
@@ -1277,6 +1567,59 @@ pub fn call_oid_request(adapter: *mut u8, request: *mut u8) -> u32 {
             oid,
         )
     };
+    /* SET OID_GEN_CURRENT_PACKET_FILTER: InformationBuffer at 0x28 and
+     * length at 0x30 are output/netkvm-20261116T092548Z.log NDIS OIDBODY
+     * (lan.c OID_REQUEST_BUFFER_AT). QMP on output/netkvm-20261116T141444Z
+     * showed RX shadow-avail-idx 256 with used-idx 0 — host has RX
+     * buffers but never fills; CTRL_RX NOUNI drops unicast when
+     * DIRECTED is clear (public ParaNdis_DeviceFiltersUpdateRxMode).
+     * output/netkvm-20261116T142828Z.log: tcpip set 0x0B
+     * (NDIS_PACKET_TYPE_DIRECTED|MULTICAST|BROADCAST in
+     * sdk/include/ddk/ndis.h), then a second open set 0 and netkvm.sys
+     * page-faulted. Keep the live filter when a later SET clears
+     * DIRECTED after it was already applied. */
+    if request_type == 1 && oid == 0x0001_010E && (size as usize) >= 0x34 {
+        let buffer = read_ptr(request, 0x28);
+        let length = u32::from_le_bytes(unsafe {
+            [
+                *request.add(0x30),
+                *request.add(0x31),
+                *request.add(0x32),
+                *request.add(0x33),
+            ]
+        });
+        let filter = if !buffer.is_null() && length >= 4 {
+            u32::from_le_bytes(unsafe {
+                [*buffer, *buffer.add(1), *buffer.add(2), *buffer.add(3)]
+            })
+        } else {
+            0xffff_ffff
+        };
+        unsafe {
+            DbgPrint(
+                b"NDIS OIDFILTER %08x len %08x\n\0".as_ptr(),
+                filter,
+                length,
+            )
+        };
+        /* NDIS_PACKET_TYPE_DIRECTED in sdk/include/ddk/ndis.h. */
+        const DIRECTED: u32 = 0x0000_0001;
+        let prior = unsafe {
+            ptr::read_unaligned(adapter.add(HANDLE_PACKET_FILTER_AT) as *const u32)
+        };
+        if filter == 0 && (prior & DIRECTED) != 0 {
+            unsafe { DbgPrint(b"NDIS OIDFILTER keep\n\0".as_ptr()) };
+            return 0;
+        }
+        if filter != 0xffff_ffff {
+            unsafe {
+                ptr::write_unaligned(
+                    adapter.add(HANDLE_PACKET_FILTER_AT) as *mut u32,
+                    filter,
+                )
+            };
+        }
+    }
     let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
         unsafe { core::mem::transmute(slot) };
     let status = unsafe { function(adapter_ctx, request) };

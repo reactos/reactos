@@ -1,0 +1,36 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should a legacy NDIS 5.1 miniport packet built for NdisMRegisterMiniport be completed and freed without BAD_POOL_HEADER 0x19 while NDIS 6 RTL8139 still pings?",
+  "allowedInputs": [
+    {
+      "source": "sdk/include/ddk/ndis.h",
+      "where": "NDIS_PACKET_PRIVATE.NdisPacketOobOffset, fPACKET_ALLOCATED_BY_NDIS, MiniportReservedEx overlay on WrapperReserved, NDIS_PER_PACKET_INFO_FROM_PACKET"
+    },
+    {
+      "source": "sdk/include/xdk/mmtypes.h",
+      "where": "MDL layout used with IoAllocateMdl and MmBuildMdlForNonPagedPool"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiport",
+      "where": "NdisMRegisterMiniport entry for NDIS 5 miniports"
+    },
+    {
+      "source": "output/ndis-disk-20261117T152636Z.log",
+      "where": "0x19 on tag 5sdN when Sent lived at WrapperReserved 0x40"
+    },
+    {
+      "source": "output/ndis-disk-20261117T160927Z.log",
+      "where": "NDIS5 FREEA then PING CHECK done 2 2 and done 1 1 with no Fatal System Error"
+    },
+    {
+      "source": "output/ndis-disk-20261117T161221Z.log",
+      "where": "NDIS6 SENDDONE and PING CHECK done 2 2 after restoring in-tree rtl8139.sys"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/veros-ntfs/disk.qcow2",
+    "name": "Boot-NdisDisk-Ipv6Peer",
+    "traceOrReplayId": "ndis-disk-20261117T160927Z",
+    "logSha256": "f305b518e73f5a1fbd7831160d62986a4e5fa8bef6799aaae71c68d63cf4bdfc"
+  }
+}

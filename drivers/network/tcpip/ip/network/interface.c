@@ -4,12 +4,20 @@
  * FILE:        tcpip/interface.c
  * PURPOSE:     Convenient abstraction for getting and setting information
  *              in IP_INTERFACE.
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Art Yerkes
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * IPv6 link-local on-link fe80::/64 from RFC 4291 Section 2.5.6
+ * (https://www.rfc-editor.org/rfc/rfc4291). A DHCPv6 IA_NA prefix is
+ * on-link the same way (RFC 8415, https://www.rfc-editor.org/rfc/rfc8415).
  */
 
 #include "precomp.h"
+
+#include <dhcp6.h>
 
 #include <ntifs.h>
 #include <ipifcons.h>
@@ -101,6 +109,16 @@ PIP_INTERFACE AddrLocateInterface(
             RetIF = CurrentIF;
             break;
 	}
+        /* Loopback also owns ::1 (separate from the IPv4 Unicast field). */
+        if (CurrentIF == Loopback && AddrIsIPv6Loopback(MatchAddress)) {
+            RetIF = CurrentIF;
+            break;
+        }
+        if (!AddrIsUnspecified(&CurrentIF->LinkLocal) &&
+            AddrIsEqual(&CurrentIF->LinkLocal, MatchAddress)) {
+            RetIF = CurrentIF;
+            break;
+        }
     } EndFor(CurrentIF);
 
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
@@ -223,7 +241,10 @@ HasLoopbackPrefix(
     PIP_ADDRESS Address,
     PIP_ADDRESS Prefix)
 {
-    if (((Address->Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) == (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4)) && 
+    if (Address->Type == IP_ADDRESS_V4 &&
+        Prefix->Type == IP_ADDRESS_V4 &&
+        ((Address->Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) ==
+         (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4)) &&
         (Prefix->Address.IPv4Address == LOOPBACK_ADDRESS_IPv4))
         return TRUE;
 
@@ -248,11 +269,29 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
     if (AddrIsUnspecified(Address))
         return GetDefaultInterface();
 
+    /* ::1 is only on the loopback interface (RFC 4291 Section 2.5.3). */
+    if (AddrIsIPv6Loopback(Address))
+        return Loopback;
+
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     ForEachInterface(CurrentIF) {
         if (HasLoopbackPrefix(Address, &CurrentIF->Unicast) ||
             HasPrefix(Address, &CurrentIF->Unicast, AddrCountPrefixBits(&CurrentIF->Netmask)))
+        {
+            TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+            return CurrentIF;
+        }
+        /* Link-local destinations are on-link for fe80::/64 (RFC 4291 2.5.6). */
+        if (AddrIsIPv6LinkLocal(Address) &&
+            !AddrIsUnspecified(&CurrentIF->LinkLocal) &&
+            HasPrefix(Address, &CurrentIF->LinkLocal, 64))
+        {
+            TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+            return CurrentIF;
+        }
+        /* DHCPv6 IA_NA prefix is on-link (RFC 8415). */
+        if (DHCP6SourceForDestination(CurrentIF, Address, NULL))
         {
             TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
             return CurrentIF;

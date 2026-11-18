@@ -30,6 +30,22 @@ Do not copy, transcribe, or adapt any of that material into the repo or a patch.
 
 Windows traces from `tools/windows-trace` stay under `output/`. They record observed calls. Do not transcribe those logs into the kernel tree, and do not disassemble the guest to extend the syscall number list.
 
+## Host tools vs implementation inputs
+
+Clean-room is about **what informs the implementation**, not which Microsoft utility runs on the build PC.
+
+A Windows Kits / Windows SDK **host tool** (for example a signer) may run only as a stapler on binaries this tree already built. That does not allow opening Kits or WDK headers, `.lib` files, or Microsoft `.sys` object code, and it does not allow using those trees to decide an offset, prototype, layout, or behavior in this tree.
+
+Prefer PowerShell `Set-AuthenticodeSignature` (`Protect-KernelAbiDriver` in the parent checkout's `differential-tests/kernel-abi/WindowsGuest.ps1`) so probe signing does not depend on a Kits install. Do not install the WDK to implement behavior here.
+
+Public Learn pages with a full URL remain allowed. Do not call them "the WDK", "SDK headers", or "Windows headers" — those words mean the forbidden private trees. The checkout rule [`.cursor/rules/clean-room-host-tools.mdc`](../../.cursor/rules/clean-room-host-tools.mdc) states the same boundary for work outside `source/`.
+
+```text
+Right: sign our probe with Set-AuthenticodeSignature; cite a Learn URL for a DDI
+Wrong: read a WDK header to confirm a field order, then implement from that
+Wrong: "Kits is installed, so check the WDK"
+```
+
 ## Review the diff before committing
 
 Before `git commit`, read the whole staged diff. If nothing is staged yet, read the diff that would be committed. Do not commit until this review is done.

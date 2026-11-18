@@ -1,0 +1,40 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What is the call shape of NdisProcessorIndexToNumber, and how should VerOS implement it without inventing a layout?",
+  "allowedInputs": [
+    {
+      "source": "output/vmxnet3-20261118T013944Z.log",
+      "where": "NDIS MISS NdisProcessorIndexToNumber"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetprocessornumberfromindex",
+      "where": "KeGetProcessorNumberFromIndex(ULONG, PPROCESSOR_NUMBER) returns NTSTATUS"
+    },
+    {
+      "source": "sdk/include/xdk/ntbasedef.h",
+      "where": "PROCESSOR_NUMBER Group USHORT, Number UCHAR, Reserved UCHAR"
+    },
+    {
+      "source": "ntoskrnl/ke/processor.c",
+      "where": "in-tree KeGetProcessorNumberFromIndex"
+    },
+    {
+      "source": "drivers/network/ndis/src/lib.rs",
+      "where": "existing NdisProcessorNumberToIndex wrap of KeGetProcessorIndexFromNumber"
+    },
+    {
+      "source": "output/ndis-discovery/windows.log",
+      "where": "DIFF NdisProcessorIndexToNumber PRESENT; DIFF SCAN STATUS 0 with Group/Number/Reserved 0; DIFF NdisProcessorIndexToNumberRound 0; DIFF END OK"
+    },
+    {
+      "source": "differential-tests/ndis-discovery/probe.c",
+      "where": "probe_processor_index_to_number NTSTATUS(ULONG, PPROCESSOR_NUMBER) call; probe method"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/win10-22h2/wtg.vhdx",
+    "name": "Invoke-NdisDiscovery",
+    "traceOrReplayId": "ndis-discovery-index-to-number",
+    "logSha256": "5cceeba7823f6810e82881fe4e09b4f1794bfc32f20251c6285bec99dd5c5886"
+  }
+}

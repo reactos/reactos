@@ -3,11 +3,16 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        network/receive.c
  * PURPOSE:     Internet Protocol receive routines
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * NOTES:       The IP datagram reassembly algorithm is taken from
  *              from RFC 815
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * IPv6 header layout and next-header dispatch from RFC 8200 Section 3
+ * (https://www.rfc-editor.org/rfc/rfc8200).
  */
 
 #include "precomp.h"
@@ -552,6 +557,93 @@ VOID IPDatagramReassemblyTimeout(
     TcpipReleaseSpinLockFromDpcLevel(&ReassemblyListLock);
 }
 
+VOID IPv6Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
+/*
+ * FUNCTION: Receives an IPv6 datagram
+ * ARGUMENTS:
+ *     IF       = Pointer to IP interface packet was received on
+ *     IPPacket = Pointer to IP packet
+ * NOTES:
+ *     No fragmentation reassembly yet. Header fields from RFC 8200 Section 3.
+ */
+{
+    ULONG BytesCopied;
+    PIPv6_HEADER Header;
+    USHORT PayloadLength;
+
+    TI_DbgPrint(DEBUG_IP, ("Received IPv6 datagram.\n"));
+
+    IPPacket->HeaderSize = IPv6_HEADER_SIZE;
+    IPPacket->Header = ExAllocatePoolWithTag(NonPagedPool,
+                                             IPPacket->HeaderSize,
+                                             PACKET_BUFFER_TAG);
+    if (!IPPacket->Header)
+    {
+        TI_DbgPrint(MIN_TRACE, ("No resources to allocate IPv6 header\n"));
+        return;
+    }
+
+    IPPacket->MappedHeader = FALSE;
+
+    BytesCopied = CopyPacketToBuffer((PCHAR)IPPacket->Header,
+                                     IPPacket->NdisPacket,
+                                     IPPacket->Position,
+                                     IPPacket->HeaderSize);
+    if (BytesCopied != IPPacket->HeaderSize)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to copy in IPv6 header\n"));
+        return;
+    }
+
+    Header = (PIPv6_HEADER)IPPacket->Header;
+    PayloadLength = WN2H(Header->PayloadLength);
+    IPPacket->TotalSize = IPPacket->HeaderSize + PayloadLength;
+    IPPacket->Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
+
+    /* Copy payload into the same contiguous buffer used for dispatch. */
+    if (PayloadLength > 0)
+    {
+        PVOID NewHeader;
+        UINT NewSize = IPPacket->HeaderSize + PayloadLength;
+
+        NewHeader = ExAllocatePoolWithTag(NonPagedPool, NewSize, PACKET_BUFFER_TAG);
+        if (!NewHeader)
+        {
+            TI_DbgPrint(MIN_TRACE, ("No resources for IPv6 payload\n"));
+            return;
+        }
+
+        RtlCopyMemory(NewHeader, IPPacket->Header, IPPacket->HeaderSize);
+        ExFreePoolWithTag(IPPacket->Header, PACKET_BUFFER_TAG);
+        IPPacket->Header = NewHeader;
+        Header = (PIPv6_HEADER)IPPacket->Header;
+        IPPacket->Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
+
+        BytesCopied = CopyPacketToBuffer((PCHAR)IPPacket->Data,
+                                         IPPacket->NdisPacket,
+                                         IPPacket->Position + IPPacket->HeaderSize,
+                                         PayloadLength);
+        if (BytesCopied != PayloadLength)
+        {
+            TI_DbgPrint(MIN_TRACE, ("Failed to copy IPv6 payload\n"));
+            return;
+        }
+
+        IPPacket->TotalSize = NewSize;
+    }
+
+    IPPacket->SrcAddr.Type = IP_ADDRESS_V6;
+    RtlCopyMemory(IPPacket->SrcAddr.Address.IPv6Address,
+                  Header->SrcAddr,
+                  sizeof(IPv6_RAW_ADDRESS));
+    IPPacket->DstAddr.Type = IP_ADDRESS_V6;
+    RtlCopyMemory(IPPacket->DstAddr.Address.IPv6Address,
+                  Header->DstAddr,
+                  sizeof(IPv6_RAW_ADDRESS));
+
+    IPDispatchProtocol(IF, IPPacket);
+}
+
 VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives an IPv4 datagram (or fragment)
@@ -668,7 +760,7 @@ VOID IPReceive( PIP_INTERFACE IF, PIP_PACKET IPPacket )
             break;
         case 6:
             IPPacket->Type = IP_ADDRESS_V6;
-            TI_DbgPrint(MAX_TRACE, ("Datagram of type IPv6 discarded.\n"));
+            IPv6Receive(IF, IPPacket);
             break;
         default:
             TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));

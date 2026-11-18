@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        datalink/lan.c
  * PURPOSE:     Local Area Network media routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
@@ -14,9 +16,6 @@
 #include <receive.h>
 #include <wait.h>
 
-UINT TransferDataCalled = 0;
-UINT TransferDataCompleteCalled = 0;
-
 #define CCS_ROOT L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet"
 #define TCPIP_GUID L"{4D36E972-E325-11CE-BFC1-08002BE10318}"
 
@@ -26,6 +25,9 @@ typedef struct _LAN_WQ_ITEM {
     PLAN_ADAPTER Adapter;
     UINT BytesTransferred;
     BOOLEAN LegacyReceive;
+    /* AllocatePacketWithBuffer copy: Position like non-legacy, free with
+     * FreeNdisPacket (not NdisReturnPackets). */
+    BOOLEAN FreeLocally;
 } LAN_WQ_ITEM, *PLAN_WQ_ITEM;
 
 typedef struct _RECONFIGURE_CONTEXT {
@@ -33,10 +35,139 @@ typedef struct _RECONFIGURE_CONTEXT {
     PLAN_ADAPTER Adapter;
 } RECONFIGURE_CONTEXT, *PRECONFIGURE_CONTEXT;
 
-NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
-BOOLEAN ProtocolRegistered     = FALSE;
+BOOLEAN ProtocolRegistered = FALSE;
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
+LIST_ENTRY NblSendListHead;
+KSPIN_LOCK NblSendListLock;
+
+/*
+ * NDIS 6 imports used while the build still defines NDIS40. Header type
+ * 0x96 revision 1 size 0xEC, RequestType at 4, Oid at 0x20, buffer at
+ * 0x28, length at 0x30: output/netkvm-20261116T092548Z.log NDIS OIDBODY.
+ * FirstNetBuffer at offset 8 is NET_BUFFER_LIST_DATA on
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer_list_data
+ * NET_BUFFER DataLength 0x18 / Mdl 0x20 / DataOffset 0x28:
+ * capture 2026-11-15T232142Z / differential-tests/ndis-discovery/METHOD.md.
+ * output/netkvm-20261116T144105Z.log: post-bind RECVIND/RECVLAN with
+ * RX used-idx 251, host ARP replies present, zero ICMP on the wire —
+ * receive copied from Mdl VA without DataOffset.
+ * output/e1000e-20261118T044315Z.log: NDIS6 LAN without NDIS6 IP, then
+ * RAWIP NOROUTE on gateway ping when MEDIA_CONNECT_STATUS returned
+ * Disconnected with success.
+ */
+#define OID_REQUEST_BYTES          0xEC
+#define OID_REQUEST_TYPE           0x96
+#define OID_REQUEST_REVISION       1
+#define OID_REQUEST_TYPE_AT        4
+#define OID_REQUEST_OID_AT         0x20
+#define OID_REQUEST_BUFFER_AT      0x28
+#define OID_REQUEST_LENGTH_AT      0x30
+#define NBL_FIRST_NET_BUFFER_AT    8
+#define NB_DATA_LENGTH_AT          0x18
+#define NB_MDL_AT                  0x20
+#define NB_DATA_OFFSET_AT          0x28
+/* Capture 2026-11-15T232142Z / METHOD.md: DataLength/Mdl/DataOffset on
+ * the NET_BUFFER_LIST pointer. output/netkvm-20261116T145342Z.log:
+ * FirstNetBuffer at 8 was null; NBL+0x198 length 64 and NBL+0x1A0 MDL
+ * were valid on every indicate. */
+#define NBL_DATA_LENGTH_AT         0x198
+#define NBL_MDL_AT                 0x1A0
+#define NBL_DATA_OFFSET_AT         0x1A8
+#define POOL_PARAMS_BYTES          0x10
+
+typedef struct _LAN_NBL_SEND {
+    LIST_ENTRY ListEntry;
+    PVOID NetBufferList;
+    PVOID NetBuffer;
+    PMDL Mdl;
+    PNDIS_PACKET Packet;
+    PLAN_ADAPTER Adapter;
+} LAN_NBL_SEND, *PLAN_NBL_SEND;
+
+NDIS_STATUS
+NTAPI
+NdisOidRequest(NDIS_HANDLE NdisBindingHandle, PVOID OidRequest);
+
+VOID
+NTAPI
+NdisSendNetBufferLists(
+    NDIS_HANDLE NdisBindingHandle,
+    PVOID NetBufferLists,
+    ULONG PortNumber,
+    ULONG SendFlags);
+
+VOID
+NTAPI
+NdisReturnNetBufferLists(
+    NDIS_HANDLE NdisBindingHandle,
+    PVOID NetBufferLists,
+    ULONG ReturnFlags);
+
+NDIS_STATUS
+NTAPI
+NdisCloseAdapterEx(NDIS_HANDLE NdisBindingHandle);
+
+NDIS_HANDLE
+NTAPI
+NdisAllocateNetBufferListPool(NDIS_HANDLE NdisHandle, PVOID Parameters);
+
+NDIS_HANDLE
+NTAPI
+NdisAllocateNetBufferPool(NDIS_HANDLE NdisHandle, PVOID Parameters);
+
+PVOID
+NTAPI
+NdisAllocateNetBufferList(NDIS_HANDLE PoolHandle, USHORT ContextSize, USHORT BackFillSize);
+
+PVOID
+NTAPI
+NdisAllocateNetBuffer(
+    NDIS_HANDLE PoolHandle,
+    PMDL Mdl,
+    ULONG DataOffset,
+    SIZE_T DataLength);
+
+VOID NTAPI NdisFreeNetBufferList(PVOID NetBufferList, ULONG FreeFlags);
+VOID NTAPI NdisFreeNetBuffer(PVOID NetBuffer);
+PMDL NTAPI NdisAllocateMdl(NDIS_HANDLE NdisHandle, PVOID VirtualAddress, ULONG Length);
+VOID NTAPI NdisFreeMdl(PMDL Mdl);
+
+static NDIS_STATUS NDISCall6(
+    PLAN_ADAPTER Adapter,
+    NDIS_REQUEST_TYPE Type,
+    NDIS_OID OID,
+    PVOID Buffer,
+    UINT Length)
+{
+    PUCHAR Request;
+    NDIS_STATUS NdisStatus;
+
+    Request = ExAllocatePoolWithTag(NonPagedPool, OID_REQUEST_BYTES, LAN_ADAPTER_TAG);
+    if (!Request) {
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    RtlZeroMemory(Request, OID_REQUEST_BYTES);
+    Request[0] = OID_REQUEST_TYPE;
+    Request[1] = OID_REQUEST_REVISION;
+    Request[2] = (UCHAR)(OID_REQUEST_BYTES & 0xff);
+    Request[3] = (UCHAR)((OID_REQUEST_BYTES >> 8) & 0xff);
+    *(PULONG)(Request + OID_REQUEST_TYPE_AT) = (ULONG)Type;
+    *(PULONG)(Request + OID_REQUEST_OID_AT) = OID;
+    *(PVOID *)(Request + OID_REQUEST_BUFFER_AT) = Buffer;
+    *(PULONG)(Request + OID_REQUEST_LENGTH_AT) = Length;
+
+    KeClearEvent(&Adapter->Event);
+    NdisStatus = NdisOidRequest(Adapter->NdisHandle, Request);
+    if (NdisStatus == NDIS_STATUS_PENDING) {
+        KeWaitForSingleObject(&Adapter->Event, UserRequest, KernelMode, FALSE, NULL);
+        NdisStatus = Adapter->NdisStatus;
+    }
+
+    ExFreePoolWithTag(Request, LAN_ADAPTER_TAG);
+    return NdisStatus;
+}
 
 NDIS_STATUS NDISCall(
     PLAN_ADAPTER Adapter,
@@ -56,40 +187,15 @@ NDIS_STATUS NDISCall(
  *     Status of operation
  */
 {
-    NDIS_REQUEST Request;
-    NDIS_STATUS NdisStatus;
-
-    Request.RequestType = Type;
-    if (Type == NdisRequestSetInformation) {
-        Request.DATA.SET_INFORMATION.Oid                     = OID;
-        Request.DATA.SET_INFORMATION.InformationBuffer       = Buffer;
-        Request.DATA.SET_INFORMATION.InformationBufferLength = Length;
-    } else {
-        Request.DATA.QUERY_INFORMATION.Oid                     = OID;
-        Request.DATA.QUERY_INFORMATION.InformationBuffer       = Buffer;
-        Request.DATA.QUERY_INFORMATION.InformationBufferLength = Length;
+    if (!Adapter->Ndis6) {
+        return NDIS_STATUS_NOT_SUPPORTED;
     }
-
-    if (Adapter->State != LAN_STATE_RESETTING) {
-        NdisRequest(&NdisStatus, Adapter->NdisHandle, &Request);
-    } else {
-        NdisStatus = NDIS_STATUS_NOT_ACCEPTED;
+    if (Adapter->State == LAN_STATE_RESETTING) {
+        return NDIS_STATUS_NOT_ACCEPTED;
     }
-
-    /* Wait for NDIS to complete the request */
-    if (NdisStatus == NDIS_STATUS_PENDING) {
-        KeWaitForSingleObject(&Adapter->Event,
-                              UserRequest,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        NdisStatus = Adapter->NdisStatus;
-    }
-
-    return NdisStatus;
+    return NDISCall6(Adapter, Type, OID, Buffer, Length);
 }
 
-/* Used by legacy ProtocolReceive for packet type */
 NDIS_STATUS
 GetPacketTypeFromHeaderBuffer(PLAN_ADAPTER Adapter,
                               PVOID HeaderBuffer,
@@ -128,7 +234,6 @@ GetPacketTypeFromHeaderBuffer(PLAN_ADAPTER Adapter,
     return NDIS_STATUS_SUCCESS;
 }
 
-/* Used by ProtocolReceivePacket for packet type */
 NDIS_STATUS
 GetPacketTypeFromNdisPacket(PLAN_ADAPTER Adapter,
                             PNDIS_PACKET NdisPacket,
@@ -204,91 +309,6 @@ NTSTATUS TcpipLanGetDwordOid
 }
 
 
-VOID NTAPI ProtocolOpenAdapterComplete(
-    NDIS_HANDLE BindingContext,
-    NDIS_STATUS Status,
-    NDIS_STATUS OpenErrorStatus)
-/*
- * FUNCTION: Called by NDIS to complete opening of an adapter
- * ARGUMENTS:
- *     BindingContext  = Pointer to a device context (LAN_ADAPTER)
- *     Status          = Status of the operation
- *     OpenErrorStatus = Additional status information
- */
-{
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    Adapter->NdisStatus = Status;
-
-    KeSetEvent(&Adapter->Event, 0, FALSE);
-}
-
-
-VOID NTAPI ProtocolCloseAdapterComplete(
-    NDIS_HANDLE BindingContext,
-    NDIS_STATUS Status)
-/*
- * FUNCTION: Called by NDIS to complete closing an adapter
- * ARGUMENTS:
- *     BindingContext = Pointer to a device context (LAN_ADAPTER)
- *     Status         = Status of the operation
- */
-{
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    Adapter->NdisStatus = Status;
-
-    KeSetEvent(&Adapter->Event, 0, FALSE);
-}
-
-
-VOID NTAPI ProtocolResetComplete(
-    NDIS_HANDLE BindingContext,
-    NDIS_STATUS Status)
-/*
- * FUNCTION: Called by NDIS to complete resetting an adapter
- * ARGUMENTS:
- *     BindingContext = Pointer to a device context (LAN_ADAPTER)
- *     Status         = Status of the operation
- */
-{
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    Adapter->NdisStatus = Status;
-
-    KeSetEvent(&Adapter->Event, 0, FALSE);
-}
-
-
-VOID NTAPI ProtocolRequestComplete(
-    NDIS_HANDLE BindingContext,
-    PNDIS_REQUEST NdisRequest,
-    NDIS_STATUS Status)
-/*
- * FUNCTION: Called by NDIS to complete a request
- * ARGUMENTS:
- *     BindingContext = Pointer to a device context (LAN_ADAPTER)
- *     NdisRequest    = Pointer to an object describing the request
- *     Status         = Status of the operation
- */
-{
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-
-    /* Save status of request and signal an event */
-    Adapter->NdisStatus = Status;
-
-    KeSetEvent(&Adapter->Event, 0, FALSE);
-}
-
-
 VOID NTAPI ProtocolSendComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
@@ -312,6 +332,7 @@ VOID LanReceiveWorker( PVOID Context ) {
     UINT BytesTransferred;
     IP_PACKET IPPacket;
     BOOLEAN LegacyReceive;
+    BOOLEAN FreeLocally;
     PIP_INTERFACE Interface;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
@@ -320,6 +341,7 @@ VOID LanReceiveWorker( PVOID Context ) {
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
     LegacyReceive = WorkItem->LegacyReceive;
+    FreeLocally = WorkItem->FreeLocally;
 
     ExFreePoolWithTag(WorkItem, WQ_CONTEXT_TAG);
 
@@ -328,7 +350,9 @@ VOID LanReceiveWorker( PVOID Context ) {
     IPInitializePacket(&IPPacket, 0);
 
     IPPacket.NdisPacket = Packet;
-    IPPacket.ReturnPacket = !LegacyReceive;
+    /* FreeLocally: copied NDIS 6 frame — FreeNdisPacket, not
+     * NdisReturnPackets (ip.c Free). */
+    IPPacket.ReturnPacket = !LegacyReceive && !FreeLocally;
 
     if (LegacyReceive)
     {
@@ -402,167 +426,39 @@ VOID LanSubmitReceiveWork(
     WQItem->Adapter = Adapter;
     WQItem->BytesTransferred = BytesTransferred;
     WQItem->LegacyReceive = LegacyReceive;
+    WQItem->FreeLocally = FALSE;
 
     if (!ChewCreate( LanReceiveWorker, WQItem ))
         ExFreePoolWithTag(WQItem, WQ_CONTEXT_TAG);
 }
 
-VOID NTAPI ProtocolTransferDataComplete(
-    NDIS_HANDLE BindingContext,
+VOID LanSubmitCopiedReceive(
+    PLAN_ADAPTER Adapter,
     PNDIS_PACKET Packet,
-    NDIS_STATUS Status,
-    UINT BytesTransferred)
-/*
- * FUNCTION: Called by NDIS to complete reception of data
- * ARGUMENTS:
- *     BindingContext   = Pointer to a device context (LAN_ADAPTER)
- *     Packet           = Pointer to a packet descriptor
- *     Status           = Status of the operation
- *     BytesTransferred = Number of bytes transferred
- * NOTES:
- *     If the packet was successfully received, determine the protocol
- *     type and pass it to the correct receive handler
- */
-{
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    UINT BytesTransferred) {
+    PLAN_WQ_ITEM WQItem;
 
-    TI_DbgPrint(DEBUG_DATALINK,("called\n"));
-
-    TransferDataCompleteCalled++;
-    ASSERT(TransferDataCompleteCalled <= TransferDataCalled);
-
-    if( Status != NDIS_STATUS_SUCCESS ) return;
-
-    LanSubmitReceiveWork(BindingContext,
-                         Packet,
-                         BytesTransferred,
-                         TRUE);
-}
-
-INT NTAPI ProtocolReceivePacket(
-    NDIS_HANDLE BindingContext,
-    PNDIS_PACKET NdisPacket)
-{
-    PLAN_ADAPTER Adapter = BindingContext;
-
-    if (Adapter->State != LAN_STATE_STARTED) {
-        TI_DbgPrint(DEBUG_DATALINK, ("Adapter is stopped.\n"));
-        return 0;
+    if (!Adapter || !Packet) {
+        return;
     }
 
-    LanSubmitReceiveWork(BindingContext,
-                         NdisPacket,
-                         0, /* Unused */
-                         FALSE);
-
-    /* Hold 1 reference on this packet */
-    return 1;
-}
-
-NDIS_STATUS NTAPI ProtocolReceive(
-    NDIS_HANDLE BindingContext,
-    NDIS_HANDLE MacReceiveContext,
-    PVOID HeaderBuffer,
-    UINT HeaderBufferSize,
-    PVOID LookaheadBuffer,
-    UINT LookaheadBufferSize,
-    UINT PacketSize)
-/*
- * FUNCTION: Called by NDIS when a packet has been received on the physical link
- * ARGUMENTS:
- *     BindingContext      = Pointer to a device context (LAN_ADAPTER)
- *     MacReceiveContext   = Handle used by underlying NIC driver
- *     HeaderBuffer        = Pointer to a buffer containing the packet header
- *     HeaderBufferSize    = Number of bytes in HeaderBuffer
- *     LookaheadBuffer     = Pointer to a buffer containing buffered packet data
- *     LookaheadBufferSize = Size of LookaheadBuffer. May be less than asked for
- *     PacketSize          = Overall size of the packet (not including header)
- * RETURNS:
- *     Status of operation
- */
-{
-    ULONG PacketType;
-    UINT BytesTransferred;
-    PCHAR BufferData;
-    NDIS_STATUS NdisStatus;
-    PNDIS_PACKET NdisPacket;
-    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Called. (packetsize %d)\n",PacketSize));
-
-    if (Adapter->State != LAN_STATE_STARTED) {
-        TI_DbgPrint(DEBUG_DATALINK, ("Adapter is stopped.\n"));
-        return NDIS_STATUS_NOT_ACCEPTED;
+    WQItem = ExAllocatePoolWithTag(NonPagedPool, sizeof(LAN_WQ_ITEM),
+                                   WQ_CONTEXT_TAG);
+    if (!WQItem) {
+        FreeNdisPacket(Packet);
+        return;
     }
 
-    if (HeaderBufferSize < Adapter->HeaderSize) {
-        TI_DbgPrint(DEBUG_DATALINK, ("Runt frame received.\n"));
-        return NDIS_STATUS_NOT_ACCEPTED;
+    WQItem->Packet = Packet;
+    WQItem->Adapter = Adapter;
+    WQItem->BytesTransferred = BytesTransferred;
+    WQItem->LegacyReceive = FALSE;
+    WQItem->FreeLocally = TRUE;
+
+    if (!ChewCreate(LanReceiveWorker, WQItem)) {
+        FreeNdisPacket(Packet);
+        ExFreePoolWithTag(WQItem, WQ_CONTEXT_TAG);
     }
-
-    NdisStatus = GetPacketTypeFromHeaderBuffer(Adapter,
-                                               HeaderBuffer,
-                                               HeaderBufferSize,
-                                               &PacketType);
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return NDIS_STATUS_NOT_ACCEPTED;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n",
-				 Adapter, Adapter->MTU));
-
-    /* Get a transfer data packet */
-    NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL,
-                                           PacketSize );
-    if( NdisStatus != NDIS_STATUS_SUCCESS ) {
-	return NDIS_STATUS_NOT_ACCEPTED;
-    }
-
-    PC(NdisPacket)->PacketType = PacketType;
-
-    TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
-
-    GetDataPtr( NdisPacket, 0, &BufferData, &PacketSize );
-
-    TransferDataCalled++;
-
-    if (LookaheadBufferSize == PacketSize)
-    {
-        /* Optimized code path for packets that are fully contained in
-         * the lookahead buffer. */
-        NdisCopyLookaheadData(BufferData,
-                              LookaheadBuffer,
-                              LookaheadBufferSize,
-                              Adapter->MacOptions);
-    }
-    else
-    {
-        NdisTransferData(&NdisStatus, Adapter->NdisHandle,
-                         MacReceiveContext, 0, PacketSize,
-			 NdisPacket, &BytesTransferred);
-    }
-    TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
-
-    if (NdisStatus != NDIS_STATUS_PENDING)
-	ProtocolTransferDataComplete(BindingContext,
-				     NdisPacket,
-				     NdisStatus,
-				     PacketSize);
-
-    TI_DbgPrint(DEBUG_DATALINK, ("leaving\n"));
-
-    return NDIS_STATUS_SUCCESS;
-}
-
-
-VOID NTAPI ProtocolReceiveComplete(
-    NDIS_HANDLE BindingContext)
-/*
- * FUNCTION: Called by NDIS when we're done receiving data
- * ARGUMENTS:
- *     BindingContext = Pointer to a device context (LAN_ADAPTER)
- */
-{
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 }
 
 BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
@@ -742,8 +638,25 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
     if (Context->State == LAN_STATE_STARTED &&
         !Context->Adapter->CompletingReset)
     {
+        IP_ADDRESS Router;
+
         /* Read the IP configuration */
         ReadIpConfiguration(Interface);
+
+        /* NDIS 6 bind uses a synthetic NetKVM registry path that has no
+         * Tcpip\Interfaces key, so ReadIpConfiguration leaves Unicast at
+         * 0.0.0.0 (output/netkvm-20261116T094739Z.log: PING CHECK fail
+         * 000004cf with no NDIS SEND before that check). QEMU user
+         * networking defaults: guest 10.0.2.15/24, gateway 10.0.2.2
+         * (https://www.qemu.org/docs/master/system/devices/net.html). */
+        if (Adapter->Ndis6 && AddrIsUnspecified(&Interface->Unicast)) {
+            AddrInitIPv4(&Interface->Unicast, inet_addr("10.0.2.15"));
+            AddrInitIPv4(&Interface->Netmask, inet_addr("255.255.255.0"));
+            AddrInitIPv4(&Router, inet_addr("10.0.2.2"));
+            IPAddInterfaceRoute(Interface);
+            RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, Interface);
+            DbgPrint("NDIS6 IP 10.0.2.15\n");
+        }
 
         /* Compute the broadcast address */
         Interface->Broadcast.Type = IP_ADDRESS_V4;
@@ -786,8 +699,10 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
                               OID_GEN_MAXIMUM_FRAME_SIZE,
                               &Adapter->MTU,
                               sizeof(Adapter->MTU));
-        if (NdisStatus != NDIS_STATUS_SUCCESS)
-            return FALSE;
+        if (NdisStatus != NDIS_STATUS_SUCCESS) {
+            /* NetKVM may reject this query; 1500 is Ethernet default. */
+            Adapter->MTU = 1500;
+        }
 
         Interface->MTU = Adapter->MTU;
 
@@ -797,8 +712,9 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
                               OID_GEN_MAXIMUM_TOTAL_SIZE,
                               &Adapter->MaxPacketSize,
                               sizeof(Adapter->MaxPacketSize));
-        if (NdisStatus != NDIS_STATUS_SUCCESS)
-            return FALSE;
+        if (NdisStatus != NDIS_STATUS_SUCCESS) {
+            Adapter->MaxPacketSize = Adapter->MTU + Adapter->HeaderSize;
+        }
     }
 
     Adapter->State = Context->State;
@@ -938,28 +854,6 @@ ProtocolPnPEvent(
     }
 }
 
-VOID NTAPI ProtocolBindAdapter(
-    OUT PNDIS_STATUS   Status,
-    IN  NDIS_HANDLE    BindContext,
-    IN  PNDIS_STRING   DeviceName,
-    IN  PVOID          SystemSpecific1,
-    IN  PVOID          SystemSpecific2)
-/*
- * FUNCTION: Called by NDIS during NdisRegisterProtocol to set up initial
- *           bindings, and periodically thereafter as new adapters come online
- * ARGUMENTS:
- *     Status: Return value to NDIS
- *     BindContext: Handle provided by NDIS to track pending binding operations
- *     DeviceName: Name of the miniport device to bind to
- *     SystemSpecific1: Pointer to a registry path with protocol-specific configuration information
- *     SystemSpecific2: Unused & must not be touched
- */
-{
-    TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
-    *Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
-}
-
-
 VOID LANTransmit(
     PVOID Context,
     PNDIS_PACKET NdisPacket,
@@ -1075,19 +969,67 @@ VOID LANTransmit(
     Interface->Stats.OutBytes += Size;
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
-	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
-	NdisSend(&NdisStatus, Adapter->NdisHandle, XmitPacket);
-	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n",
-				NdisStatus == NDIS_STATUS_PENDING ?
-				"Pending" : "Complete"));
-	TcpipReleaseSpinLock( &Adapter->Lock, OldIrql );
+	if (Adapter->Ndis6) {
+		PLAN_NBL_SEND Send;
+		PVOID NetBuffer;
+		PVOID NetBufferList;
+		PMDL Mdl;
+		PCHAR Payload;
+		UINT PayloadSize;
 
-	/* I had a talk with vizzini: these really ought to be here.
-	 * we're supposed to see these completed by ndis *only* when
-	 * status_pending is returned.  Note that this is different from
-	 * the situation with IRPs. */
-        if (NdisStatus != NDIS_STATUS_PENDING)
-            ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NdisStatus);
+		GetDataPtr(XmitPacket, 0, &Payload, &PayloadSize);
+		if (Payload && PayloadSize >= sizeof(ETH_HEADER)) {
+			PETH_HEADER Eh = (PETH_HEADER)Payload;
+			DbgPrint("NDIS6 TX %02x%02x%02x%02x%02x%02x %04x len %u\n",
+			         Eh->DstAddr[0], Eh->DstAddr[1], Eh->DstAddr[2],
+			         Eh->DstAddr[3], Eh->DstAddr[4], Eh->DstAddr[5],
+			         RtlUshortByteSwap(Eh->EType), PayloadSize);
+		}
+		Mdl = NdisAllocateMdl(Adapter->NdisHandle, Payload, PayloadSize);
+		if (!Mdl) {
+			TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
+			ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NDIS_STATUS_RESOURCES);
+			return;
+		}
+		NetBuffer = NdisAllocateNetBuffer(Adapter->NbPool, Mdl, 0, PayloadSize);
+		if (!NetBuffer) {
+			NdisFreeMdl(Mdl);
+			TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
+			ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NDIS_STATUS_RESOURCES);
+			return;
+		}
+		NetBufferList = NdisAllocateNetBufferList(Adapter->NblPool, 0, 0);
+		if (!NetBufferList) {
+			NdisFreeNetBuffer(NetBuffer);
+			NdisFreeMdl(Mdl);
+			TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
+			ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NDIS_STATUS_RESOURCES);
+			return;
+		}
+		*(PVOID *)((PUCHAR)NetBufferList + NBL_FIRST_NET_BUFFER_AT) = NetBuffer;
+		Send = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Send), LAN_ADAPTER_TAG);
+		if (!Send) {
+			NdisFreeNetBufferList(NetBufferList, 0);
+			NdisFreeNetBuffer(NetBuffer);
+			NdisFreeMdl(Mdl);
+			TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
+			ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NDIS_STATUS_RESOURCES);
+			return;
+		}
+		RtlZeroMemory(Send, sizeof(*Send));
+		Send->NetBufferList = NetBufferList;
+		Send->NetBuffer = NetBuffer;
+		Send->Mdl = Mdl;
+		Send->Packet = XmitPacket;
+		Send->Adapter = Adapter;
+		ExInterlockedInsertTailList(&NblSendListHead, &Send->ListEntry, &NblSendListLock);
+		TI_DbgPrint(MID_TRACE, ("NdisSendNetBufferLists\n"));
+		NdisSendNetBufferLists(Adapter->NdisHandle, NetBufferList, 0, 0);
+		TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
+		return;
+	}
+	TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
+	ProtocolSendComplete((NDIS_HANDLE)Context, XmitPacket, NDIS_STATUS_NOT_SUPPORTED);
 }
 
 static NTSTATUS
@@ -1393,7 +1335,14 @@ BOOLEAN BindAdapter(
     /* Store adapter context */
     Adapter->Context = IF;
 
-    /* Get the media state */
+    /* Get the media state. NDIS 6 miniports often reject the NDIS 5
+     * OID_GEN_MEDIA_CONNECT_STATUS query (output/netkvm-20261116T093855Z.log
+     * printed NDIS OID c00000bb for 0x00010114); treat that as connected
+     * so BindAdapter can finish. Link-state OIDs are a later step.
+     * output/e1000e-20261118T044315Z.log: NDIS6 LAN 00000000 with no
+     * NDIS6 IP 10.0.2.15, then RAWIP NOROUTE on the gateway ping — the
+     * query returned success with Disconnected and skipped the synthetic
+     * address. For Ndis6, treat Disconnected the same as a failed query. */
     NdisStatus = NDISCall(Adapter,
                           NdisRequestQueryInformation,
                           OID_GEN_MEDIA_CONNECT_STATUS,
@@ -1401,15 +1350,26 @@ BOOLEAN BindAdapter(
                           sizeof(MediaState));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(DEBUG_DATALINK, ("Could not query media status (0x%X).\n", NdisStatus));
-        IPUnregisterInterface(IF);
-        IPDestroyInterface(IF);
-        return FALSE;
+        MediaState = NdisMediaStateConnected;
+    } else if (Adapter->Ndis6 && MediaState != NdisMediaStateConnected) {
+        DbgPrint("NDIS6 MEDIA %08x -> connected\n", MediaState);
+        MediaState = NdisMediaStateConnected;
     }
 
-    /* Indicate the current media state */
-    ProtocolStatus(Adapter,
-                   (MediaState == NdisMediaStateConnected) ? NDIS_STATUS_MEDIA_CONNECT : NDIS_STATUS_MEDIA_DISCONNECT,
-                   NULL, 0);
+    /* Run reconfigure synchronously so the interface is STARTED before
+     * PingCheck (async ChewCreate raced that check on
+     * output/netkvm-20261116T094042Z.log). */
+    if (MediaState == NdisMediaStateConnected) {
+        RECONFIGURE_CONTEXT Ctx;
+        Ctx.Adapter = Adapter;
+        Ctx.State = LAN_STATE_STARTED;
+        if (!ReconfigureAdapter(&Ctx)) {
+            TI_DbgPrint(DEBUG_DATALINK, ("NDIS6 ReconfigureAdapter failed.\n"));
+            IPUnregisterInterface(IF);
+            IPDestroyInterface(IF);
+            return FALSE;
+        }
+    }
 
     /* Set packet filter so we can send and receive packets */
     NdisStatus = NDISCall(Adapter,
@@ -1449,134 +1409,239 @@ VOID UnbindAdapter(
 }
 
 
-NDIS_STATUS LANRegisterAdapter(
-    PNDIS_STRING AdapterName,
-    PNDIS_STRING RegistryPath)
+VOID NTAPI LanOidComplete6(PVOID BindingContext, NDIS_STATUS Status)
+{
+    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+
+    if (!Adapter) {
+        return;
+    }
+    Adapter->NdisStatus = Status;
+    KeSetEvent(&Adapter->Event, 0, FALSE);
+}
+
+VOID NTAPI LanReceiveNbl6(
+    PVOID BindingContext,
+    PVOID NetBufferLists,
+    ULONG PortNumber,
+    ULONG NumberOfNetBufferLists,
+    ULONG ReceiveFlags)
 /*
- * FUNCTION: Registers protocol with an NDIS adapter
+ * FUNCTION: Deliver NET_BUFFER_LIST frames into the existing LAN receive path
+ * NOTES:
+ *     FirstNetBuffer at 8:
+ *     https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer_list_data
+ *     NET_BUFFER DataLength 0x18 / Mdl 0x20 / DataOffset 0x28:
+ *     capture 2026-11-15T232142Z /
+ *     differential-tests/ndis-discovery/METHOD.md.
+ */
+{
+    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+    PVOID Nbl;
+
+    UNREFERENCED_PARAMETER(PortNumber);
+    UNREFERENCED_PARAMETER(NumberOfNetBufferLists);
+    UNREFERENCED_PARAMETER(ReceiveFlags);
+
+    if (!NetBufferLists) {
+        return;
+    }
+
+    if (!Adapter) {
+        /* Caller must return lists via the miniport path; nothing to do. */
+        return;
+    }
+
+    if (Adapter->State != LAN_STATE_STARTED) {
+        DbgPrint("NDIS6 RECV wait\n");
+        NdisReturnNetBufferLists(Adapter->NdisHandle, NetBufferLists, 0);
+        return;
+    }
+
+    DbgPrint("NDIS6 RECVLAN\n");
+
+    for (Nbl = NetBufferLists; Nbl; Nbl = *(PVOID *)Nbl) {
+        PMDL Mdl;
+        ULONG64 DataLength;
+        ULONG DataOffset;
+        ULONG Length;
+        PUCHAR Va;
+        PNDIS_PACKET Packet;
+        NDIS_STATUS Status;
+
+        /* Prefer FirstNetBuffer at 8; NetKVM leaves it null and keeps
+         * DataLength/Mdl/DataOffset on the NBL (NBL_DATA_* above). */
+        {
+            PVOID Nb = *(PVOID *)((PUCHAR)Nbl + NBL_FIRST_NET_BUFFER_AT);
+            if (Nb) {
+                DataLength = *(ULONG64 *)((PUCHAR)Nb + NB_DATA_LENGTH_AT);
+                Mdl = *(PMDL *)((PUCHAR)Nb + NB_MDL_AT);
+                DataOffset = *(ULONG *)((PUCHAR)Nb + NB_DATA_OFFSET_AT);
+            } else {
+                DataLength = *(ULONG64 *)((PUCHAR)Nbl + NBL_DATA_LENGTH_AT);
+                Mdl = *(PMDL *)((PUCHAR)Nbl + NBL_MDL_AT);
+                DataOffset = *(ULONG *)((PUCHAR)Nbl + NBL_DATA_OFFSET_AT);
+            }
+        }
+        Length = (ULONG)DataLength;
+        if (!Mdl || Length < Adapter->HeaderSize) {
+            continue;
+        }
+
+        Va = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+        if (!Va) {
+            continue;
+        }
+        Va += DataOffset;
+
+        Status = AllocatePacketWithBuffer(&Packet, (PCHAR)Va, Length);
+        if (Status != NDIS_STATUS_SUCCESS) {
+            continue;
+        }
+
+        /* Full Ethernet frame needs Position=HeaderSize (non-legacy).
+         * Copied buffer must FreeNdisPacket — NdisReturnPackets on
+         * output/netkvm-20261116T150034Z.pcap left ICMP replies unused
+         * while PingCheck timed out. Legacy TRUE (Position 0) caused
+         * ARP storm on output/netkvm-20261116T150452Z.log. */
+        LanSubmitCopiedReceive(Adapter, Packet, Length);
+    }
+
+    NdisReturnNetBufferLists(Adapter->NdisHandle, NetBufferLists, 0);
+}
+
+VOID NTAPI LanSendComplete6(PVOID BindingContext, PVOID NetBufferLists, ULONG Flags)
+{
+    PLIST_ENTRY Entry;
+    PLAN_NBL_SEND Send = NULL;
+    KIRQL OldIrql;
+
+    UNREFERENCED_PARAMETER(BindingContext);
+    UNREFERENCED_PARAMETER(Flags);
+
+    KeAcquireSpinLock(&NblSendListLock, &OldIrql);
+    for (Entry = NblSendListHead.Flink; Entry != &NblSendListHead; Entry = Entry->Flink) {
+        PLAN_NBL_SEND Candidate = CONTAINING_RECORD(Entry, LAN_NBL_SEND, ListEntry);
+        if (Candidate->NetBufferList == NetBufferLists) {
+            RemoveEntryList(Entry);
+            Send = Candidate;
+            break;
+        }
+    }
+    KeReleaseSpinLock(&NblSendListLock, OldIrql);
+
+    if (!Send) {
+        return;
+    }
+
+    if (Send->NetBufferList) {
+        NdisFreeNetBufferList(Send->NetBufferList, 0);
+    }
+    if (Send->NetBuffer) {
+        NdisFreeNetBuffer(Send->NetBuffer);
+    }
+    if (Send->Mdl) {
+        NdisFreeMdl(Send->Mdl);
+    }
+    if (Send->Packet) {
+        ProtocolSendComplete((NDIS_HANDLE)Send->Adapter, Send->Packet, NDIS_STATUS_SUCCESS);
+    }
+    ExFreePoolWithTag(Send, LAN_ADAPTER_TAG);
+}
+
+NDIS_STATUS NTAPI LanBindAdapter6(NDIS_HANDLE Binding, PUNICODE_STRING AdapterName)
+/*
+ * FUNCTION: Finish an NDIS 6 open by creating a LAN_ADAPTER for IP
  * ARGUMENTS:
- *     AdapterName = Pointer to string with name of adapter to register
- *     Adapter     = Address of pointer to a LAN_ADAPTER structure
- * RETURNS:
- *     Status of operation
+ *     Binding     = Handle from NdisOpenAdapterEx
+ *     AdapterName = Miniport name from bind parameters (may be null)
+ * NOTES:
+ *     Called from ndis prot6 after NDIS6 OPEN.
  */
 {
     PLAN_ADAPTER IF;
     NDIS_STATUS NdisStatus;
-    NDIS_STATUS OpenStatus;
-    UINT MediaIndex;
-    NDIS_MEDIUM MediaArray[MAX_MEDIA];
     UINT AddressOID;
+    UCHAR PoolParams[POOL_PARAMS_BYTES];
+    UNICODE_STRING RegistryPath;
+    WCHAR RegistryBuffer[] =
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\NetKVM\\Parameters";
 
-    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+    TI_DbgPrint(DEBUG_DATALINK, ("LanBindAdapter6 called.\n"));
+
+    if (!Binding) {
+        return NDIS_STATUS_FAILURE;
+    }
 
     IF = ExAllocatePoolWithTag(NonPagedPool, sizeof(LAN_ADAPTER), LAN_ADAPTER_TAG);
     if (!IF) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NDIS_STATUS_RESOURCES;
     }
 
     RtlZeroMemory(IF, sizeof(LAN_ADAPTER));
-
-    /* Put adapter in stopped state */
     IF->State = LAN_STATE_STOPPED;
-
-    /* Initialize protecting spin lock */
+    IF->Ndis6 = TRUE;
+    IF->NdisHandle = Binding;
     KeInitializeSpinLock(&IF->Lock);
-
     KeInitializeEvent(&IF->Event, SynchronizationEvent, FALSE);
 
-    /* Initialize array with media IDs we support */
-    MediaArray[MEDIA_ETH] = NdisMedium802_3;
-
-    TI_DbgPrint(DEBUG_DATALINK,("opening adapter %wZ\n", AdapterName));
-    /* Open the adapter. */
-    NdisOpenAdapter(&NdisStatus,
-                    &OpenStatus,
-                    &IF->NdisHandle,
-                    &MediaIndex,
-                    MediaArray,
-                    MAX_MEDIA,
-                    NdisProtocolHandle,
-                    IF,
-                    AdapterName,
-                    0,
-                    NULL);
-
-    /* Wait until the adapter is opened */
-    if (NdisStatus == NDIS_STATUS_PENDING)
-        KeWaitForSingleObject(&IF->Event, UserRequest, KernelMode, FALSE, NULL);
-    else if (NdisStatus != NDIS_STATUS_SUCCESS) {
-	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ\n", AdapterName));
-	ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
-        return NdisStatus;
-    }
-
-    IF->Media = MediaArray[MediaIndex];
-
-    /* Fill LAN_ADAPTER structure with some adapter specific information */
-    switch (IF->Media) {
-    case NdisMedium802_3:
-        IF->HWAddressLength = IEEE_802_ADDR_LENGTH;
-        IF->BCastMask       = BCAST_ETH_MASK;
-        IF->BCastCheck      = BCAST_ETH_CHECK;
-        IF->BCastOffset     = BCAST_ETH_OFFSET;
-        IF->HeaderSize      = sizeof(ETH_HEADER);
-        IF->MinFrameSize    = 60;
-        AddressOID          = OID_802_3_CURRENT_ADDRESS;
-        IF->PacketFilter    =
-            NDIS_PACKET_TYPE_BROADCAST |
-            NDIS_PACKET_TYPE_DIRECTED  |
-            NDIS_PACKET_TYPE_MULTICAST;
-        break;
-
-    default:
-        /* Unsupported media */
-        TI_DbgPrint(MIN_TRACE, ("Unsupported media.\n"));
+    RtlZeroMemory(PoolParams, sizeof(PoolParams));
+    PoolParams[0] = 0x80;
+    PoolParams[1] = 1;
+    PoolParams[2] = POOL_PARAMS_BYTES;
+    PoolParams[5] = 1;
+    IF->NblPool = NdisAllocateNetBufferListPool(Binding, PoolParams);
+    IF->NbPool = NdisAllocateNetBufferPool(Binding, PoolParams);
+    if (!IF->NblPool || !IF->NbPool) {
+        TI_DbgPrint(MIN_TRACE, ("NBL/NB pool allocate failed.\n"));
         ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
-        return NDIS_STATUS_NOT_SUPPORTED;
+        return NDIS_STATUS_RESOURCES;
     }
 
-    /* Get maximum number of packets we can pass to NdisSend(Packets) at one time */
-    NdisStatus = NDISCall(IF,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_SEND_PACKETS,
-                          &IF->MaxSendPackets,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        /* Legacy NIC drivers may not support this query, if it fails we
-           assume it can send at least one packet per call to NdisSend(Packets) */
-        IF->MaxSendPackets = 1;
+    LanSetBindingContext6(Binding, IF);
 
-    /* Get current hardware address */
+    IF->Media = NdisMedium802_3;
+    IF->HWAddressLength = IEEE_802_ADDR_LENGTH;
+    IF->BCastMask = BCAST_ETH_MASK;
+    IF->BCastCheck = BCAST_ETH_CHECK;
+    IF->BCastOffset = BCAST_ETH_OFFSET;
+    IF->HeaderSize = sizeof(ETH_HEADER);
+    IF->MinFrameSize = 60;
+    IF->MaxSendPackets = 1;
+    IF->PacketFilter =
+        NDIS_PACKET_TYPE_BROADCAST |
+        NDIS_PACKET_TYPE_DIRECTED |
+        NDIS_PACKET_TYPE_MULTICAST;
+    AddressOID = OID_802_3_CURRENT_ADDRESS;
+
     NdisStatus = NDISCall(IF,
                           NdisRequestQueryInformation,
                           AddressOID,
                           &IF->HWAddress,
                           IF->HWAddressLength);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MIN_TRACE, ("Query for current hardware address failed.\n"));
+        TI_DbgPrint(MIN_TRACE, ("NDIS6 MAC query failed 0x%x.\n", NdisStatus));
         ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
         return NdisStatus;
     }
 
-    /* Bind adapter to IP layer */
-    if( !BindAdapter(IF, RegistryPath) ) {
-	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (BindAdapter)\n", AdapterName));
-	ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
-	return NDIS_STATUS_NOT_ACCEPTED;
+    TI_DbgPrint(DEBUG_DATALINK,
+                ("NDIS6 MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
+                 IF->HWAddress[0], IF->HWAddress[1], IF->HWAddress[2],
+                 IF->HWAddress[3], IF->HWAddress[4], IF->HWAddress[5]));
+
+    UNREFERENCED_PARAMETER(AdapterName);
+    RtlInitUnicodeString(&RegistryPath, RegistryBuffer);
+    if (!BindAdapter(IF, &RegistryPath)) {
+        TI_DbgPrint(DEBUG_DATALINK, ("LanBindAdapter6 BindAdapter failed.\n"));
+        ExFreePoolWithTag(IF, LAN_ADAPTER_TAG);
+        return NDIS_STATUS_NOT_ACCEPTED;
     }
 
-    /* Add adapter to the adapter list */
-    ExInterlockedInsertTailList(&AdapterListHead,
-                                &IF->ListEntry,
-                                &AdapterListLock);
-
-    TI_DbgPrint(DEBUG_DATALINK, ("Leaving.\n"));
-
+    ExInterlockedInsertTailList(&AdapterListHead, &IF->ListEntry, &AdapterListLock);
+    TI_DbgPrint(DEBUG_DATALINK, ("LanBindAdapter6 ok.\n"));
     return NDIS_STATUS_SUCCESS;
 }
-
 
 NDIS_STATUS LANUnregisterAdapter(
     PLAN_ADAPTER Adapter)
@@ -1606,14 +1671,8 @@ NDIS_STATUS LANUnregisterAdapter(
         Adapter->NdisHandle = NULL;
         TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
 
-        NdisCloseAdapter(&NdisStatus, NdisHandle);
-        if (NdisStatus == NDIS_STATUS_PENDING) {
-            TcpipWaitForSingleObject(&Adapter->Event,
-                                     UserRequest,
-                                     KernelMode,
-                                     FALSE,
-                                     NULL);
-            NdisStatus = Adapter->NdisStatus;
+        if (Adapter->Ndis6) {
+            NdisStatus = NdisCloseAdapterEx(NdisHandle);
         }
     } else
         TcpipReleaseSpinLock(&Adapter->Lock, OldIrql);
@@ -1633,8 +1692,8 @@ LANUnregisterProtocol(VOID)
 {
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
+    LanDeregisterProtocol6();
     if (ProtocolRegistered) {
-        NDIS_STATUS NdisStatus;
         PLIST_ENTRY CurrentEntry;
         PLIST_ENTRY NextEntry;
         PLAN_ADAPTER Current;
@@ -1654,20 +1713,8 @@ LANUnregisterProtocol(VOID)
 
         TcpipReleaseSpinLock(&AdapterListLock, OldIrql);
 
-        NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
         ProtocolRegistered = FALSE;
     }
-}
-
-VOID
-NTAPI
-ProtocolUnbindAdapter(
-    PNDIS_STATUS Status,
-    NDIS_HANDLE ProtocolBindingContext,
-    NDIS_HANDLE UnbindContext)
-{
-    /* We don't pend any unbinding so we can just ignore UnbindContext */
-    *Status = LANUnregisterAdapter((PLAN_ADAPTER)ProtocolBindingContext);
 }
 
 NTSTATUS LANRegisterProtocol(
@@ -1680,50 +1727,29 @@ NTSTATUS LANRegisterProtocol(
  *     Status of operation
  */
 {
-    NDIS_STATUS NdisStatus;
-    NDIS_PROTOCOL_CHARACTERISTICS ProtChars;
+    NTSTATUS Status6;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
     InitializeListHead(&AdapterListHead);
     KeInitializeSpinLock(&AdapterListLock);
+    InitializeListHead(&NblSendListHead);
+    KeInitializeSpinLock(&NblSendListLock);
 
-    /* Set up protocol characteristics */
-    RtlZeroMemory(&ProtChars, sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
-    ProtChars.MajorNdisVersion               = NDIS_VERSION_MAJOR;
-    ProtChars.MinorNdisVersion               = NDIS_VERSION_MINOR;
-    ProtChars.Name.Length                    = Name->Length;
-    ProtChars.Name.Buffer                    = Name->Buffer;
-    ProtChars.Name.MaximumLength             = Name->MaximumLength;
-    ProtChars.OpenAdapterCompleteHandler     = ProtocolOpenAdapterComplete;
-    ProtChars.CloseAdapterCompleteHandler    = ProtocolCloseAdapterComplete;
-    ProtChars.ResetCompleteHandler           = ProtocolResetComplete;
-    ProtChars.RequestCompleteHandler         = ProtocolRequestComplete;
-    ProtChars.SendCompleteHandler            = ProtocolSendComplete;
-    ProtChars.TransferDataCompleteHandler    = ProtocolTransferDataComplete;
-    ProtChars.ReceivePacketHandler           = ProtocolReceivePacket;
-    ProtChars.ReceiveHandler                 = ProtocolReceive;
-    ProtChars.ReceiveCompleteHandler         = ProtocolReceiveComplete;
-    ProtChars.StatusHandler                  = ProtocolStatus;
-    ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
-    ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
-    ProtChars.PnPEventHandler                = ProtocolPnPEvent;
-    ProtChars.UnbindAdapterHandler           = ProtocolUnbindAdapter;
-    ProtChars.UnloadHandler                  = LANUnregisterProtocol;
-
-    /* Try to register protocol */
-    NdisRegisterProtocol(&NdisStatus,
-                         &NdisProtocolHandle,
-                         &ProtChars,
-                         sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-    {
-        TI_DbgPrint(DEBUG_DATALINK, ("NdisRegisterProtocol failed, status 0x%x\n", NdisStatus));
-        return (NTSTATUS)NdisStatus;
+    /* NDIS 6.84 only. Phase C dropped NdisRegisterProtocol after
+     * output/ndis-disk-20261116T203348Z.log and output/netkvm-20261116T203635Z.log. */
+    Status6 = LanRegisterProtocol6(Name);
+    TI_DbgPrint(DEBUG_DATALINK, ("LanRegisterProtocol6 status 0x%x\n", Status6));
+    if (!NT_SUCCESS(Status6)) {
+        return Status6;
     }
 
+    LanSetBindAdapter6(LanBindAdapter6);
+    LanSetSendComplete6(LanSendComplete6);
+    LanSetOidComplete6(LanOidComplete6);
+    LanSetReceiveNbl6(LanReceiveNbl6);
+    VerosBindReadyProtocols();
     ProtocolRegistered = TRUE;
-
     return STATUS_SUCCESS;
 }
 

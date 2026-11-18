@@ -3,9 +3,17 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        include/icmp.h
  * PURPOSE:     Internet Control Message Protocol definitions
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * ICMPv6 type values and echo layout from RFC 4443 Sections 2.1 and 4.1-4.2
+ * (https://www.rfc-editor.org/rfc/rfc4443). IPv6 next-header 58 from
+ * RFC 8200 Section 3 (https://www.rfc-editor.org/rfc/rfc8200).
  */
 
 #pragma once
+
 
 #include <pshpack1.h>
 typedef struct ICMP_HEADER {
@@ -15,6 +23,10 @@ typedef struct ICMP_HEADER {
     UINT16 Identifier; /* ICMP Echo message identifier */
     UINT16 Seq;        /* ICMP Echo message sequence num */
 } ICMP_HEADER, *PICMP_HEADER;
+
+/* ICMPv6 shares the same 8-byte echo header layout (RFC 4443). */
+typedef ICMP_HEADER ICMPV6_HEADER;
+typedef PICMP_HEADER PICMPV6_HEADER;
 #include <poppack.h>
 
 /* ICMP message types */
@@ -29,6 +41,12 @@ typedef struct ICMP_HEADER {
 #define ICMP_TYPE_TIMESTAMP_REPLY   14 /* Timestamp reply */
 #define ICMP_TYPE_INFO_REQUEST      15 /* Information request */
 #define ICMP_TYPE_INFO_REPLY        16 /* Information reply */
+
+/* ICMPv6 informational message types (RFC 4443 Section 2.1) */
+#define ICMPV6_TYPE_ECHO_REQUEST    128
+#define ICMPV6_TYPE_ECHO_REPLY      129
+
+/* Neighbor Discovery types are in ndp.h (RFC 4861). */
 
 /* ICMP codes for ICMP_TYPE_DEST_UNREACH */
 #define ICMP_CODE_DU_NET_UNREACH         0 /* Network unreachable */
@@ -77,5 +95,23 @@ VOID ICMPReply(
     PIP_PACKET IPPacket,
     UCHAR Type,
     UCHAR Code);
+
+VOID ICMP6Receive(
+    PIP_INTERFACE Interface,
+    PIP_PACKET IPPacket);
+
+VOID ICMP6Reply(
+    PIP_INTERFACE Interface,
+    PIP_PACKET IPPacket,
+    UCHAR Type,
+    UCHAR Code);
+
+USHORT IPv6PseudoChecksum(
+    PIP_ADDRESS SrcAddress,
+    PIP_ADDRESS DstAddress,
+    USHORT Length,
+    UCHAR NextHeader,
+    PVOID Data,
+    UINT DataLength);
 
 /* EOF */

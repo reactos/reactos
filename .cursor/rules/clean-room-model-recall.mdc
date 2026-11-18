@@ -1,0 +1,21 @@
+---
+description: What the model remembers about Windows is not a source
+alwaysApply: true
+---
+
+# Model recall
+
+What you remember about Windows internals is not a source. Training data can include leaked NT source, the Windows Research Kernel, WDK and SDK headers, disassembly, and symbol dumps, and recall cannot show which one a fact came from.
+
+Every Windows behavior, name, status, size, offset, or layout in a patch needs a source named under [clean-room.mdc](clean-room.mdc): a public document's title and URL, an in-tree path, or a guest log and its marker. Find that source before writing the code. Do not write the code first and look for a citation afterward.
+
+When you think you know an answer but cannot cite one, say so and stop. Propose a probe or a Learn search instead. Do not fill a struct, an enum, a flag set, or a function body from memory, and do not guess the order of fields.
+
+Do not describe Windows internals in chat, a comment, or a commit body unless the source is named in the same turn.
+
+```text
+Right: "I don't have a source for this field order. Add it to the kernel-abi probe?"
+Right: STATUS_INFO_LENGTH_MISMATCH, because the probe log at output/kernel-abi/windows.log showed it
+Wrong: a new _KTHREAD field "from what Windows does" with no URL, path, or log
+Wrong: writing the function, then searching for a page that agrees
+```

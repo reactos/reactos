@@ -1,0 +1,29 @@
+---
+description: What serial and log capture from a Windows machine is allowed
+alwaysApply: true
+---
+
+# Serial and log capture from Windows
+
+Serial ports on test machines may carry Windows output only when Windows is not being debugged. This applies to the QEMU guest and to physical test machines alike.
+
+Allowed:
+
+- **EMS/SAC console** (`bcdedit /ems on`, documented on Learn). Record what the console shows, the way you would record a screen.
+- **Probe output.** A GPL probe from this tree that runs on Windows and writes its own results to a COM port or a file.
+- **Documented logs and tracing.** Event logs exported with `wevtutil`, `netsh trace`, and other tools Learn documents, saved as files or sent over serial. Record only the output the tool emits. Do not decode binary trace payloads with Microsoft symbols or TMF files.
+
+Forbidden:
+
+- Kernel debugging of Windows over serial, USB, or network (`bcdedit /debug`, `/dbgsettings`, KDNET), and any WinDbg, KD, or other debugger session attached to Windows.
+- Capturing Windows memory, crash dumps, or debug-print streams that only appear because a debugger is enabled.
+
+Store captures under `output/<tool>/` and cite them in the transparency note, as with any guest log.
+
+Serial debugging of VerOS itself, with in-tree symbols, is unrestricted.
+
+```text
+Right: probe on the Shuttle running Windows 10 writes results to COM1; diff against VerOS on the same box
+Right: EMS/SAC console output saved during a Windows boot
+Wrong: bcdedit /debug on, then attach KD over COM1 to watch Windows boot
+```

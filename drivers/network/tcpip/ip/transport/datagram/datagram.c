@@ -1,11 +1,18 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
  * FILE:        transport/datagram/datagram.c
  * PURPOSE:     Routines for sending and receiving datagrams
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * TA_IP6_ADDRESS is sdk/include/psdk/tdi.h. The return buffer for an IPv6
+ * datagram receive is that size. source/output/ndis-disk-20261117T014026Z.log
+ * printed "IPV6 XCHG udp fail 995" after the peer echoed the payload.
  */
 
 #include "precomp.h"
@@ -101,6 +108,7 @@ DGDeliverData(
         PLIST_ENTRY CurrentEntry;
         PDATAGRAM_RECEIVE_REQUEST Current = NULL;
         PTA_IP_ADDRESS RTAIPAddress;
+        PTA_IP6_ADDRESS RTAIP6Address;
 
         TI_DbgPrint(MAX_TRACE, ("There is a receive request.\n"));
 
@@ -130,17 +138,33 @@ DGDeliverData(
                      DataBuffer,
                      MIN(Current->BufferSize, DataSize));
 
-                RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo->RemoteAddress;
-                RTAIPAddress->TAAddressCount = 1;
-                RTAIPAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
-                RTAIPAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
-                RTAIPAddress->Address->Address->sin_port = SrcPort;
-                RTAIPAddress->Address->Address->in_addr = SrcAddress->Address.IPv4Address;
-                RtlZeroMemory(RTAIPAddress->Address->Address->sin_zero, 8);
+                if (SrcAddress->Type == IP_ADDRESS_V6)
+                {
+                    RTAIP6Address = (PTA_IP6_ADDRESS)Current->ReturnInfo->RemoteAddress;
+                    RTAIP6Address->TAAddressCount = 1;
+                    RTAIP6Address->Address->AddressType = TDI_ADDRESS_TYPE_IP6;
+                    RTAIP6Address->Address->AddressLength = TDI_ADDRESS_LENGTH_IP6;
+                    RTAIP6Address->Address->Address->sin6_port = SrcPort;
+                    RTAIP6Address->Address->Address->sin6_flowinfo = 0;
+                    RtlCopyMemory(RTAIP6Address->Address->Address->sin6_addr,
+                                  SrcAddress->Address.IPv6Address,
+                                  sizeof(IPv6_RAW_ADDRESS));
+                    RTAIP6Address->Address->Address->sin6_scope_id = 0;
+                }
+                else
+                {
+                    RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo->RemoteAddress;
+                    RTAIPAddress->TAAddressCount = 1;
+                    RTAIPAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
+                    RTAIPAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
+                    RTAIPAddress->Address->Address->sin_port = SrcPort;
+                    RTAIPAddress->Address->Address->in_addr = SrcAddress->Address.IPv4Address;
+                    RtlZeroMemory(RTAIPAddress->Address->Address->sin_zero, 8);
 
-                TI_DbgPrint(MAX_TRACE, ("(A: %08x) Addr %08x Port %04x\n",
-                            RTAIPAddress,
-                            SrcAddress->Address.IPv4Address, SrcPort));
+                    TI_DbgPrint(MAX_TRACE, ("(A: %08x) Addr %08x Port %04x\n",
+                                RTAIPAddress,
+                                SrcAddress->Address.IPv4Address, SrcPort));
+                }
 
                 ReferenceObject(AddrFile);
                 UnlockObject(AddrFile);

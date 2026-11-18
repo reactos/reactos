@@ -1,13 +1,18 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS Ancillary Function Driver DLL
  * FILE:        dll/win32/msafd/misc/helpers.c
  * PURPOSE:     Helper DLL management
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *				Alex Ionescu (alex@relsoft.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/09-2000 Created
  *	 Alex 16/07/2004 - Complete Rewrite
+ *
+ * AF_INET6 lookup uses the AF_INET Winsock mapping in
+ * media/inf/nettcpip.inf. The helper still receives AF_INET6.
  */
 
 #include <msafd.h>
@@ -36,9 +41,16 @@ SockGetTdiName(
     PWINSOCK_MAPPING	Mapping;
     PLIST_ENTRY	        Helpers;
     INT                 Status;
+    INT                 LookupFamily;
 
     TRACE("AddressFamily %p, SocketType %p, Protocol %p, Group %u, Flags %lx, TransportName %p, HelperDllContext %p, HelperDllData %p, Events %p\n",
         AddressFamily, SocketType, Protocol, Group, Flags, TransportName, HelperDllContext, HelperDllData, Events);
+
+    /* Mapping in media/inf/nettcpip.inf has no AF_INET6 row. The helper
+     * still receives the caller's family. */
+    LookupFamily = *AddressFamily;
+    if (LookupFamily == AF_INET6)
+        LookupFamily = AF_INET;
 
     /* Check in our Current Loaded Helpers */
     for (Helpers = SockHelpersListHead.Flink;
@@ -49,7 +61,7 @@ SockGetTdiName(
 
         /* See if this Mapping works for us */
         if (SockIsTripleInMapping (HelperData->Mapping,
-                                   *AddressFamily,
+                                   LookupFamily,
                                    *SocketType,
                                    *Protocol)) {
 
@@ -108,7 +120,7 @@ SockGetTdiName(
         }
 
         /* See if this Mapping works for us */
-        if (SockIsTripleInMapping(Mapping, *AddressFamily, *SocketType, *Protocol)) {
+        if (SockIsTripleInMapping(Mapping, LookupFamily, *SocketType, *Protocol)) {
 
             /* It does, so load the DLL associated with it */
             Status = SockLoadHelperDll(Transport, Mapping, &HelperData);

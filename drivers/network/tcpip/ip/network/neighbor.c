@@ -3,12 +3,18 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        network/neighbor.c
  * PURPOSE:     Neighbor address cache
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * IPv6 neighbor solicitation uses NDP (RFC 4861), not ARP.
  */
 
 #include "precomp.h"
+
+#include <ndp.h>
 
 NEIGHBOR_CACHE_TABLE NeighborCache[NB_HASHMASK + 1];
 
@@ -57,7 +63,8 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
 	      Packet->Packet,
 	      0,
 	      NCE->LinkAddress,
-	      LAN_PROTO_IPv4 );
+	      (NCE->Address.Type == IP_ADDRESS_V6) ? LAN_PROTO_IPv6
+	                                           : LAN_PROTO_IPv4 );
     }
 }
 
@@ -229,6 +236,12 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
+    if (NCE->Address.Type == IP_ADDRESS_V6)
+    {
+        NDPSendSolicit(NCE->Interface, &NCE->Address);
+        return;
+    }
+
     ARPTransmit(&NCE->Address,
                 (NCE->State & NUD_INCOMPLETE) ? NULL : NCE->LinkAddress,
                 NCE->Interface);
@@ -316,7 +329,9 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   RtlCopyMemory(&InternalAddress, Address, sizeof(*Address));
 
   /* Map 127.x.x.x adresses to the loopback address (127.0.0.1) */
-  if ((InternalAddress.Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) == (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4))
+  if (InternalAddress.Type == IP_ADDRESS_V4 &&
+      (InternalAddress.Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) ==
+      (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4))
     InternalAddress.Address.IPv4Address = LOOPBACK_ADDRESS_IPv4;
 
   NCE->Interface = Interface;
@@ -447,10 +462,12 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
   RtlCopyMemory(&InternalAddress, Address, sizeof(*Address));
 
   /* Map 127.x.x.x adresses to the loopback address (127.0.0.1) */
-  if ((InternalAddress.Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) == (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4))
+  if (InternalAddress.Type == IP_ADDRESS_V4 &&
+      (InternalAddress.Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) ==
+      (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4))
     InternalAddress.Address.IPv4Address = LOOPBACK_ADDRESS_IPv4;
 
-  HashValue = *(PULONG)&InternalAddress.Address;;
+  HashValue = *(PULONG)&InternalAddress.Address;
   HashValue ^= HashValue >> 16;
   HashValue ^= HashValue >> 8;
   HashValue ^= HashValue >> 4;
@@ -541,6 +558,9 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
             TI_DbgPrint(MID_TRACE,("Packet targeted at broadcast addr\n"));
             NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_PERMANENT, 0);
+        } else if (Interface == Loopback && AddrIsIPv6Loopback(Address)) {
+            /* ::1 never needs Neighbor Discovery (RFC 4291 Section 2.5.3). */
+            NCE = NBAddNeighbor(Interface, Address, NULL, 0, NUD_PERMANENT, 0);
         } else {
             NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_INCOMPLETE, NoTimeout ? 0 : ARP_INCOMPLETE_TIMEOUT);

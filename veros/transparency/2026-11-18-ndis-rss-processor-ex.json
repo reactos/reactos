@@ -1,0 +1,44 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What buffer sizes and headers does Windows return for NdisGetProcessorInformationEx and NdisGetRssProcessorInformation so VerOS can publish them through NdisGetRoutineAddress without FilterResourceRequirements FAILURE?",
+  "allowedInputs": [
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex",
+      "where": "SUCCESS or BUFFER_TOO_SHORT; Size IN/OUT"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation",
+      "where": "SUCCESS or BUFFER_TOO_SHORT; used from MiniportFilterResourceRequirements"
+    },
+    {
+      "source": "sdk/include/ddk/ndis.h",
+      "where": "NDIS_STATUS_BUFFER_TOO_SHORT 0xC0010016"
+    },
+    {
+      "source": "sdk/include/psdk/ntddndis.h",
+      "where": "NDIS_OBJECT_HEADER"
+    },
+    {
+      "source": "sdk/include/xdk/ntbasedef.h",
+      "where": "PROCESSOR_NUMBER packing for RSSEX entries"
+    },
+    {
+      "source": "output/vmxnet3-20261118T052250Z.log",
+      "where": "NDIS RSSEX fail then NDIS FILTER c000009a"
+    },
+    {
+      "source": "output/ndis-discovery/windows.log",
+      "where": "SPIEX STATUS short Size 0x78; ACCEPTED SPX header 80 01 28; RSSEX with InitializeEx adapter handle STATUS short Size 0x48; ACCEPTED RSX header b1 02 28; DIFF END OK"
+    },
+    {
+      "source": "differential-tests/ndis-discovery/probe.c",
+      "where": "probe_one_size_info; Processor Ex NULL handle; RSS Ex adapter handle A; probe method"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/win10-22h2/wtg.vhdx",
+    "name": "Invoke-NdisDiscovery",
+    "traceOrReplayId": "ndis-discovery-rss-spiex",
+    "logSha256": "37677a8a800aaff8803b9ecdfae4e151b1bcaf671b5f5274f3d7a3d1c9e70219"
+  }
+}

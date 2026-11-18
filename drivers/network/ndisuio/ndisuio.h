@@ -202,6 +202,17 @@ NduUnbindAdapter(PNDIS_STATUS Status,
                  NDIS_HANDLE ProtocolBindingContext,
                  NDIS_HANDLE UnbindContext);
 
+NDIS_STATUS
+NTAPI
+NduBindAdapterEx(NDIS_HANDLE ProtocolDriverContext,
+                 NDIS_HANDLE BindContext,
+                 PVOID BindParameters);
+
+NDIS_STATUS
+NTAPI
+NduUnbindAdapterEx(NDIS_HANDLE UnbindContext,
+                   NDIS_HANDLE ProtocolBindingContext);
+
 /* readwrite.c */
 NTSTATUS
 NTAPI

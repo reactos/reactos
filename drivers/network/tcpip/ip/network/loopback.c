@@ -3,9 +3,14 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        datalink/loopback.c
  * PURPOSE:     Loopback adapter
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * IPv6 ::1 neighbor from RFC 4291 Section 2.5.3
+ * (https://www.rfc-editor.org/rfc/rfc4291).
  */
 
 #include "precomp.h"
@@ -49,7 +54,7 @@ VOID LoopTransmit(
     ASSERT_KM_POINTER(PC(NdisPacket));
     ASSERT_KM_POINTER(PC(NdisPacket)->DLComplete);
 
-    if (Type != LAN_PROTO_IPv4)
+    if (Type != LAN_PROTO_IPv4 && Type != LAN_PROTO_IPv6)
     {
         TI_DbgPrint(MAX_TRACE, ("Received unsupported protocol %u\n", Type));
         PC(NdisPacket)->DLComplete(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_NOT_SUPPORTED);
@@ -133,6 +138,19 @@ NDIS_STATUS LoopRegisterAdapter(
   IPRegisterInterface(Loopback);
 
   IPAddInterfaceRoute(Loopback);
+
+  /* Permanent neighbor for ::1 so ICMPv6 loopback can route (RFC 4291). */
+  {
+    IP_ADDRESS LoopbackV6;
+    PNEIGHBOR_CACHE_ENTRY NCE6;
+
+    AddrInitIPv6Loopback(&LoopbackV6);
+    NCE6 = NBAddNeighbor(Loopback, &LoopbackV6, NULL, 0, NUD_PERMANENT, 0);
+    if (!NCE6)
+    {
+      TI_DbgPrint(MIN_TRACE, ("Could not create IPv6 loopback NCE.\n"));
+    }
+  }
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 

@@ -1,0 +1,14 @@
+{
+  "question": "When may the NDIS 5 tcpip bridge (NdisRegisterProtocol, VerosNoteTransmit, VerosIndicateFrame) be removed?",
+  "allowedInputs": [
+    "differential-tests/ndis-discovery/METHOD.md item 65 and Phase C acceptance logs",
+    "output/ndis-disk-20261116T203348Z.log PING CHECK done 2 2 and done 1 1",
+    "output/netkvm-20261116T203635Z.log PING CHECK done 2 2 and done 1 1"
+  ],
+  "spdx": "GPL-2.0-or-later",
+  "harness": {
+    "guest": "virtual-machines/veros-ntfs/disk.qcow2",
+    "name": "PingCheck NDIS 6 rtl8139n and NetKVM",
+    "traceOrReplayId": "ndis-disk-20261116T203348Z and netkvm-20261116T203635Z"
+  }
+}

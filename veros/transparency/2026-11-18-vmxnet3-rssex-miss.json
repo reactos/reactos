@@ -1,0 +1,40 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Catalog vmxnet3 stop at FilterResourceRequirements after e1000e MISS stubs, and how was Start restored without inventing RSS info layout?",
+  "allowedInputs": [
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation",
+      "where": "returns SUCCESS or BUFFER_TOO_SHORT; used from MiniportFilterResourceRequirements"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex",
+      "where": "processor Ex companion left as GetRoutineAddress MISS with the RSS Ex name"
+    },
+    {
+      "source": "sdk/include/ddk/ndis.h",
+      "where": "NDIS_STATUS_BUFFER_TOO_SHORT"
+    },
+    {
+      "source": "drivers/network/ndis/src/lib.rs",
+      "where": "NdisGetProcessorInformation SPI path used when RSS Ex is MISS"
+    },
+    {
+      "source": "output/vmxnet3-20261118T013944Z.log",
+      "where": "MISS NdisGetRssProcessorInformation; NDIS SPI; NDIS FILTER 00000000; START; INIT 00000000"
+    },
+    {
+      "source": "output/vmxnet3-20261118T052250Z.log",
+      "where": "NDIS RSSEX fail; NDIS FILTER c000009a; IopInitiatePnpIrp FILTER_RESOURCE_REQUIREMENTS failed"
+    },
+    {
+      "source": "output/vmxnet3-20261118T052926Z.log",
+      "where": "MISS RSSEX again; FILTER 00000000; INIT 00000000; NDIS6 IP 10.0.2.15; SENDDONE; PING CHECK done 2 2 and done 1 1"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/veros-ntfs/disk.qcow2",
+    "name": "Boot-Vmxnet3",
+    "traceOrReplayId": "vmxnet3-20261118T052926Z",
+    "logSha256": "fb7fdc7998be4224fc338e22eb7fc4e8a695a89dfd41bd6b054ff41b1008a39b"
+  }
+}

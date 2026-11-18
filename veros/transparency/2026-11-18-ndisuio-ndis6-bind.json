@@ -1,0 +1,48 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How does ndisuio register as an NDIS 6 protocol and open adapters so GlobalAdapterList is populated for NDISUIO SMOKE bind ok?",
+  "allowedInputs": [
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisregisterprotocoldriver",
+      "where": "NdisRegisterProtocolDriver"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_protocol_driver_characteristics",
+      "where": "protocol characteristics handler slots"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_bind_adapter_ex",
+      "where": "ProtocolBindAdapterEx"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisopenadapterex",
+      "where": "NdisOpenAdapterEx"
+    },
+    {
+      "source": "drivers/network/ndis/src/prot6.rs",
+      "where": "characteristics type 0x95 rev 2 size 0x80; AdapterName at bind+16; open header 0x87/1/0x40"
+    },
+    {
+      "source": "drivers/network/lldp/src/lib.rs",
+      "where": "BindAdapterEx then NdisOpenAdapterEx open fill"
+    },
+    {
+      "source": "drivers/network/ndis/ndis.spec",
+      "where": "VerosBindReadyProtocols"
+    },
+    {
+      "source": "drivers/network/ndis/src/ndis5.rs",
+      "where": "NdisRequest returns not-supported on NDIS 6 bindings"
+    },
+    {
+      "source": "output/ndis-disk-20261118T065244Z.log",
+      "where": "NDISUIO REG6 00000000; NDISUIO BIND6; NDIS OPENEXOK; NDISUIO SMOKE bind ok"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/veros-ntfs/disk.qcow2",
+    "name": "Boot-NdisDisk",
+    "traceOrReplayId": "ndisuio-ndis6-bind",
+    "logSha256": "bcd34b7269b517aee7d19bf236e0c20a800cc29f3f10ebcbaeb9095e24e961c7"
+  }
+}

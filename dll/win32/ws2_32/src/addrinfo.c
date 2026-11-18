@@ -4,6 +4,15 @@
  * FILE:        dll/win32/ws2_32/src/addrinfo.c
  * PURPOSE:     Protocol-Independent Address Resolution
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
+ *              Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * IPv6 textual form (:: and hex groups) from RFC 4291 Section 2.2
+ * https://www.rfc-editor.org/rfc/rfc4291#section-2.2
+ * GetAddrInfoW AF_INET6 / numeric host: PingCheck ::1 printed
+ * PING CHECK dns fail in output/ndis-disk-20261116T214838Z.log when
+ * Family was AF_UNSPEC and only ParseV4Address ran.
  */
 
 /* INCLUDES ******************************************************************/
@@ -162,6 +171,161 @@ again:
         *pAddress = htonl(val);
 
     return TRUE;
+}
+
+static
+BOOL
+WINAPI
+ParseV6Address(IN PCWSTR AddressString,
+               OUT struct in6_addr *Address)
+{
+    CHAR Ansi[MAX_HOSTNAME_LEN];
+    UCHAR Bytes[16];
+    INT PartCount = 0;
+    INT CompressAt = -1;
+    UINT16 Current = 0;
+    INT Digits = 0;
+    BOOL InPart = FALSE;
+    const CHAR *cp;
+
+    if (!AddressString || !Address)
+        return FALSE;
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        AddressString,
+                        -1,
+                        Ansi,
+                        sizeof(Ansi),
+                        NULL,
+                        0);
+
+    ZeroMemory(Bytes, sizeof(Bytes));
+    cp = Ansi;
+
+    /* Leading "::" compresses from the start (RFC 4291 Section 2.2). */
+    if (cp[0] == ':' && cp[1] == ':')
+    {
+        CompressAt = 0;
+        cp += 2;
+    }
+
+    while (*cp)
+    {
+        CHAR c = *cp;
+
+        if (c == ':')
+        {
+            if (!InPart)
+            {
+                /* "::" after a prior colon. */
+                if (CompressAt >= 0)
+                    return FALSE;
+                CompressAt = PartCount;
+                cp++;
+                continue;
+            }
+            if (PartCount >= 8)
+                return FALSE;
+            Bytes[PartCount * 2] = (UCHAR)(Current >> 8);
+            Bytes[PartCount * 2 + 1] = (UCHAR)(Current & 0xFF);
+            PartCount++;
+            Current = 0;
+            Digits = 0;
+            InPart = FALSE;
+            cp++;
+            continue;
+        }
+
+        if (c >= '0' && c <= '9')
+            Current = (UINT16)((Current << 4) + (c - '0'));
+        else if (c >= 'a' && c <= 'f')
+            Current = (UINT16)((Current << 4) + (c - 'a' + 10));
+        else if (c >= 'A' && c <= 'F')
+            Current = (UINT16)((Current << 4) + (c - 'A' + 10));
+        else
+            return FALSE;
+
+        Digits++;
+        if (Digits > 4)
+            return FALSE;
+        InPart = TRUE;
+        cp++;
+    }
+
+    if (InPart)
+    {
+        if (PartCount >= 8)
+            return FALSE;
+        Bytes[PartCount * 2] = (UCHAR)(Current >> 8);
+        Bytes[PartCount * 2 + 1] = (UCHAR)(Current & 0xFF);
+        PartCount++;
+    }
+
+    if (CompressAt >= 0)
+    {
+        INT Need = 8 - PartCount;
+        INT Tail = PartCount - CompressAt;
+        INT i;
+
+        if (Need < 0)
+            return FALSE;
+        for (i = Tail - 1; i >= 0; i--)
+        {
+            Bytes[(CompressAt + Need + i) * 2] = Bytes[(CompressAt + i) * 2];
+            Bytes[(CompressAt + Need + i) * 2 + 1] = Bytes[(CompressAt + i) * 2 + 1];
+        }
+        for (i = 0; i < Need; i++)
+        {
+            Bytes[(CompressAt + i) * 2] = 0;
+            Bytes[(CompressAt + i) * 2 + 1] = 0;
+        }
+        PartCount = 8;
+    }
+
+    if (PartCount != 8)
+        return FALSE;
+
+    RtlCopyMemory(Address->s6_addr, Bytes, 16);
+    return TRUE;
+}
+
+static
+PADDRINFOW
+WINAPI
+NewAddrInfo6(IN INT SocketType,
+             IN INT Protocol,
+             IN WORD Port,
+             IN const struct in6_addr *Address)
+{
+    PADDRINFOW AddrInfo;
+    PSOCKADDR_IN6 SockAddress;
+
+    AddrInfo = HeapAlloc(WsSockHeap, 0, sizeof(ADDRINFOW));
+    if (!AddrInfo) return NULL;
+
+    SockAddress = HeapAlloc(WsSockHeap, 0, sizeof(SOCKADDR_IN6));
+    if (!SockAddress)
+    {
+        HeapFree(WsSockHeap, 0, AddrInfo);
+        return NULL;
+    }
+
+    ZeroMemory(SockAddress, sizeof(*SockAddress));
+    SockAddress->sin6_family = AF_INET6;
+    SockAddress->sin6_port = Port;
+    SockAddress->sin6_addr = *Address;
+
+    AddrInfo->ai_family = PF_INET6;
+    AddrInfo->ai_socktype = SocketType;
+    AddrInfo->ai_protocol = Protocol;
+    AddrInfo->ai_flags = 0;
+    AddrInfo->ai_next = 0;
+    AddrInfo->ai_canonname = NULL;
+    AddrInfo->ai_addrlen = sizeof(SOCKADDR_IN6);
+    AddrInfo->ai_addr = (PSOCKADDR)SockAddress;
+
+    return AddrInfo;
 }
 
 static
@@ -563,7 +727,9 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
 
         /* Save family and validate it */
         iFamily = ptHints->ai_family;
-        if ((iFamily != PF_UNSPEC) && (iFamily != PF_INET))
+        if ((iFamily != PF_UNSPEC) &&
+            (iFamily != PF_INET) &&
+            (iFamily != PF_INET6))
         {
             SetLastError(EAI_FAMILY);
             return EAI_FAMILY;
@@ -659,8 +825,59 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
         }
     }
 
-    /* Check if no node was given or if this is is a valid IPv4 address */
-    if ((!pszNodeName) || (ParseV4Address(pszNodeName, &dwAddress)))
+    /*
+     * AF_INET6 must not take the IPv4-only branch (even for a null node
+     * name, which would invent INADDR_LOOPBACK). PingCheck -6 ::1 was
+     * landing on 127.0.0.1 when Family was AF_INET6 and the V4 path ran
+     * first (output/ndis-disk-20261117T000924Z.log dns 0100007f).
+     * RFC 4291 Section 2.2 numeric form is handled below via ParseV6.
+     */
+    if (iFamily == AF_INET6)
+    {
+        struct in6_addr V6Address;
+
+        if (pszNodeName && ParseV6Address(pszNodeName, &V6Address))
+        {
+            *pptResult = NewAddrInfo6(iSocketType, iProtocol, wPort, &V6Address);
+            if (!(*pptResult))
+                iError = EAI_MEMORY;
+            else
+                (*pptResult)->ai_flags |= AI_NUMERICHOST;
+        }
+        else if (!pszNodeName)
+        {
+            /* Passive: invent :: or ::1 from AI_PASSIVE like the IPv4 path. */
+            ZeroMemory(&V6Address, sizeof(V6Address));
+            if (!(iFlags & AI_PASSIVE))
+                V6Address.s6_addr[15] = 1;
+            *pptResult = NewAddrInfo6(iSocketType, iProtocol, wPort, &V6Address);
+            if (!(*pptResult))
+                iError = EAI_MEMORY;
+        }
+        else if (iFlags & AI_NUMERICHOST)
+        {
+            iError = EAI_NONAME;
+        }
+        else
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                pszNodeName,
+                                -1,
+                                AnsiNodeName,
+                                sizeof(AnsiNodeName),
+                                NULL,
+                                0);
+            iError = LookupAddressForName(AnsiNodeName,
+                                          iSocketType,
+                                          iProtocol,
+                                          wPort,
+                                          (iFlags & AI_CANONNAME),
+                                          pptResult);
+        }
+    }
+    /* Check if no node was given or if this is a valid IPv4 address */
+    else if ((!pszNodeName) || (ParseV4Address(pszNodeName, &dwAddress)))
     {
         /* Check if we don't have a node name */
         if (!pszNodeName)
@@ -712,6 +929,40 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                                   wcslen(CanonicalName));
                 }
             }
+        }
+    }
+    else if (iFamily != PF_INET)
+    {
+        struct in6_addr V6Address;
+
+        if (ParseV6Address(pszNodeName, &V6Address))
+        {
+            *pptResult = NewAddrInfo6(iSocketType, iProtocol, wPort, &V6Address);
+            if (!(*pptResult))
+                iError = EAI_MEMORY;
+            else
+                (*pptResult)->ai_flags |= AI_NUMERICHOST;
+        }
+        else if (iFlags & AI_NUMERICHOST)
+        {
+            iError = EAI_NONAME;
+        }
+        else
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                pszNodeName,
+                                -1,
+                                AnsiNodeName,
+                                sizeof(AnsiNodeName),
+                                NULL,
+                                0);
+            iError = LookupAddressForName(AnsiNodeName,
+                                          iSocketType,
+                                          iProtocol,
+                                          wPort,
+                                          (iFlags & AI_CANONNAME),
+                                          pptResult);
         }
     }
     else if (iFlags & AI_NUMERICHOST)
