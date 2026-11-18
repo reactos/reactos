@@ -8,6 +8,14 @@
  * PROGRAMMERS: Alex Ionescu (alex.ionescu@reactos.org)
  *              Ariadne (ariadne@xs4all.nl)
  *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * QueryThreadCycleTime: guest
+ * output/ntdll-apps/serial-App-20261118T042848Z.log
+ * marker WARNING: calling stub QueryThreadCycleTime.
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime
+ * Same GetProcInfoSync path as QueryProcessCycleTime: a failing thread
+ * cycle query skips the process; empty map → requestProcInfo rejects and
+ * Troubleshoot.processes never calls done().
  */
 
 /* INCLUDES *******************************************************************/
@@ -518,6 +526,42 @@ GetThreadTimes(IN HANDLE hThread,
     *lpExitTime = *(LPFILETIME)&KernelUserTimes.ExitTime;
     *lpKernelTime = *(LPFILETIME)&KernelUserTimes.KernelTime;
     *lpUserTime = *(LPFILETIME)&KernelUserTimes.UserTime;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * Thread cycle counters are not wired in ntos yet. Validate the handle
+ * with ThreadTimes, then succeed with zero cycles so Firefox GetProcInfo
+ * keeps the process (same pattern as QueryProcessCycleTime).
+ */
+BOOL
+WINAPI
+QueryThreadCycleTime(IN HANDLE ThreadHandle,
+                     OUT PULONG64 CycleTime)
+{
+    KERNEL_USER_TIMES Kut;
+    NTSTATUS Status;
+
+    if (!CycleTime)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = NtQueryInformationThread(ThreadHandle,
+                                      ThreadTimes,
+                                      &Kut,
+                                      sizeof(Kut),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    *CycleTime = 0;
     return TRUE;
 }
 
