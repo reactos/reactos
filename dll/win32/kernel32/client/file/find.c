@@ -1,11 +1,19 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/find.c
  * PURPOSE:         Find functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  *                  Hermes Belusca-Maito
+ *                  Ryan Wilson <ryan@verosnt.com>
+ *
+ * Sources: FindFirstFileEx dwAdditionalFlags — Microsoft Learn
+ *          "FindFirstFileExW function" FIND_FIRST_EX_LARGE_FETCH;
+ *          sdk/include/psdk/minwinbase.h FIND_FIRST_EX_*;
+ *          output/ntdll-apps/direnum-falsify-guest-log/direnum-probe.txt
+ *          marker "FindFirstFileExW ... [Basic LARGE_FETCH] FAIL gle=87".
  */
 
 /* INCLUDES *******************************************************************/
@@ -581,9 +589,10 @@ FindFirstFileExA(IN LPCSTR lpFileName,
     WIN32_FIND_DATAW FindFileDataW;
     LPWIN32_FIND_DATAA lpFindFileDataA = (LPWIN32_FIND_DATAA)lpFindFileData;
 
+    /* LARGE_FETCH is accepted as a hint; FIND_DATA_SIZE already covers it. */
     if ((fInfoLevelId != FindExInfoStandard && fInfoLevelId != FindExInfoBasic) ||
         fSearchOp == FindExSearchLimitToDevices ||
-        dwAdditionalFlags & ~FIND_FIRST_EX_CASE_SENSITIVE /* only supported flag for now */)
+        dwAdditionalFlags & ~(FIND_FIRST_EX_CASE_SENSITIVE | FIND_FIRST_EX_LARGE_FETCH))
     {
         SetLastError(fSearchOp == FindExSearchLimitToDevices
                                 ? ERROR_NOT_SUPPORTED
@@ -657,9 +666,10 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
 
     TRACE("FindFirstFileExW(lpFileName %S)\n", lpFileName);
 
+    /* LARGE_FETCH is accepted as a hint; FIND_DATA_SIZE already covers it. */
     if ((fInfoLevelId != FindExInfoStandard && fInfoLevelId != FindExInfoBasic) ||
         fSearchOp == FindExSearchLimitToDevices ||
-        dwAdditionalFlags & ~FIND_FIRST_EX_CASE_SENSITIVE /* only supported flag for now */)
+        dwAdditionalFlags & ~(FIND_FIRST_EX_CASE_SENSITIVE | FIND_FIRST_EX_LARGE_FETCH))
     {
         SetLastError(fSearchOp == FindExSearchLimitToDevices
                                 ? ERROR_NOT_SUPPORTED

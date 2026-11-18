@@ -1,0 +1,27 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Troubleshoot.snapshot still never write veros-snapshot-keys after SPI ImageFileName-only and EPROCESS ThreadListHead walks, when processes awaits requestProcInfo under App TCG?",
+  "allowedInputs": [
+    {
+      "title": "In-tree KeQueryRuntimeProcess KPROCESS ThreadListHead walk under process spinlock",
+      "path": "ntoskrnl/ke/procobj.c"
+    },
+    {
+      "title": "In-tree ExpQuerySystemProcessInformation ProcessLock + KeQueryRuntimeProcess call",
+      "path": "ntoskrnl/ex/sysinfo.c"
+    },
+    {
+      "title": "Mozilla ProcInfo_win.cpp uses CycleTime/GetProcessTimes not SPI UserTime/KernelTime",
+      "url": "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/toolkit/components/processtools/ProcInfo_win.cpp"
+    },
+    {
+      "title": "Reported: serial-App-20261118T073631Z after 08f5c0e ThreadListHead; veros-app-basics name=Firefox; veros-snapshot-keys missing after ~7 min",
+      "note": "Reported: requestProcInfo still never settled; 5s Troubleshoot timers never fired done()"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App TCG",
+    "name": "about:support Troubleshoot.snapshot processes",
+    "traceOrReplayId": "serial-App-20261118T073631Z"
+  }
+}

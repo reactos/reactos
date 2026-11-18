@@ -1,6 +1,7 @@
 /*
  * Copyright 2002 Jon Griffiths
  * Copyright 2016 Sebastian Lackner
+ * Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,6 +16,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * GetDpiForMonitor for ReactOS/VerOS: guest
+ * output/ntdll-apps/serial-App-20261116T203718Z.log
+ * WARNING: calling stub GetDpiForMonitor. Public:
+ * https://learn.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getdpiformonitor
+ * Calls user32 GetDpiForMonitorInternal (win32ss/user/user32_vista/dpi.c).
  */
 
 #include <stdarg.h>
@@ -72,13 +79,20 @@ HRESULT WINAPI SetProcessDpiAwareness(PROCESS_DPI_AWARENESS value)
     if (SetProcessDpiAwarenessInternal( (DPI_AWARENESS)value )) return S_OK;
     return HRESULT_FROM_WIN32( GetLastError() );
 }
+#endif /* __REACTOS__ */
+
+/*
+ * Guest: output/ntdll-apps/serial-App-20261116T203718Z.log
+ * WARNING: calling stub GetDpiForMonitor. Needed with WR force-disabled
+ * so Firefox XUL can size glyphs from monitor DPI.
+ */
+BOOL WINAPI GetDpiForMonitorInternal(HMONITOR monitor, UINT type, UINT *x, UINT *y);
 
 HRESULT WINAPI GetDpiForMonitor(HMONITOR monitor, MONITOR_DPI_TYPE type, UINT *x, UINT *y)
 {
     if (GetDpiForMonitorInternal( monitor, type, x, y )) return S_OK;
     return HRESULT_FROM_WIN32( GetLastError() );
 }
-#endif /* __REACTOS__ */
 
 HRESULT WINAPI GetScaleFactorForMonitor(HMONITOR monitor, DEVICE_SCALE_FACTOR *scale)
 {

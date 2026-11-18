@@ -1,0 +1,27 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox Troubleshoot.snapshot hang with blank Name/Version when the processes provider awaits ChromeUtils.requestProcInfo, while application-only stubs fill Name/Version?",
+  "allowedInputs": [
+    {
+      "title": "QueryProcessCycleTime",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryprocesscycletime"
+    },
+    {
+      "title": "Mozilla ProcInfo_win.cpp GetProcInfoSync",
+      "url": "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/toolkit/components/processtools/ProcInfo_win.cpp"
+    },
+    {
+      "title": "Guest serial stub QueryProcessCycleTime",
+      "path": "output/ntdll-apps/serial-App-20261118T021702Z.log",
+      "marker": "WARNING: calling stub QueryProcessCycleTime"
+    },
+    {
+      "title": "Reported: requestProcInfo rejects NS_ERROR_UNEXPECTED when every QueryProcessCycleTime stub fails; Troubleshoot.processes never calls done()",
+      "note": "Reported: snapshot-probe requestProcInfo:ERR NS_ERROR_UNEXPECTED; ChromeUtils rejects empty GetProcInfo map; processes provider hang leaves Name/Version blank"
+    },
+    {
+      "title": "In-tree ProcessCycleTime IQS_NONE",
+      "path": "ntoskrnl/include/internal/ps_i.h"
+    }
+  ]
+}

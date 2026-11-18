@@ -1,0 +1,28 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox show the desktop through the title bar and leave a solid grey content pane after GetDpiForMonitor restored chrome glyphs, while DwmExtendFrameIntoClientArea is a no-op?",
+  "allowedInputs": [
+    {
+      "title": "DwmIsCompositionEnabled",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmiscompositionenabled"
+    },
+    {
+      "title": "Guest serial reports NT 10.0.19045",
+      "path": "output/ntdll-apps/serial-App-20261116T205323Z.log",
+      "marker": "VERPORT PsGetVersion 10.0.19045"
+    },
+    {
+      "title": "DwmExtendFrameIntoClientArea stub and DwmGetTransportAttributes DWM_E_COMPOSITIONDISABLED",
+      "path": "dll/win32/dwmapi/dwmapi_main.c"
+    },
+    {
+      "title": "Reported: screenshot desktop through title bar with grey content after DPI fix",
+      "note": "Reported: after GetDpiForMonitor, chrome glyphs paint; title bar shows desktop bleed; content pane solid grey"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-dpi-dwm",
+    "traceOrReplayId": "serial-App-20261116T205323Z"
+  }
+}

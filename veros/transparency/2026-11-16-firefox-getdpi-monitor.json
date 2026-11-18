@@ -1,0 +1,36 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox paint XUL wireframe chrome without glyphs after GetClipBox cleared SWGL no dt, and what should GetDpiForMonitor return?",
+  "allowedInputs": [
+    {
+      "title": "GetDpiForMonitor",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getdpiformonitor"
+    },
+    {
+      "title": "Guest serial stub GetDpiForMonitor on wireframe boot",
+      "path": "output/ntdll-apps/serial-App-20261116T203718Z.log",
+      "marker": "WARNING: calling stub GetDpiForMonitor"
+    },
+    {
+      "title": "Guest user.js WebRender force-disabled",
+      "path": "output/ntdll-apps/firefox-gfx-evidence-guest-log/user.js"
+    },
+    {
+      "title": "GetDpiForSystem LOGPIXELS pattern and GetDpiForMonitorInternal stub",
+      "path": "win32ss/user/user32_vista/dpi.c"
+    },
+    {
+      "title": "Wine shcore GetDpiForMonitor wrapper gated off for ReactOS",
+      "path": "dll/win32/shcore/main.c"
+    },
+    {
+      "title": "Reported: wireframe screenshot is a step in the right direction",
+      "note": "Reported: Ryan said the empty chrome wireframe screenshot is a step in the right direction"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-gfx-evidence",
+    "traceOrReplayId": "serial-App-20261116T203718Z"
+  }
+}

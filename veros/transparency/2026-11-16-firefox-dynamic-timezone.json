@@ -1,0 +1,28 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox about:support leave Name/Version blank and ignore wheel scroll and Ctrl+A after DWM ExtendFrame is fixed, while GetDynamicTimeZoneInformation is a stub?",
+  "allowedInputs": [
+    {
+      "title": "GetDynamicTimeZoneInformation",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-getdynamictimezoneinformation"
+    },
+    {
+      "title": "Guest serial stub GetDynamicTimeZoneInformation",
+      "path": "output/ntdll-apps/serial-App-20261116T220556Z.log",
+      "marker": "WARNING: calling stub GetDynamicTimeZoneInformation"
+    },
+    {
+      "title": "In-tree GetTimeZoneInformation",
+      "path": "dll/win32/kernel32/wine/timezone.c"
+    },
+    {
+      "title": "Reported: no wheel scroll; grayed about:support; Ctrl+A/C failed after ExtendFrame",
+      "note": "Reported: Ryan confirmed Start clicks work after ExtendFrame; wheel still broken; about:support dim; clipboard dump empty"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-about-support-tz",
+    "traceOrReplayId": "serial-App-20261116T220556Z"
+  }
+}

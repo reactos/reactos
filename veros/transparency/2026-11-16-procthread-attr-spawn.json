@@ -1,0 +1,29 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox SB::LA::SpawnTarget fail with Win32 0x57 after Mesa softpipe loads, and how do Initialize/Update/DeleteProcThreadAttributeList get implemented without -stub?",
+  "allowedInputs": [
+    {
+      "title": "Wine process attribute-list APIs already in this tree",
+      "path": "dll/win32/kernelbase/wine/process.c"
+    },
+    {
+      "title": "kernel32.spec prior -stub exports for the three attribute-list APIs",
+      "path": "dll/win32/kernel32/kernel32.spec"
+    },
+    {
+      "title": "Firefox Mesa retest guest stderr SpawnTarget Error 0x80070057",
+      "path": "output/ntdll-apps/firefox-mesa-retest-guest-log/firefox-stderr.txt",
+      "marker": "Failed to launch gpu subprocess @SB::LA::SpawnTarget (Error:-2147024809)"
+    },
+    {
+      "title": "App serial MESASOFT ICD then softpipe WineD3D",
+      "path": "output/ntdll-apps/serial-App-20261116T185747Z.log",
+      "marker": "Overriding the default OGL ICD with MESASOFT"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-mesa-retest",
+    "traceOrReplayId": "serial-App-20261116T185747Z"
+  }
+}

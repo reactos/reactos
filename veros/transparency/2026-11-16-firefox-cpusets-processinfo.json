@@ -1,0 +1,28 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox about:support stay grey with blank Name/Version after cubeb-null cleared the MMDeviceEnumerator burst, while GetSystemCpuSetInformation is still a kernel32 stub?",
+  "allowedInputs": [
+    {
+      "title": "GetSystemCpuSetInformation",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getsystemcpusetinformation"
+    },
+    {
+      "title": "Guest serial stub GetSystemCpuSetInformation",
+      "path": "output/ntdll-apps/serial-App-20261116T235322Z.log",
+      "marker": "WARNING: calling stub GetSystemCpuSetInformation"
+    },
+    {
+      "title": "In-tree SYSTEM_CPU_SET_INFORMATION",
+      "path": "sdk/include/xdk/ketypes.h"
+    },
+    {
+      "title": "Reported: cubeb-null still grey; Name/Version blank; blue bar then grey shell",
+      "note": "Reported: Ryan confirmed media.cubeb.force_null_context=true still left about:support grey with blank Name/Version after MMDevice hits dropped"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-about-support-cpusets",
+    "traceOrReplayId": "serial-App-20261116T235322Z"
+  }
+}

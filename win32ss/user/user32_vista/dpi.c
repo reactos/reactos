@@ -5,7 +5,13 @@
  * PURPOSE:     DPI functions for user32 and user32_vista.
  * COPYRIGHT:   Copyright 2024 Carl Bialorucki <cbialo2@outlook.com>
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Carl Bialorucki <cbialo2@outlook.com>
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * GetDpiForMonitorInternal: guest serial-App-20261116T203718Z.log
+ * marker WARNING: calling stub GetDpiForMonitor. Public:
+ * https://learn.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getdpiformonitor
+ * Same LOGPIXELS source as GetDpiForSystem in this file.
  */
 
 #define WIN32_NO_STATUS
@@ -256,7 +262,11 @@ SetProcessDpiAwarenessInternal(
 }
 
 /*
- * @stub
+ * @implemented
+ *
+ * Guest: output/ntdll-apps/serial-App-20261116T203718Z.log
+ * WARNING: calling stub GetDpiForMonitor. With WebRender force-disabled,
+ * Firefox paints XUL wireframe without glyphs when this stays FALSE.
  */
 BOOL
 WINAPI
@@ -266,8 +276,33 @@ GetDpiForMonitorInternal(
     _Out_ UINT *x,
     _Out_ UINT *y)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    HDC hDC;
+    UINT dpiX;
+    UINT dpiY;
+
+    UNREFERENCED_PARAMETER(monitor);
+    UNREFERENCED_PARAMETER(type);
+
+    if (!x || !y)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    hDC = NtUserGetDC(NULL);
+    if (!hDC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    dpiX = GetDeviceCaps(hDC, LOGPIXELSX);
+    dpiY = GetDeviceCaps(hDC, LOGPIXELSY);
+    ReleaseDC(NULL, hDC);
+
+    *x = dpiX;
+    *y = dpiY;
+    return TRUE;
 }
 
 /*

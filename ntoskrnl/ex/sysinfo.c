@@ -1,11 +1,38 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ex/sysinfo.c
- * PURPOSE:         System information functions
+ * PROJECT:     VerOS NT Kernel
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
+ * FILE:        ntoskrnl/ex/sysinfo.c
+ * PURPOSE:     System information functions
+ * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: David Welch (welch@mcmail.com)
+ *              Aleksey Bragin (aleksey@reactos.org)
+ *              Ryan Wilson <ryan@verosnt.com>
  *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Aleksey Bragin (aleksey@reactos.org)
+ * SystemProcessInformation ImageName: use Process->ImageFileName only.
+ * SeLocateProcessImageName per process dominated App TCG latency for
+ * Firefox ChromeUtils.requestProcInfo → GetProcInfoSync; Troubleshoot
+ * snapshot left about:support Name/Version blank until processes done().
+ * Guest: output/ntdll-apps veros-app-basics name=Firefox while UI empty;
+ * veros-snapshot-keys processes=ok after long wait. Firefox matches SPI
+ * by PID (ProcInfo_win.cpp); basename of ImageFileName is the existing
+ * fallback in this file when locate returns empty.
+ *
+ * SPI thread walk: use Process->ThreadListHead / ETHREAD.ThreadListEntry
+ * under ProcessLock (same pairing as PsGetNextProcessThread in
+ * ntoskrnl/ps/process.c). Walking Pcb.ThreadListHead / Tcb.ThreadListEntry
+ * without the KPROCESS lock could loop under concurrent thread churn while
+ * ProcessLock stayed held; guest serial-App-20261118T062219Z wrote
+ * veros-app-basics name=Firefox but never veros-snapshot-keys — processes
+ * await requestProcInfo never settled, so Troubleshoot 5s nsITimer could
+ * not run done() on the blocked main thread.
+ *
+ * Omit KeQueryRuntimeProcess under ProcessLock. That helper walks the
+ * KPROCESS thread list at SYNCH; holding the EPROCESS push lock across
+ * it left SPI stalling after the ThreadListHead fix (serial-App-
+ * 20261118T073631Z: basics filled, snapshot-keys still missing). Firefox
+ * GetProcInfo ignores SPI UserTime/KernelTime (uses CycleTime /
+ * GetProcessTimes); leave those fields zero from the buffer wipe.
  */
 
 /* INCLUDES *****************************************************************/
@@ -902,12 +929,8 @@ ExpQuerySystemProcessInformation(
     USHORT ImageNameLength;
     PLIST_ENTRY CurrentEntry;
     ULONG TotalSize = 0, ThreadsCount;
-    ULONG TotalUser, TotalKernel;
     PUCHAR Current;
     NTSTATUS Status = STATUS_SUCCESS;
-    PUNICODE_STRING TempProcessImageName;
-    _SEH2_VOLATILE PUNICODE_STRING ProcessImageName = NULL;
-    PWCHAR szSrc;
     BOOLEAN Overflow = FALSE;
 
     _SEH2_TRY
@@ -943,7 +966,7 @@ ExpQuerySystemProcessInformation(
             if ((Process->ProcessExiting) &&
                 (Process->Pcb.Header.SignalState) &&
                 !(Process->ActiveThreads) &&
-                (IsListEmpty(&Process->Pcb.ThreadListHead)))
+                (IsListEmpty(&Process->ThreadListHead)))
             {
                 DPRINT1("Process %p (%s:%p) is a zombie\n",
                         Process, Process->ImageFileName, Process->UniqueProcessId);
@@ -956,42 +979,32 @@ ExpQuerySystemProcessInformation(
                 goto Skip;
             }
 
+            /*
+             * Walk EPROCESS ThreadListHead under ProcessLock — same list
+             * PsGetNextProcessThread uses. Do not walk Pcb.ThreadListHead
+             * here; that KPROCESS list is not paired with ProcessLock.
+             */
             ThreadsCount = 0;
-            CurrentEntry = Process->Pcb.ThreadListHead.Flink;
-            while (CurrentEntry != &Process->Pcb.ThreadListHead)
+            CurrentEntry = Process->ThreadListHead.Flink;
+            while (CurrentEntry != &Process->ThreadListHead)
             {
-                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
+                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, ThreadListEntry);
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
             }
 
             // size of the structure for every process
             CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + ThreadInfoSize * ThreadsCount;
+            /*
+             * Skip SeLocateProcessImageName. Full-path locate per process
+             * was the SPI hot cost under App TCG; ImageFileName is the
+             * basename fallback this function already used when locate
+             * returned empty, and Firefox GetProcInfo matches by PID.
+             */
             ImageNameLength = 0;
-            Status = SeLocateProcessImageName(Process, &TempProcessImageName);
-            ProcessImageName = TempProcessImageName;
-            szSrc = NULL;
-            if (NT_SUCCESS(Status) && (ProcessImageName->Length > 0))
+            if (Process != PsIdleProcess)
             {
-              szSrc = (PWCHAR)((PCHAR)ProcessImageName->Buffer + ProcessImageName->Length);
-              /* Loop the file name*/
-              while (szSrc > ProcessImageName->Buffer)
-              {
-                /* Make sure this isn't a backslash */
-                if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
-                {
-                    szSrc++;
-                    break;
-                }
-                else
-                {
-                    ImageNameLength += sizeof(WCHAR);
-                }
-              }
-            }
-            if (!ImageNameLength && Process != PsIdleProcess)
-            {
-              ImageNameLength = (USHORT)strlen(Process->ImageFileName) * sizeof(WCHAR);
+                ImageNameLength = (USHORT)strlen(Process->ImageFileName) * sizeof(WCHAR);
             }
 
             /* Round up the image name length as NT does */
@@ -1019,20 +1032,15 @@ ExpQuerySystemProcessInformation(
                 SpiCurrent->ImageName.Buffer = (void*)(Current + CurrentSize);
 
                 /* Copy name to the end of the struct */
-                if(Process != PsIdleProcess)
+                if (Process != PsIdleProcess)
                 {
-                    if (szSrc)
+                    RtlInitAnsiString(&ImageName, Process->ImageFileName);
+                    Status = RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName,
+                                                          &ImageName,
+                                                          FALSE);
+                    if (!NT_SUCCESS(Status))
                     {
-                        RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
-                    }
-                    else
-                    {
-                        RtlInitAnsiString(&ImageName, Process->ImageFileName);
-                        Status = RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
-                        if (!NT_SUCCESS(Status))
-                        {
-                            SpiCurrent->ImageName.Length = 0;
-                        }
+                        SpiCurrent->ImageName.Length = 0;
                     }
                 }
                 else
@@ -1063,11 +1071,11 @@ ExpQuerySystemProcessInformation(
 
                 /* Now do the threads */
                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
-                for (CurrentEntry = Process->Pcb.ThreadListHead.Flink;
-                     CurrentEntry != &Process->Pcb.ThreadListHead;
+                for (CurrentEntry = Process->ThreadListHead.Flink;
+                     CurrentEntry != &Process->ThreadListHead;
                      CurrentEntry = CurrentEntry->Flink)
                 {
-                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
+                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, ThreadListEntry);
 
                     ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
                     ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
@@ -1093,17 +1101,14 @@ ExpQuerySystemProcessInformation(
                     ThreadInfo = (PSYSTEM_THREAD_INFORMATION)((PUCHAR)ThreadInfo + ThreadInfoSize);
                 }
 
-                /* Query total user/kernel times of a process */
-                TotalKernel = KeQueryRuntimeProcess(&Process->Pcb, &TotalUser);
-                SpiCurrent->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
-                SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
-            }
-
-            if (ProcessImageName)
-            {
-                /* Release the memory allocated by SeLocateProcessImageName */
-                ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
-                ProcessImageName = NULL;
+                /*
+                 * Do not call KeQueryRuntimeProcess under ProcessLock.
+                 * It walks the KPROCESS thread list at SYNCH; holding the
+                 * EPROCESS push lock across that walk stalled SPI after
+                 * the ThreadListHead fix. UserTime/KernelTime stay zero
+                 * from RtlZeroMemory above; Firefox GetProcInfo does not
+                 * use them.
+                 */
             }
 
             /* Unlock the Process */
@@ -1132,13 +1137,8 @@ Skip:
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if(Process != NULL)
+        if (Process != NULL)
             ObDereferenceObject(Process);
-        if (ProcessImageName)
-        {
-            /* Release the memory allocated by SeLocateProcessImageName */
-            ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
-        }
 
         Status = _SEH2_GetExceptionCode();
     }

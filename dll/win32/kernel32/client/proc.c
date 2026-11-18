@@ -7,11 +7,15 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Ariadne (ariadne@xs4all.nl)
  *              Ryan Wilson <ryan@verosnt.com>
- */
-
-/*
- * UPDATE HISTORY:
- *                  Created 01/11/98
+ *
+ * QueryProcessCycleTime: guest
+ * output/ntdll-apps/serial-App-20261118T021702Z.log
+ * marker WARNING: calling stub QueryProcessCycleTime.
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryprocesscycletime
+ * Mozilla GetProcInfoSync (ProcInfo_win.cpp) skips a process when this
+ * export fails, then ChromeUtils.requestProcInfo rejects an empty map
+ * with NS_ERROR_UNEXPECTED; Troubleshoot.processes never calls done().
+ * Probe: capture-log snapshot-probe requestProcInfo:ERR NS_ERROR_UNEXPECTED.
  */
 
 /* INCLUDES ****************************************************************/
@@ -1182,6 +1186,42 @@ GetProcessTimes(IN HANDLE hProcess,
     lpKernelTime->dwHighDateTime = Kut.KernelTime.u.HighPart;
     lpUserTime->dwLowDateTime = Kut.UserTime.u.LowPart;
     lpUserTime->dwHighDateTime = Kut.UserTime.u.HighPart;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * ProcessCycleTime is not wired in ntos yet (IQS_NONE). Validate the
+ * handle with ProcessTimes, then succeed with zero cycles so Firefox
+ * GetProcInfo can keep the process and use GetProcessTimes for cpuTime.
+ */
+BOOL
+WINAPI
+QueryProcessCycleTime(IN HANDLE ProcessHandle,
+                      OUT PULONG64 CycleTime)
+{
+    KERNEL_USER_TIMES Kut;
+    NTSTATUS Status;
+
+    if (!CycleTime)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = NtQueryInformationProcess(ProcessHandle,
+                                       ProcessTimes,
+                                       &Kut,
+                                       sizeof(Kut),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    *CycleTime = 0;
     return TRUE;
 }
 
@@ -2388,6 +2428,19 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     /* Capture the special window flag */
     NoWindow = dwCreationFlags & CREATE_NO_WINDOW;
     dwCreationFlags &= ~CREATE_NO_WINDOW;
+
+    /*
+     * Attribute lists are filled by Initialize/UpdateProcThreadAttribute
+     * (client/procattr.c). CSRSS CreateProcess does not consume them yet, so
+     * drop EXTENDED_STARTUPINFO_PRESENT (0x80000, Vista+) after Firefox and
+     * other callers have already built the list. Guest:
+     * output/ntdll-apps/firefox-mesa-retest-guest-log/firefox-stderr.txt
+     * SB::LA::SpawnTarget Error 0x80070057.
+     */
+#ifndef EXTENDED_STARTUPINFO_PRESENT
+#define EXTENDED_STARTUPINFO_PRESENT 0x00080000
+#endif
+    dwCreationFlags &= ~EXTENDED_STARTUPINFO_PRESENT;
 
 #if _SXS_SUPPORT_ENABLED_
     /* Setup the SxS static string arrays and buffers */

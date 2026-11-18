@@ -1,0 +1,33 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox still log RenderCompositorSWGL failed mapping default framebuffer, no dt after the empty DceGetVisRgn fallback, and what should GetClipBox return for a window DC with an empty clip region?",
+  "allowedInputs": [
+    {
+      "title": "Firefox InProcessWinCompositorWidget StartRemoteDrawing / GetWindowSurface GetDC",
+      "url": "https://searchfox.org/firefox-main/source/widget/windows/InProcessWinCompositorWidget.cpp"
+    },
+    {
+      "title": "Firefox RenderCompositorSWGL AllocateMappedBuffer no dt marker",
+      "url": "https://searchfox.org/firefox-main/source/gfx/webrender_bindings/RenderCompositorSWGL.cpp"
+    },
+    {
+      "title": "Guest Firefox stdout SWGL no dt after empty-clip windc retest",
+      "path": "output/ntdll-apps/firefox-clip-guest-log/firefox-stdout.txt",
+      "marker": "RenderCompositorSWGL failed mapping default framebuffer, no dt"
+    },
+    {
+      "title": "GdiGetClipBox and GreSetDCOrg erclWindow",
+      "path": "win32ss/gdi/ntgdi/cliprgn.c"
+    },
+    {
+      "title": "GreSetDCOrg stores window rectangle on DC",
+      "path": "win32ss/gdi/ntgdi/coord.c"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-clip-getclipbox",
+    "traceOrReplayId": "firefox-clip-guest-log",
+    "logSha256": "da975aca6db5a6401b8f1ac09af6979a640530b5b601531723a6cb8c85437bd8"
+  }
+}

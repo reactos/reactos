@@ -1,0 +1,32 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox about:support stay blank with a nearly full scrollbar thumb after GetDynamicTimeZoneInformation is implemented, while softpipe calls stub lround and cbrtf?",
+  "allowedInputs": [
+    {
+      "title": "lround, lroundf, lroundl",
+      "url": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/lround-lroundf-lroundl"
+    },
+    {
+      "title": "cbrt, cbrtf, cbrtl",
+      "url": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/cbrt-cbrtf-cbrtl"
+    },
+    {
+      "title": "Guest serial stub lround and cbrtf",
+      "path": "output/ntdll-apps/serial-App-20261116T224834Z.log",
+      "marker": "WARNING: calling stub lround(100.000000)"
+    },
+    {
+      "title": "In-tree lround via round",
+      "path": "dll/win32/msvcrt/math.c"
+    },
+    {
+      "title": "Reported: cant scroll; Application Basics values blank; scrollbar thumb nearly full after TZ",
+      "note": "Reported: Ryan confirmed about:support still blank and unscrollable after GetDynamicTimeZoneInformation"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-about-support-ucrt-math",
+    "traceOrReplayId": "serial-App-20261116T224834Z"
+  }
+}

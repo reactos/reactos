@@ -1,9 +1,19 @@
 /*
- * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
- * PURPOSE:          Clip region functions
- * FILE:             win32ss/gdi/ntgdi/cliprgn.c
- * PROGRAMER:        Unknown
+ * PROJECT:     VerOS NT Subsystem
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
+ * FILE:        win32ss/gdi/ntgdi/cliprgn.c
+ * PURPOSE:     Clip region functions
+ * COPYRIGHT:   Copyright ReactOS Team
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Unknown
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * Empty GetClipBox fallback for window DCs: guest
+ * output/ntdll-apps/firefox-clip-guest-log/firefox-stdout.txt
+ * marker RenderCompositorSWGL failed mapping default framebuffer, no dt.
+ * Public: Firefox InProcessWinCompositorWidget StartRemoteDrawing /
+ * cairo_win32_surface size from GetClipBox
+ * https://searchfox.org/firefox-main/source/widget/windows/InProcessWinCompositorWidget.cpp
  */
 
 #include <win32k.h>
@@ -369,6 +379,7 @@ GdiGetClipBox(
 {
     PDC pdc;
     INT iComplexity;
+    RECTL devBox;
 
     /* Lock the DC */
     pdc = DC_LockDc(hdc);
@@ -384,23 +395,41 @@ GdiGetClipBox(
     /* Check if we have a RAO region (intersection of API and VIS region) */
     if (pdc->prgnRao)
     {
-        /* We have a RAO region, use it */
-        iComplexity = REGION_GetRgnBox(pdc->prgnRao, prc);
+        iComplexity = REGION_GetRgnBox(pdc->prgnRao, &devBox);
+    }
+    else if (pdc->prgnVis)
+    {
+        iComplexity = REGION_GetRgnBox(pdc->prgnVis, &devBox);
     }
     else
     {
-        /* No RAO region means no API region, so use the VIS region */
-        ASSERT(pdc->prgnVis);
-        iComplexity = REGION_GetRgnBox(pdc->prgnVis, prc);
+        DC_UnlockDc(pdc);
+        return ERROR;
     }
 
-    /* Unlock the DC */
+    /*
+     * An empty vis/RAO box still leaves erclWindow set by GreSetDCOrg from
+     * GetDC's rcClient. Cairo sizes a window-DC surface from GetClipBox;
+     * a non-positive box makes Firefox StartRemoteDrawing return null and
+     * log SWGL "no dt". Prefer the client-relative window size then.
+     * Guest: output/ntdll-apps/firefox-clip-guest-log/firefox-stdout.txt
+     * RenderCompositorSWGL failed mapping default framebuffer, no dt.
+     */
+    if (devBox.right <= devBox.left || devBox.bottom <= devBox.top)
+    {
+        if (!RECTL_bIsEmptyRect(&pdc->erclWindow))
+        {
+            devBox.left = 0;
+            devBox.top = 0;
+            devBox.right = pdc->erclWindow.right - pdc->erclWindow.left;
+            devBox.bottom = pdc->erclWindow.bottom - pdc->erclWindow.top;
+            iComplexity = SIMPLEREGION;
+        }
+    }
+
+    *prc = *(RECT *)&devBox;
+    IntDPtoLP(pdc, (PPOINTL)prc, 2);
     DC_UnlockDc(pdc);
-
-    /* Convert the rect to logical coordinates */
-    IntDPtoLP(pdc, (LPPOINT)prc, 2);
-
-    /* Return the complexity */
     return iComplexity;
 }
 

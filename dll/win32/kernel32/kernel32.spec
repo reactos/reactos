@@ -210,7 +210,7 @@
 @ stub -version=0x600+ DeleteFileTransactedA
 @ stub -version=0x600+ DeleteFileTransactedW
 @ stdcall DeleteFileW(wstr)
-@ stdcall -stub DeleteProcThreadAttributeList(ptr)
+@ stdcall DeleteProcThreadAttributeList(ptr)
 @ stdcall DeleteTimerQueue(long)
 @ stdcall DeleteTimerQueueEx(long long)
 @ stdcall DeleteTimerQueueTimer(long long long)
@@ -472,7 +472,7 @@
 @ stdcall GetDriveTypeW(wstr)
 @ stub -version=0x600+ GetDurationFormat
 @ stub -version=0x600+ GetDurationFormatEx
-@ stdcall -stub GetDynamicTimeZoneInformation(ptr)
+@ stdcall GetDynamicTimeZoneInformation(ptr)
 @ stdcall GetEnvironmentStrings()
 @ stdcall GetEnvironmentStringsA() GetEnvironmentStrings
 @ stdcall GetEnvironmentStringsW()
@@ -623,7 +623,7 @@
 @ stdcall GetSystemDefaultLangID()
 @ stdcall -version=0x600+ GetSystemDefaultLocaleName(ptr long)
 @ stdcall GetSystemDefaultUILanguage()
-@ stdcall -stub GetSystemCpuSetInformation(ptr long ptr ptr long)
+@ stdcall GetSystemCpuSetInformation(ptr long ptr ptr long)
 @ stdcall GetSystemDirectoryA(ptr long)
 @ stdcall GetSystemDirectoryW(ptr long)
 @ stdcall GetSystemFileCacheSize(ptr ptr ptr)
@@ -650,6 +650,7 @@
 @ stdcall GetTempPathW(long ptr)
 @ stdcall GetTempPath2W(long ptr)
 @ stdcall GetThreadContext(long ptr)
+@ stdcall GetThreadDescription(ptr ptr)
 @ stdcall -stub -version=0x600+ GetThreadErrorMode()
 @ stdcall GetThreadGroupAffinity(ptr ptr)
 @ stdcall GetThreadIOPendingFlag(long ptr)
@@ -747,7 +748,7 @@
 @ stdcall InitializeCriticalSection(ptr)
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
 @ stdcall InitializeCriticalSectionEx(ptr long long)
-@ stdcall -stub InitializeProcThreadAttributeList(ptr long long ptr)
+@ stdcall InitializeProcThreadAttributeList(ptr long long ptr)
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stdcall InitializeSRWLock(ptr) ntdll.RtlInitializeSRWLock
 @ stdcall -arch=i386 -ret64 InterlockedCompareExchange64(ptr double double) ntdll.RtlInterlockedCompareExchange64
@@ -975,8 +976,8 @@
 @ stdcall QueryUnbiasedInterruptTime(ptr) ntdll.RtlQueryUnbiasedInterruptTime
 @ stdcall QueryUnbiasedInterruptTimePrecise(ptr)
 @ stub -version=0x600+ QueryProcessAffinityUpdateMode
-@ stdcall -stub QueryProcessCycleTime(ptr ptr)
-@ stdcall -stub QueryThreadCycleTime(ptr ptr)
+@ stdcall QueryProcessCycleTime(ptr ptr)
+@ stdcall QueryThreadCycleTime(ptr ptr)
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
 @ stdcall -norelay RaiseException(long long long ptr)
@@ -1249,7 +1250,7 @@
 @ stdcall UnregisterWait(long)
 @ stdcall UnregisterWaitEx(long long)
 @ stub -version=0x600+ UpdateCalendarDayOfWeek
-@ stdcall -stub UpdateProcThreadAttribute(ptr long ptr ptr ptr ptr ptr)
+@ stdcall UpdateProcThreadAttribute(ptr long long ptr long ptr ptr)
 @ stdcall UpdateResourceA(long str str long ptr long)
 @ stdcall UpdateResourceW(long wstr wstr long ptr long)
 @ stdcall VDMConsoleOperation(long long)

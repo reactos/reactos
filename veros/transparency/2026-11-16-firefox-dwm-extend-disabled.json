@@ -1,0 +1,28 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox still trap desktop clicks and refuse to scroll about:support after DwmIsCompositionEnabled returns FALSE?",
+  "allowedInputs": [
+    {
+      "title": "DwmExtendFrameIntoClientArea",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmextendframeintoclientarea"
+    },
+    {
+      "title": "Guest serial ExtendFrame stub after composition-off",
+      "path": "output/ntdll-apps/serial-App-20261116T210232Z.log",
+      "marker": "fixme:(dll\\win32\\dwmapi\\dwmapi_main.c:97)"
+    },
+    {
+      "title": "DwmGetTransportAttributes already returns DWM_E_COMPOSITIONDISABLED",
+      "path": "dll/win32/dwmapi/dwmapi_main.c"
+    },
+    {
+      "title": "Reported: cannot scroll, minimize, click Start, or click desktop through Firefox",
+      "note": "Reported: Ryan could see Desktop save-clipboard behind Firefox but clicks did nothing; Start unresponsive; wheel scroll failed; Ctrl+A/C doubtful"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-support-input-trap",
+    "traceOrReplayId": "serial-App-20261116T210232Z"
+  }
+}

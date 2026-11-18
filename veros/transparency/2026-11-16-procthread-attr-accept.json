@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Should UpdateProcThreadAttribute reject unknown attributes while CreateProcess strips EXTENDED_STARTUPINFO_PRESENT?",
+  "allowedInputs": [
+    {
+      "title": "CreateProcess strips EXTENDED_STARTUPINFO_PRESENT in client/proc.c",
+      "path": "dll/win32/kernel32/client/proc.c"
+    },
+    {
+      "title": "Socket SpawnTarget still 0x80070057 after content children started",
+      "path": "output/ntdll-apps/firefox-procattr-guest-log/firefox-stderr.txt",
+      "marker": "Failed to launch socket subprocess @SB::LA::SpawnTarget (Error:-2147024809)"
+    }
+  ]
+}

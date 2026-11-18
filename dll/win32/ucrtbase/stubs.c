@@ -1,3 +1,17 @@
+/*
+ * PROJECT:     VerOS NT System Libraries
+ * LICENSE:     GNU Lesser General Public License, version 2.1 or later (LGPL-2.1-or-later)
+ * FILE:        dll/win32/ucrtbase/stubs.c
+ * PURPOSE:     ucrtbase helpers and C99 math exports softpipe needs
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
+ *
+ * lround/cbrtf: guest output/ntdll-apps/serial-App-20261116T224834Z.log
+ * marker WARNING: calling stub lround(100.000000) and calling stub cbrtf.
+ * In-tree shape: dll/win32/msvcrt/math.c lround via round.
+ * Public: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/lround-lroundf-lroundl
+ * Public: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/cbrt-cbrtf-cbrtl
+ */
 
 #include <stdint.h>
 #include <intrin.h>
@@ -45,6 +59,10 @@ int __cdecl __acrt_initialize_sse2(void)
 #pragma function(log2f)
 #pragma function(lrint)
 #pragma function(lrintf)
+#pragma function(lround)
+#pragma function(lroundf)
+#pragma function(cbrt)
+#pragma function(cbrtf)
 #endif
 
 double fma(double x, double y, double z)
@@ -80,4 +98,44 @@ long int lrintf(float x)
 {
     __debugbreak();
     return 0;
+}
+
+/* Shape matches dll/win32/msvcrt/math.c lround: round then cast. */
+long int lround(double x)
+{
+    double d = round(x);
+    if (d != (double)(long int)d)
+    {
+        return 0;
+    }
+    return (long int)d;
+}
+
+long int lroundf(float x)
+{
+    float f = roundf(x);
+    if (f != (float)(long int)f)
+    {
+        return 0;
+    }
+    return (long int)f;
+}
+
+/* C99 cube root via pow; preserve sign (MSDN cbrt page above). */
+double cbrt(double x)
+{
+    if (x == 0.0)
+    {
+        return x;
+    }
+    return copysign(pow(fabs(x), 1.0 / 3.0), x);
+}
+
+float cbrtf(float x)
+{
+    if (x == 0.0f)
+    {
+        return x;
+    }
+    return copysignf(powf(fabsf(x), 1.0f / 3.0f), x);
 }

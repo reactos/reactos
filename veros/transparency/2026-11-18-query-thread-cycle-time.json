@@ -1,0 +1,30 @@
+{
+  "question": "Why does Firefox Troubleshoot.processes / requestProcInfo still leave about:support Name/Version blank after QueryProcessCycleTime was implemented?",
+  "allowedInputs": [
+    {
+      "kind": "Reported",
+      "note": "After QueryProcessCycleTime fix, about:support Name/Version still blank; serial shows WARNING: calling stub QueryThreadCycleTime many times."
+    },
+    {
+      "kind": "guest-log",
+      "path": "output/ntdll-apps/serial-App-20261118T042848Z.log",
+      "marker": "WARNING: calling stub QueryThreadCycleTime"
+    },
+    {
+      "kind": "public",
+      "title": "QueryThreadCycleTime",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime"
+    },
+    {
+      "kind": "in-tree",
+      "path": "dll/win32/kernel32/client/proc.c",
+      "note": "QueryProcessCycleTime pattern: validate with ProcessTimes, return zero cycles."
+    },
+    {
+      "kind": "in-tree",
+      "path": "dll/win32/kernel32/client/thread.c",
+      "note": "GetThreadTimes already uses NtQueryInformationThread(ThreadTimes)."
+    }
+  ],
+  "spdx": "GPL-2.0-or-later"
+}

@@ -1,0 +1,27 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Troubleshoot.snapshot never write veros-snapshot-keys after SPI ImageFileName-only, when processes awaits ChromeUtils.requestProcInfo and 5s nsITimer providers never call done() under App TCG?",
+  "allowedInputs": [
+    {
+      "title": "In-tree PsGetNextProcessThread ProcessLock + ThreadListHead pairing",
+      "path": "ntoskrnl/ps/process.c"
+    },
+    {
+      "title": "In-tree ExpQuerySystemProcessInformation prior Pcb.ThreadListHead walk",
+      "path": "ntoskrnl/ex/sysinfo.c"
+    },
+    {
+      "title": "Mozilla ProcInfo_win.cpp GetProcInfo uses SystemProcessInformation",
+      "url": "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/toolkit/components/processtools/ProcInfo_win.cpp"
+    },
+    {
+      "title": "Reported: serial-App-20261118T062219Z kernel 26c22d4; veros-app-basics name=Firefox at 12:25:11; veros-snapshot-keys missing after ~6 min; disk omni has 5s verosTimeout timers",
+      "note": "Reported: requestProcInfo never settled so Troubleshoot.snapshot never finished; blank about:support Name/Version"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App TCG",
+    "name": "about:support Troubleshoot.snapshot processes",
+    "traceOrReplayId": "serial-App-20261118T062219Z"
+  }
+}
