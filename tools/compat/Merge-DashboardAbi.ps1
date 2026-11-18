@@ -312,6 +312,6 @@ if ($SelfTest) {
     exit 0
 }
 
-if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "veros\dashboard\latest.json" }
+if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "tavera\dashboard\latest.json" }
 if (-not $SnapshotPath) { $SnapshotPath = Join-Path $SourceRoot "dashboard\data\snapshot.json" }
 Update-WebsiteAbi -WebsiteFile $WebsitePath -SnapshotFile $SnapshotPath | Out-Null

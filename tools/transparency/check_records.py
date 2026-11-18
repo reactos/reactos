@@ -25,15 +25,15 @@ SCOPED_PREFIXES = (
 )
 
 DATE_FILE = re.compile(
-    r"^veros/transparency/(\d{4}-\d{2}-\d{2})-[A-Za-z0-9][A-Za-z0-9-]*\.json$"
+    r"^tavera/transparency/(\d{4}-\d{2}-\d{2})-[A-Za-z0-9][A-Za-z0-9-]*\.json$"
 )
-SHA_FILE = re.compile(r"^veros/transparency/([0-9a-f]{40})\.json$")
+SHA_FILE = re.compile(r"^tavera/transparency/([0-9a-f]{40})\.json$")
 LOG_SHA = re.compile(r"^[0-9a-f]{64}$")
 OUTPUT_FILE = re.compile(
     r"output/[A-Za-z0-9_./+-]+\.(?:log|json|txt|probe|err|ok)"
 )
 BANNED_FIELDS = ("forbiddenInputsNotUsed", "humanReview", "cursor")
-NOTES_DIR = "veros/transparency"
+NOTES_DIR = "tavera/transparency"
 
 
 def git(*args):
@@ -267,7 +267,7 @@ def check_commit(sha, end):
         return errors
     errors.append(
         "%s: a commit that changes boot, the kernel, the HAL, a driver, NTFS, "
-        "or a Windows-facing DLL adds one veros/transparency/<yyyy-mm-dd>-<slug>.json"
+        "or a Windows-facing DLL adds one tavera/transparency/<yyyy-mm-dd>-<slug>.json"
         % sha
     )
     return errors

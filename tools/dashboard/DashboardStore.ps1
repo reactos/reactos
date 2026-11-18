@@ -91,7 +91,7 @@ function Get-DashboardPaths {
     param([string]$SourceRoot, [string]$DashboardRoot)
     if (-not $DashboardRoot) {
         if (-not $SourceRoot) { throw "A dashboard root is required" }
-        $DashboardRoot = Join-Path $SourceRoot "veros\dashboard"
+        $DashboardRoot = Join-Path $SourceRoot "tavera\dashboard"
     }
     return [pscustomobject]@{
         Root     = $DashboardRoot
@@ -387,13 +387,13 @@ function Convert-DashboardStore {
         foreach ($row in @($legacy)) { $snaps.Add($row) | Out-Null }
     }
     Push-Location $SourceRoot
-    try { $shas = @(& git log --format=%H -- "veros/dashboard/latest.json") }
+    try { $shas = @(& git log --format=%H -- "tavera/dashboard/latest.json") }
     finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { throw "git log failed while converting the dashboard" }
     [array]::Reverse($shas)
     foreach ($sha in @($shas | Where-Object { $_ })) {
         Push-Location $SourceRoot
-        try { $raw = & git show ($sha.Trim() + ":veros/dashboard/latest.json") }
+        try { $raw = & git show ($sha.Trim() + ":tavera/dashboard/latest.json") }
         finally { Pop-Location }
         if ($LASTEXITCODE -ne 0 -or -not $raw) { continue }
         $snaps.Add(($raw | Out-String | ConvertFrom-Json)) | Out-Null

@@ -398,13 +398,13 @@ if ($SelfTest) {
 }
 
 if ($Repair) {
-    if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "veros\dashboard\latest.json" }
+    if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "tavera\dashboard\latest.json" }
     Repair-WebsiteAfterKernelMerge -WebsitePath $WebsitePath
     exit 0
 }
 
 $sections = Get-SectionSet $Section
-if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "veros\dashboard\latest.json" }
+if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "tavera\dashboard\latest.json" }
 if (-not $DriverLog) { $DriverLog = Join-Path $SourceRoot "output\driver\load.log" }
 if (-not $AppCatalog) { $AppCatalog = Join-Path $SourceRoot "compat\catalog\apps.json" }
 

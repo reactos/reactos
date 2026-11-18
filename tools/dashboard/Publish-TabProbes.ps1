@@ -567,8 +567,8 @@ if ($SelfTest) {
 }
 
 $sections = Get-SectionSet $Section
-if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "veros\dashboard\latest.json" }
-if (-not $HistoryPath) { $HistoryPath = Join-Path $SourceRoot "veros\dashboard\history.json" }
+if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "tavera\dashboard\latest.json" }
+if (-not $HistoryPath) { $HistoryPath = Join-Path $SourceRoot "tavera\dashboard\history.json" }
 if (-not $SubsystemMap) { $SubsystemMap = Join-Path $SourceRoot "compat\catalog\syscall-subsystems.json" }
 if (-not $DriverGroups) { $DriverGroups = Join-Path $SourceRoot "compat\catalog\driver-abi-groups.json" }
 if (-not $PluginLog) { $PluginLog = Join-Path $SourceRoot "output\abi-boot\abi.jsonl" }

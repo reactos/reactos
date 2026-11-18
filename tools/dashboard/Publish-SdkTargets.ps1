@@ -1022,7 +1022,7 @@ if ($SelfTest) {
     exit 0
 }
 
-if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "veros\dashboard\latest.json" }
+if (-not $WebsitePath) { $WebsitePath = Join-Path $SourceRoot "tavera\dashboard\latest.json" }
 $modules = @(Get-SdkAudit $SourceRoot)
 if ($modules.Count -eq 0) { throw "The amd64 build produced no module targets" }
 Test-KernelPin $modules

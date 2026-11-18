@@ -119,10 +119,10 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if ($Stage) {
     $paths = @(
-        "veros/dashboard/latest.json",
-        "veros/dashboard/history.json",
-        "veros/dashboard/sections",
-        "veros/dashboard/history",
+        "tavera/dashboard/latest.json",
+        "tavera/dashboard/history.json",
+        "tavera/dashboard/sections",
+        "tavera/dashboard/history",
         "dashboard/data/snapshot.json",
         "dashboard/data/snapshot.js"
     )

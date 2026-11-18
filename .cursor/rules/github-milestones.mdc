@@ -5,9 +5,9 @@ alwaysApply: true
 
 # Milestone progress
 
-When the task is an open milestone on `https://github.com/rjwil1086/verosng`, update that milestone in GitHub in the same turn as the work. Match it by title (`Milestone 16: The next application`). The number in the title is not the GitHub milestone number.
+When the task is an open milestone on `https://github.com/taveraos/taveraos`, update that milestone in GitHub in the same turn as the work. Match it by title (`Milestone 16: The next application`). The number in the title is not the GitHub milestone number.
 
-Use `gh --repo rjwil1086/verosng`. Leave `https://github.com/reactos/reactos` alone. Do not open, close, or retitle a milestone. If the task fits more than one open milestone, ask Ryan which one. Work that is not a milestone stays off the milestone list.
+Use `gh --repo taveraos/taveraos`. Leave `https://github.com/reactos/reactos` alone. Do not open, close, or retitle a milestone. If the task fits more than one open milestone, ask Ryan which one. Work that is not a milestone stays off the milestone list.
 
 ## Progress
 
@@ -33,5 +33,5 @@ When Ryan asks to open an issue, or an issue already exists for the fault:
 ```text
 Wrong: gh issue create during a silent-fail fix loop without Ryan asking
 Right: fix the fault; update Progress; open an issue only when Ryan says to
-Right: gh issue close 42 --repo rjwil1086/verosng --comment "The import resolves. The installer reaches the desktop."
+Right: gh issue close 42 --repo taveraos/taveraos --comment "The import resolves. The installer reaches the desktop."
 ```

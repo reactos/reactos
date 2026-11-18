@@ -241,7 +241,7 @@ function Export-OsImage {
     New-Item -ItemType Directory -Force -Path $Image | Out-Null
     $copied = 0
     foreach ($line in Get-Content $List) {
-        if ($line -notlike "VerOS/*=*") { continue }
+        if ($line -notlike "Tavera/*=*") { continue }
         $split = $line.IndexOf("=")
         if ($split -lt 7) { continue }
         $rel = $line.Substring(6, $split - 6) -replace "/", "\"
@@ -297,14 +297,14 @@ function Repack-Bootcd {
         $relative -like "Program Files\VerOS Update\*" -or $relative -eq "system32\VerOSUpdate.cpl" -or $relative -eq "veros.build"
     }
     foreach ($file in $clientFiles) {
-        $graft = "VerOS/" + $file.FullName.Substring($Reactos.Length).TrimStart('\').Replace('\', '/')
+        $graft = "Tavera/" + $file.FullName.Substring($Reactos.Length).TrimStart('\').Replace('\', '/')
         $added += "$graft=$($file.FullName)"
     }
     $systemHive = (Join-Path $Reactos "system32\config\SYSTEM").Replace('\', '/')
     $softwareHive = (Join-Path $Reactos "system32\config\SOFTWARE").Replace('\', '/')
     $kept = $kept | ForEach-Object {
-        if ($_ -like "VerOS/system32/config/system=*") { "VerOS/system32/config/system=$systemHive" }
-        elseif ($_ -like "VerOS/system32/config/software=*") { "VerOS/system32/config/software=$softwareHive" }
+        if ($_ -like "Tavera/system32/config/system=*") { "Tavera/system32/config/system=$systemHive" }
+        elseif ($_ -like "Tavera/system32/config/software=*") { "Tavera/system32/config/software=$softwareHive" }
         else { $_ }
     }
     @($kept + $added) | Set-Content $list -Encoding ascii

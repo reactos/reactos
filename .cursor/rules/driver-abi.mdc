@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Application goal
 
-The order is the open milestones on https://github.com/rjwil1086/verosng/milestones, lowest title number first. A task stays only when the amd64 live CD still reaches the desktop.
+The order is the open milestones on https://github.com/taveraos/taveraos/milestones, lowest title number first. A task stays only when the amd64 live CD still reaches the desktop.
 
 Update a milestone on GitHub. The title stays `Milestone N: …`. Rename that title to change the number. Close the milestone when the work is done. Edit the description there. Do not add `docs/MILESTONES.md`.
 

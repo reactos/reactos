@@ -7,10 +7,10 @@ alwaysApply: true
 
 SPDX-License-Identifier: GPL-2.0-or-later
 
-A commit that changes boot, the kernel, the HAL, a driver, NTFS, or a Windows-facing DLL includes one `veros/transparency/<yyyy-mm-dd>-<slug>.json` in that same commit, whether or not the body has `Co-authored-by: Cursor`. Docs, branding, GitHub workflows, and cursor rules do not get a file.
+A commit that changes boot, the kernel, the HAL, a driver, NTFS, or a Windows-facing DLL includes one `tavera/transparency/<yyyy-mm-dd>-<slug>.json` in that same commit, whether or not the body has `Co-authored-by: Cursor`. Docs, branding, GitHub workflows, and cursor rules do not get a file.
 
 - The new file is named beforehand. Its name cannot be this commit's SHA, because the SHA covers the file.
-- A missed record for an earlier commit is `veros/transparency/<full sha>.json` on a later commit. The catch-up that records the commits still missing a note may be its own commit. After that catch-up, put a missed record in the next real commit. Do not make a habit of a commit whose only change is a notice.
+- A missed record for an earlier commit is `tavera/transparency/<full sha>.json` on a later commit. The catch-up that records the commits still missing a note may be its own commit. After that catch-up, put a missed record in the next real commit. Do not make a habit of a commit whose only change is a notice.
 - Required fields are `question`, `allowedInputs`, and `"spdx": "GPL-2.0-or-later"`. `allowedInputs` lists only sources that were actually used. Each entry cites one source and where to open it.
   - A public document or another project's file includes its title and an `https://` URL.
   - A file in this tree includes its path from the source root.
@@ -22,10 +22,10 @@ A commit that changes boot, the kernel, the HAL, a driver, NTFS, or a Windows-fa
 - Do not record `forbiddenInputsNotUsed`, `humanReview`, or the prompt.
 - Do not paste a trace body, a header, a disassembly, or a Windows ordinal into the record.
 
-`tools/transparency/check_records.py` rejects a commit that touches those paths unless a dated note that commit added is still in the tree, or the tree has `veros/transparency/<full sha>.json` for it. A commit that already added more than one dated note still counts. It rejects every note in the checkout that uses a banned field, and a commit that adds or edits a note whose name is not a date slug or an earlier commit SHA. On the checkout, a cited `output/` path that ends in `.log`, `.json`, `.txt`, `.probe`, `.err`, or `.ok` must exist under `output/`. It does not parse note blobs from older revisions. `harness.logSha256` is optional. When it is present it must be 64 lowercase hex characters. The Transparency workflow runs the script on the checkout and on the commits in a push or a pull request.
+`tools/transparency/check_records.py` rejects a commit that touches those paths unless a dated note that commit added is still in the tree, or the tree has `tavera/transparency/<full sha>.json` for it. A commit that already added more than one dated note still counts. It rejects every note in the checkout that uses a banned field, and a commit that adds or edits a note whose name is not a date slug or an earlier commit SHA. On the checkout, a cited `output/` path that ends in `.log`, `.json`, `.txt`, `.probe`, `.err`, or `.ok` must exist under `output/`. It does not parse note blobs from older revisions. `harness.logSha256` is optional. When it is present it must be 64 lowercase hex characters. The Transparency workflow runs the script on the checkout and on the commits in a push or a pull request.
 
 ```text
-Right: veros/transparency/2026-11-08-runtime-nt-version.json citing https://learn.microsoft.com/en-us/windows/release-health/release-information and output/syscall-diff/windows.log DIFF END OK.
+Right: tavera/transparency/2026-11-08-runtime-nt-version.json citing https://learn.microsoft.com/en-us/windows/release-health/release-information and output/syscall-diff/windows.log DIFF END OK.
 Right: differential-tests/ndis-discovery/probe.c, the report_u32 read length, probe method, not a Windows field.
 Wrong: an entry that names "the public spec" or "Linux" and gives no URL or path.
 Wrong: a file for a docs-only commit, a boolean attestation, or another notice-only commit after the catch-up.
