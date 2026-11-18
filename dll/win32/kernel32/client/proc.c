@@ -7,11 +7,15 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Ariadne (ariadne@xs4all.nl)
  *              Ryan Wilson <ryan@verosnt.com>
- */
-
-/*
- * UPDATE HISTORY:
- *                  Created 01/11/98
+ *
+ * QueryProcessCycleTime: guest
+ * output/ntdll-apps/serial-App-20261118T021702Z.log
+ * marker WARNING: calling stub QueryProcessCycleTime.
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryprocesscycletime
+ * Mozilla GetProcInfoSync (ProcInfo_win.cpp) skips a process when this
+ * export fails, then ChromeUtils.requestProcInfo rejects an empty map
+ * with NS_ERROR_UNEXPECTED; Troubleshoot.processes never calls done().
+ * Probe: capture-log snapshot-probe requestProcInfo:ERR NS_ERROR_UNEXPECTED.
  */
 
 /* INCLUDES ****************************************************************/
@@ -1182,6 +1186,42 @@ GetProcessTimes(IN HANDLE hProcess,
     lpKernelTime->dwHighDateTime = Kut.KernelTime.u.HighPart;
     lpUserTime->dwLowDateTime = Kut.UserTime.u.LowPart;
     lpUserTime->dwHighDateTime = Kut.UserTime.u.HighPart;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * ProcessCycleTime is not wired in ntos yet (IQS_NONE). Validate the
+ * handle with ProcessTimes, then succeed with zero cycles so Firefox
+ * GetProcInfo can keep the process and use GetProcessTimes for cpuTime.
+ */
+BOOL
+WINAPI
+QueryProcessCycleTime(IN HANDLE ProcessHandle,
+                      OUT PULONG64 CycleTime)
+{
+    KERNEL_USER_TIMES Kut;
+    NTSTATUS Status;
+
+    if (!CycleTime)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = NtQueryInformationProcess(ProcessHandle,
+                                       ProcessTimes,
+                                       &Kut,
+                                       sizeof(Kut),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    *CycleTime = 0;
     return TRUE;
 }
 

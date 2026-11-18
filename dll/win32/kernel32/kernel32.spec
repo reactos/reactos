@@ -975,7 +975,7 @@
 @ stdcall QueryUnbiasedInterruptTime(ptr) ntdll.RtlQueryUnbiasedInterruptTime
 @ stdcall QueryUnbiasedInterruptTimePrecise(ptr)
 @ stub -version=0x600+ QueryProcessAffinityUpdateMode
-@ stdcall -stub QueryProcessCycleTime(ptr ptr)
+@ stdcall QueryProcessCycleTime(ptr ptr)
 @ stdcall -stub QueryThreadCycleTime(ptr ptr)
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
