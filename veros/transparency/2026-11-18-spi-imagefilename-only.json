@@ -1,0 +1,23 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox about:support leave Name/Version blank for minutes while Troubleshoot.application already wrote name=Firefox, when processes awaits ChromeUtils.requestProcInfo under App TCG?",
+  "allowedInputs": [
+    {
+      "title": "In-tree ExpQuerySystemProcessInformation ImageFileName fallback",
+      "path": "ntoskrnl/ex/sysinfo.c"
+    },
+    {
+      "title": "Mozilla ProcInfo_win.cpp GetProcInfo matches SPI by PID",
+      "url": "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/toolkit/components/processtools/ProcInfo_win.cpp"
+    },
+    {
+      "title": "Reported: veros-app-basics name=Firefox while UI empty; veros-snapshot-keys processes=ok after long wait on serial-App-20261118T045832Z; SeLocateProcessImageName per process dominates SPI under TCG",
+      "note": "Reported: requestProcInfo eventually succeeds; blank Name is late Troubleshoot.snapshot gate on processes under App TCG"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App TCG",
+    "name": "about:support Troubleshoot.snapshot processes",
+    "traceOrReplayId": "serial-App-20261118T045832Z"
+  }
+}
