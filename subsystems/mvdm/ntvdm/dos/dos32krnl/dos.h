@@ -257,6 +257,7 @@ typedef struct _DOS_DATA
     CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
     BYTE UnreadConInputBuffer[128];
     BYTE DosStack[384];
+    BYTE MediaIdByte;
     BYTE Sft[ANYSIZE_ARRAY];
 } DOS_DATA, *PDOS_DATA;
 
