@@ -1,0 +1,27 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which NDIS 5 exports were restored so miniports and protocols can link into bootcd.iso?",
+  "allowedInputs": [
+    "drivers/network/ndis/ndis.spec",
+    "drivers/network/ndis/src/ndis5.rs",
+    "drivers/network/ndis/src/lib.rs NdisQueueIoWorkItem WORK_QUEUE_ITEM offsets",
+    "sdk/include/ddk/ndis.h NDIS_TIMER NDIS_WORK_ITEM NdisAllocateMemory obsolete note",
+    "sdk/include/xdk/iotypes.h DRIVER_OBJECT.DriverUnload after DriverStartIo",
+    "sdk/include/xdk/extypes.h WORK_QUEUE_ITEM CriticalWorkQueue",
+    "sdk/include/xdk/ntdef.h UNICODE_STRING",
+    "sdk/include/xdk/kefuncs.h KeGetRecommendedSharedDataAlignment",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememory",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetshareddataalignment",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetrecommendedshareddataalignment",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitunicodestring",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatemapregisters",
+    "https://learn.microsoft.com/en-us/previous-versions/ms865238(v=msdn.10)",
+    "https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff550828(v=vs.85)",
+    "https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff554768(v=vs.85)",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterunloadhandler",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisterminatewrapper",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisscheduleworkitem",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializetimer",
+    "Reported: a complete bootcd.iso link failed until these NDIS 5 imports were exported again; live CD then reached the desktop."
+  ]
+}

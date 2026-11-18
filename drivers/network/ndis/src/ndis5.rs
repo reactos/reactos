@@ -39,6 +39,17 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadpcislotinformation
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiswritepcislotinformation
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememorywithtag
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememory
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetshareddataalignment
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetrecommendedshareddataalignment
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitunicodestring
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatemapregisters
+ * https://learn.microsoft.com/en-us/previous-versions/ms865238(v=msdn.10)
+ * https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff550828(v=vs.85)
+ * https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff554768(v=vs.85)
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterunloadhandler
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisterminatewrapper
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisscheduleworkitem
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisminitializescattergatherdma
  * Dma64Addresses 0 asks for a 32-bit device. output/ndis-disk-20261117T150052Z.log
  * printed NDIS5 SGDMA 00000000 then NDIS SHMEMOK with physical high
@@ -104,6 +115,8 @@ struct Pool {
 unsafe extern "system" {
     fn ExAllocatePoolWithTag(kind: u32, bytes: usize, tag: u32) -> *mut u8;
     fn ExFreePoolWithTag(address: *mut u8, tag: u32);
+    /* sdk/include/xdk/extypes.h WORK_QUEUE_ITEM; CriticalWorkQueue is 0. */
+    fn ExQueueWorkItem(work: *mut u8, queue: i32);
     fn IoAllocateMdl(
         address: *mut u8,
         length: u32,
@@ -112,6 +125,10 @@ unsafe extern "system" {
         irp: *mut u8,
     ) -> *mut u8;
     fn MmBuildMdlForNonPagedPool(mdl: *mut u8);
+    /* UNICODE_STRING in sdk/include/xdk/ntdef.h; NdisInitUnicodeString. */
+    fn RtlInitUnicodeString(destination: *mut u8, source: *const u16);
+    /* sdk/include/xdk/kefuncs.h; ntoskrnl.spec export. */
+    fn KeGetRecommendedSharedDataAlignment() -> u32;
 }
 
 fn span_pages(buffer: *const Mdl) -> u32 {
@@ -1397,6 +1414,65 @@ pub unsafe extern "system" fn NdisMInitializeTimer(
     }
 }
 
+/*
+ * NDIS_TIMER in sdk/include/ddk/ndis.h is only KTIMER then KDPC. The
+ * TimerFunction and FunctionContext from
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializetimer
+ * are kept in a pool block this DPC's DeferredContext points at.
+ */
+#[repr(C)]
+struct ProtocolTimerBind {
+    function: *const (),
+    context: *mut u8,
+}
+
+unsafe extern "system" fn protocol_timer_dpc(
+    _dpc: *mut u8,
+    deferred: *mut u8,
+    arg1: *mut u8,
+    arg2: *mut u8,
+) {
+    if deferred.is_null() {
+        return;
+    }
+    let bind = deferred as *mut ProtocolTimerBind;
+    let function = unsafe { (*bind).function };
+    let context = unsafe { (*bind).context };
+    if function.is_null() {
+        return;
+    }
+    let call: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8, *mut u8) =
+        unsafe { core::mem::transmute(function) };
+    unsafe { call(arg1, context, arg2, ptr::null_mut()) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisInitializeTimer(
+    timer: *mut u8,
+    function: *const (),
+    context: *mut u8,
+) {
+    /* Association of TimerFunction with the object is required before
+     * NdisSetTimer per
+     * https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff554768(v=vs.85)
+     * NDIS_TIMER layout: sdk/include/ddk/ndis.h. */
+    if timer.is_null() {
+        return;
+    }
+    let bind = unsafe {
+        ExAllocatePoolWithTag(0, size_of::<ProtocolTimerBind>(), POOL_TAG)
+    } as *mut ProtocolTimerBind;
+    if bind.is_null() {
+        return;
+    }
+    unsafe {
+        (*bind).function = function;
+        (*bind).context = context;
+        KeInitializeTimer(timer);
+        KeInitializeDpc(timer.add(TIMER_DPC), protocol_timer_dpc as *const (), bind as *mut u8);
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "system" fn NdisSetTimer(timer: *mut u8, milliseconds: u32) {
     if timer.is_null() {
@@ -1419,6 +1495,28 @@ pub unsafe extern "system" fn NdisMCancelTimer(timer: *mut u8, cancelled: *mut u
     };
     if !cancelled.is_null() {
         unsafe { *cancelled = was };
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisCancelTimer(timer: *mut u8, cancelled: *mut u8) {
+    /* https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff550828(v=vs.85)
+     * Same cancel as NdisMCancelTimer on the KTIMER at the object start. */
+    unsafe { NdisMCancelTimer(timer, cancelled) };
+}
+
+/* DRIVER_OBJECT.DriverUnload after DriverStartIo in sdk/include/xdk/iotypes.h. */
+const DRIVER_UNLOAD_AT: usize = 0x68;
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMRegisterUnloadHandler(wrapper: *mut u8, unload: *const ()) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterunloadhandler
+     * NdisInitializeWrapper returns the DRIVER_OBJECT pointer as the handle. */
+    if wrapper.is_null() {
+        return;
+    }
+    unsafe {
+        ptr::write_unaligned(wrapper.add(DRIVER_UNLOAD_AT) as *mut *const (), unload);
     }
 }
 
@@ -1535,6 +1633,122 @@ pub unsafe extern "system" fn NdisAllocateMemoryWithTag(
     unsafe {
         ptr::write_bytes(block, 0, length as usize);
         *address = block;
+    }
+    SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisAllocateMemory(
+    address: *mut *mut u8,
+    length: u32,
+    _flags: u32,
+    _highest: i64,
+) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememory
+     * sdk/include/ddk/ndis.h marks this obsolete and prefers
+     * NdisAllocateMemoryWithTag; MemoryFlags and HighestAcceptableAddress
+     * are unused on that path. */
+    unsafe { NdisAllocateMemoryWithTag(address, length, POOL_TAG) }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisGetSharedDataAlignment() -> u32 {
+    /* Learn describes the same preferred shared-structure alignment for
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetshareddataalignment
+     * and
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetrecommendedshareddataalignment
+     * Declaration: sdk/include/xdk/kefuncs.h. */
+    unsafe { KeGetRecommendedSharedDataAlignment() }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisInitUnicodeString(destination: *mut u8, source: *const u16) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitunicodestring
+     * NDIS_STRING is UNICODE_STRING on that page. RtlInitUnicodeString fills
+     * Length, MaximumLength, and Buffer for that type
+     * (sdk/include/xdk/ntdef.h). */
+    unsafe { RtlInitUnicodeString(destination, source) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMAllocateMapRegisters(
+    _handle: *mut u8,
+    _channel: u32,
+    _dma_size: u32,
+    _needed: u32,
+    _maximum: u32,
+) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatemapregisters
+     * sdk/include/ddk/ndis.h prefers NdisMInitializeScatterGatherDma.
+     * No map-register state is kept; callers that only need the status
+     * succeed. */
+    SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMSetTimer(timer: *mut u8, milliseconds: u32) {
+    /* https://learn.microsoft.com/en-us/previous-versions/ms865238(v=msdn.10)
+     * One-shot MiniportTimer after MillisecondsToDelay. NdisSetTimer in this
+     * file already queues that one-shot via KeSetTimerEx. */
+    unsafe { NdisSetTimer(timer, milliseconds) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisTerminateWrapper(_wrapper: *mut u8, _system: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisterminatewrapper
+     * NdisInitializeWrapper only stores the driver pointer; nothing to free. */
+    let _ = (_wrapper, _system);
+}
+
+/*
+ * NDIS_WORK_ITEM field order in sdk/include/ddk/ndis.h: Context, Routine,
+ * then WrapperReserved[8 * sizeof(PVOID)]. Offsets below follow that order
+ * on this amd64 build. NDIS_PROC is (WorkItem, Context) on that header.
+ * This file queues a WORK_QUEUE_ITEM (sdk/include/xdk/extypes.h) inside
+ * WrapperReserved the same way NdisQueueIoWorkItem in src/lib.rs builds one
+ * for ExQueueWorkItem: WorkerRoutine at +0x10, Parameter at +0x18, queue
+ * CriticalWorkQueue (0).
+ */
+const WI5_CONTEXT_AT: usize = 0;
+const WI5_ROUTINE_AT: usize = size_of::<*mut u8>();
+const WI5_RESERVED_AT: usize = size_of::<*mut u8>() * 2;
+const WI5_WQ_BYTES: usize = 0x20;
+const WI5_WQ_ROUTINE_AT: usize = 0x10;
+const WI5_WQ_PARAM_AT: usize = 0x18;
+const CRITICAL_WORK_QUEUE: i32 = 0;
+type NdisWorkFn = unsafe extern "system" fn(*mut u8, *mut u8);
+
+unsafe extern "system" fn ndis_work_worker(parameter: *mut u8) {
+    if parameter.is_null() {
+        return;
+    }
+    let routine =
+        unsafe { ptr::read_unaligned(parameter.add(WI5_ROUTINE_AT) as *const *const ()) };
+    let context =
+        unsafe { ptr::read_unaligned(parameter.add(WI5_CONTEXT_AT) as *const *mut u8) };
+    if routine.is_null() {
+        return;
+    }
+    let call: NdisWorkFn = unsafe { core::mem::transmute(routine) };
+    unsafe { call(parameter, context) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisScheduleWorkItem(work: *mut u8) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisscheduleworkitem
+     * Callback runs later at PASSIVE_LEVEL from a system worker. */
+    if work.is_null() {
+        return INVALID_PARAMETER;
+    }
+    let wq = unsafe { work.add(WI5_RESERVED_AT) };
+    unsafe {
+        ptr::write_bytes(wq, 0, WI5_WQ_BYTES);
+        ptr::write_unaligned(
+            wq.add(WI5_WQ_ROUTINE_AT) as *mut *const (),
+            ndis_work_worker as *const (),
+        );
+        ptr::write_unaligned(wq.add(WI5_WQ_PARAM_AT) as *mut *mut u8, work);
+        ExQueueWorkItem(wq, CRITICAL_WORK_QUEUE);
     }
     SUCCESS
 }

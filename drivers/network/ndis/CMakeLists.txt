@@ -21,11 +21,14 @@ add_custom_target(ndis_rust
             --target-dir ${CMAKE_CURRENT_BINARY_DIR}/rust
     DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml
+        ${CMAKE_CURRENT_SOURCE_DIR}/ndis.spec
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib.rs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ndis5.rs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/pool.rs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/register.rs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/filter.rs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.rs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/prot6.rs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/check.rs
     BYPRODUCTS "${NDIS_RUST_LIB}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
