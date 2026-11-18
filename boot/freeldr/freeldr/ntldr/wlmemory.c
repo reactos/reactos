@@ -1,11 +1,18 @@
 /*
- * PROJECT:     VerOS NT Kernel
+ * PROJECT:     Tavera OS Kernel
  * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
  * FILE:        boot/freeldr/freeldr/ntldr/wlmemory.c
  * PURPOSE:     Memory related routines
- * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@taveraos.com>
  * PROGRAMMERS: Aleksey Bragin
- *              Ryan Wilson <ryan@verosnt.com>
+ *              Ryan Wilson <ryan@taveraos.com>
+ */
+
+/*
+ * Firmware runs above the lookup table are clipped by MM_MAX_PAGE in
+ * boot/freeldr/freeldr/include/mm.h. That ceiling is 6 TiB.
+ * Memory Limits for Windows and Windows Server Releases:
+ * https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
  */
 
 /* INCLUDES ***************************************************************/
@@ -68,15 +75,14 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (Mad == NULL)
         return;
 
-    /* Check for memory block after 4GB - we don't support it yet
-       Note: Even last page before 4GB limit is not supported */
+    /* Runs at or above MM_MAX_PAGE are omitted. A crossing run is shortened. */
     if (BasePage >= MM_MAX_PAGE)
     {
         /* Just skip this, without even adding to MAD list */
         return;
     }
 
-    /* Check if last page is after 4GB limit and shorten this block if needed */
+    /* Shorten a run that crosses MM_MAX_PAGE. */
     if (BasePage + PageCount > MM_MAX_PAGE)
     {
         /* Shorten this block */
@@ -316,18 +322,28 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     BiosMemoryMapEntryCount = MmGetBiosMemoryMap(&BiosMemoryMap);
 
-    /* Now we need to add high descriptors from the bios memory map */
+    /* Pass the part of each firmware run that sits above the lookup table. */
     for (i = 0; i < BiosMemoryMapEntryCount; i++)
     {
-        /* Check if its higher than the lookup table */
-        if (BiosMemoryMap[i].BasePage > MmGetHighestPhysicalPage())
+        PFN_NUMBER TableEnd = MmGetHighestPhysicalPage();
+        PFN_NUMBER HighBase = BiosMemoryMap[i].BasePage;
+        PFN_NUMBER HighCount = BiosMemoryMap[i].PageCount;
+
+        if (HighBase + HighCount <= TableEnd)
         {
-            /* Copy this descriptor */
-            MempAddMemoryBlock(LoaderBlock,
-                               BiosMemoryMap[i].BasePage,
-                               BiosMemoryMap[i].PageCount,
-                               BiosMemoryMap[i].MemoryType);
+            continue;
         }
+
+        if (HighBase < TableEnd)
+        {
+            HighCount -= TableEnd - HighBase;
+            HighBase = TableEnd;
+        }
+
+        MempAddMemoryBlock(LoaderBlock,
+                           HighBase,
+                           HighCount,
+                           BiosMemoryMap[i].MemoryType);
     }
     TRACE("Bios map added\n");
 

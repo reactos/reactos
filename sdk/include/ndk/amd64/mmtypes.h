@@ -14,8 +14,17 @@ Author:
 
     Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
     Timo Kreuzer (timo.kreuzer@reactos.com)   15-Aug-2008
+    Copyright 2026 Ryan Wilson <ryan@taveraos.com>
 
 --*/
+
+/*
+ * The compiled page-frame width is the 36-bit PageFrameNumber already
+ * in the NTDDI_LONGHORN branches of this file. Write and Dirty stay
+ * on the lines this 0x502 build already uses. The physical ceiling
+ * is 6 TiB. Memory Limits for Windows and Windows Server Releases:
+ * https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
+ */
 
 #ifndef _AMD64_MMTYPES_H
 #define _AMD64_MMTYPES_H
@@ -75,8 +84,8 @@ typedef struct _HARDWARE_PTE
     ULONG64 CopyOnWrite:1;
     ULONG64 Prototype:1;
     ULONG64 reserved0:1;
-    ULONG64 PageFrameNumber:28;
-    ULONG64 reserved1:12;
+    ULONG64 PageFrameNumber:36;
+    ULONG64 reserved1:4;
     ULONG64 SoftwareWsIndex:11;
     ULONG64 NoExecute:1;
 } HARDWARE_PTE, *PHARDWARE_PTE;
@@ -107,8 +116,8 @@ typedef struct _MMPTE_TRANSITION
     ULONG64 PageFrameNumber:36;
     ULONG64 Unused:16;
 #else
-    ULONG64 PageFrameNumber:28;
-    ULONG64 Unused:24;
+    ULONG64 PageFrameNumber:36;
+    ULONG64 Unused:16;
 #endif
 } MMPTE_TRANSITION;
 
@@ -176,8 +185,8 @@ typedef struct _MMPTE_HARDWARE
 #else
     ULONG64 reserved0:1;
 #endif
-    ULONG64 PageFrameNumber:28;
-    ULONG64 reserved1:12;
+    ULONG64 PageFrameNumber:36;
+    ULONG64 reserved1:4;
 #endif
     ULONG64 SoftwareWsIndex:11;
     ULONG64 NoExecute:1;
@@ -203,8 +212,8 @@ typedef struct _MMPTE_HARDWARE_LARGEPAGE
     ULONG64 PageFrameNumber:27;
     ULONG64 reserved2:16;
 #else
-    ULONG64 PageFrameNumber:19;
-    ULONG64 reserved2:24;
+    ULONG64 PageFrameNumber:27;
+    ULONG64 reserved2:16;
 #endif
 } MMPTE_HARDWARE_LARGEPAGE, *PMMPTE_HARDWARE_LARGEPAGE;
 

@@ -1,11 +1,19 @@
 /*
- * COPYRIGHT:       GPL, See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/amd64/init.c
- * PURPOSE:         Memory Manager Initialization for amd64
- *
- * PROGRAMMERS:     Timo kreuzer (timo.kreuzer@reactos.org)
- *                  ReactOS Portable Systems Group
+ * PROJECT:     Tavera OS Kernel
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
+ * FILE:        ntoskrnl/mm/amd64/init.c
+ * PURPOSE:     Memory Manager Initialization for amd64
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@taveraos.com>
+ * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              ReactOS Portable Systems Group
+ *              Ryan Wilson <ryan@taveraos.com>
+ */
+
+/*
+ * Nonpaged pool stays at MI_MAX_NONPAGED_POOL_SIZE in
+ * ntoskrnl/include/internal/amd64/mm.h, which is 128 GB.
+ * Memory Limits for Windows and Windows Server Releases:
+ * https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
  */
 
 /* INCLUDES ***************************************************************/
@@ -308,8 +316,12 @@ MiBuildNonPagedPool(VOID)
     {
         /* Start with the minimum (256 KB) and add 32 KB for each MB above 4 */
         MmSizeOfNonPagedPoolInBytes = MmMinimumNonPagedPoolSize;
-        MmSizeOfNonPagedPoolInBytes += (MmNumberOfPhysicalPages - 1024) /
-                                       256 * MmMinAdditionNonPagedPoolPerMb;
+        if (MmNumberOfPhysicalPages > 1024)
+        {
+            MmSizeOfNonPagedPoolInBytes +=
+                ((SIZE_T)MmNumberOfPhysicalPages - 1024) / 256 *
+                (SIZE_T)MmMinAdditionNonPagedPoolPerMb;
+        }
     }
 
     /* Check if the registy setting or our dynamic calculation was too high */
@@ -334,8 +346,12 @@ MiBuildNonPagedPool(VOID)
     {
         /* Start with the default (1MB) and add 400 KB for each MB above 4 */
         MmMaximumNonPagedPoolInBytes = MmDefaultMaximumNonPagedPool;
-        MmMaximumNonPagedPoolInBytes += (MmNumberOfPhysicalPages - 1024) /
-                                         256 * MmMaxAdditionNonPagedPoolPerMb;
+        if (MmNumberOfPhysicalPages > 1024)
+        {
+            MmMaximumNonPagedPoolInBytes +=
+                ((SIZE_T)MmNumberOfPhysicalPages - 1024) / 256 *
+                (SIZE_T)MmMaxAdditionNonPagedPoolPerMb;
+        }
     }
 
     /* Don't let the maximum go too high */

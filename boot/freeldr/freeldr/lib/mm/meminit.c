@@ -1,21 +1,19 @@
 /*
- *  FreeLoader
- *  Copyright (C) 2006-2008     Aleksey Bragin  <aleksey@reactos.org>
- *  Copyright (C) 2006-2009     Hervé Poussineau  <hpoussin@reactos.org>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     Tavera OS Kernel
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
+ * FILE:        boot/freeldr/freeldr/lib/mm/meminit.c
+ * PURPOSE:     FreeLoader page lookup table setup
+ * COPYRIGHT:   Copyright (C) 2006-2008 Aleksey Bragin <aleksey@reactos.org>
+ *              Copyright (C) 2006-2009 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2026 Ryan Wilson <ryan@taveraos.com>
+ * PROGRAMMERS: Aleksey Bragin <aleksey@reactos.org>
+ *              Hervé Poussineau <hpoussin@reactos.org>
+ *              Ryan Wilson <ryan@taveraos.com>
+ */
+
+/*
+ * The amd64 lookup table stops at MM_MAX_PAGE_LOADER in
+ * boot/freeldr/freeldr/include/mm.h. That constant is the 1 GiB map.
  */
 
 #include <freeldr.h>
@@ -428,6 +426,14 @@ PFN_NUMBER MmGetAddressablePageCountIncludingHoles(VOID)
         }
     }
 
+#if defined(_AMD64_)
+    /* MM_MAX_PAGE_LOADER is the last page index of the 1 GiB loader map. */
+    if (MmHighestPhysicalPage > (PFN_NUMBER)MM_MAX_PAGE_LOADER + 1)
+    {
+        MmHighestPhysicalPage = (PFN_NUMBER)MM_MAX_PAGE_LOADER + 1;
+    }
+#endif
+
     TRACE("lo/hi %lx %lx\n", MmLowestPhysicalPage, MmHighestPhysicalPage);
     PageCount = MmHighestPhysicalPage - MmLowestPhysicalPage;
     TRACE("MmGetAddressablePageCountIncludingHoles() returning 0x%x\n", PageCount);
@@ -499,22 +505,33 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
     {
         // Mark used pages in the lookup table
 
-        if (MemoryDescriptor->BasePage + MemoryDescriptor->PageCount <= TotalPageCount)
+        PFN_NUMBER RunBase = MemoryDescriptor->BasePage;
+        PFN_NUMBER RunCount = MemoryDescriptor->PageCount;
+        PFN_NUMBER TableEnd = MmLowestPhysicalPage + TotalPageCount;
+
+        if (RunBase >= TableEnd || RunCount == 0)
         {
-            TRACE("Marking pages 0x%lx-0x%lx as type %s\n",
-                  MemoryDescriptor->BasePage,
-                  MemoryDescriptor->BasePage + MemoryDescriptor->PageCount,
-                  MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
-            MmMarkPagesInLookupTable(PageLookupTable,
-                                     MemoryDescriptor->BasePage,
-                                     MemoryDescriptor->PageCount,
-                                     MemoryDescriptor->MemoryType);
-        }
-        else
             TRACE("Ignoring pages 0x%lx-0x%lx (%s)\n",
                   MemoryDescriptor->BasePage,
                   MemoryDescriptor->BasePage + MemoryDescriptor->PageCount,
                   MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
+            continue;
+        }
+
+        /* A run that crosses the 1 GiB table is marked only up to the table. */
+        if (RunBase + RunCount > TableEnd)
+        {
+            RunCount = TableEnd - RunBase;
+        }
+
+        TRACE("Marking pages 0x%lx-0x%lx as type %s\n",
+              RunBase,
+              RunBase + RunCount,
+              MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
+        MmMarkPagesInLookupTable(PageLookupTable,
+                                 RunBase,
+                                 RunCount,
+                                 MemoryDescriptor->MemoryType);
     }
 
     // Mark the pages that the lookup table occupies as reserved

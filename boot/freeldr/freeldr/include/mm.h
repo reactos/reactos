@@ -1,20 +1,19 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     Tavera OS Kernel
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
+ * FILE:        boot/freeldr/freeldr/include/mm.h
+ * PURPOSE:     FreeLoader memory manager definitions
+ * COPYRIGHT:   Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>
+ *              Copyright 2026 Ryan Wilson <ryan@taveraos.com>
+ * PROGRAMMERS: Brian Palmer <brianp@sginet.com>
+ *              Ryan Wilson <ryan@taveraos.com>
+ */
+
+/*
+ * amd64 MM_MAX_PAGE is 6 TiB in pages. Memory Limits for Windows and
+ * Windows Server Releases:
+ * https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
+ * MM_MAX_PAGE_LOADER is the 1 GiB map already in this file.
  */
 
 #pragma once
@@ -63,9 +62,8 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-//HACK: ReactOS AMD64 can't handle the full memory range yet CORE-20265
-//#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
-#define MM_MAX_PAGE        0x1FFFFF
+/* 6 TiB / 4 KiB. See the Learn page named under the header. */
+#define MM_MAX_PAGE        0x60000000
 #define MM_MAX_PAGE_LOADER 0x3FFFF /* on x64 freeldr only maps 1 GB */
 
 #define MM_SIZE_TO_PAGES(a)  \

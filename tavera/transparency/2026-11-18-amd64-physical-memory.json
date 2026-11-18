@@ -1,0 +1,24 @@
+{
+  "question": "How does the amd64 boot keep physical RAM through 6 TB while FreeLoader keeps a 1 GiB map, a page frame stays 36 bits, and nonpaged pool stays under 128 GB?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases Windows 10 x64 Enterprise and Pro for Workstations 6 TB; 64-bit nonpaged pool is RAM or 128 GB, whichever is smaller",
+    "tavera/specs/amd64-physical-memory.md",
+    "sdk/include/ndk/amd64/mmtypes.h the compiled page-frame width already present on the NTDDI_LONGHORN lines of this file",
+    "boot/freeldr/freeldr/include/mm.h MM_MAX_PAGE and MM_MAX_PAGE_LOADER",
+    "ntoskrnl/include/internal/amd64/mm.h MI_MAX_NONPAGED_POOL_SIZE and MM_HAL_VA_START",
+    "output/amd64-memory/boot-8192.log marker 8192 MB Memory",
+    "output/amd64-memory/boot-16384.log marker 16384 MB Memory",
+    "output/amd64-memory/boot-32768.log marker 32768 MB Memory",
+    "Reported: Task Manager Physical Memory totals were 8388036 KB at 8 GiB, 16776644 KB at 16 GiB, and 33553860 KB at 32 GiB. Each is 572 KB under the QEMU size.",
+    "output/syscall-diff/windows.log marker DIFF END OK",
+    "output/syscall-diff/reactos.log marker DIFF END OK",
+    "Reported: NtCreateFile, NtWriteFile, NtReadFile, NtClose, and NtCreateThreadEx returned 0x00000000 on both guests. NtDeviceIoControlFile and NtCreateUserProcess returned 0xC000000D on both guests."
+  ],
+  "harness": {
+    "guest": "amd64 live CD, 32768 MB, 4 CPUs, TCG",
+    "name": "amd64-memory",
+    "traceOrReplayId": "boot-32768",
+    "logSha256": "7ecbe5495754850de34140c31ab4634aa0edf1910991209cca2a331472fd3e66"
+  },
+  "spdx": "GPL-2.0-or-later"
+}
