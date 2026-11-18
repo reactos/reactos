@@ -158,6 +158,7 @@ typedef struct {
 extern PDEVICE_OBJECT TCPDeviceObject;
 extern PDEVICE_OBJECT UDPDeviceObject;
 extern PDEVICE_OBJECT IPDeviceObject;
+extern PDEVICE_OBJECT IP6DeviceObject;
 extern PDEVICE_OBJECT RawIPDeviceObject;
 extern LIST_ENTRY InterfaceListHead;
 extern KSPIN_LOCK InterfaceListLock;

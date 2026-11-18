@@ -1,3 +1,15 @@
+/*
+ * PROJECT:     VerOS NT Kernel
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
+ * FILE:        drivers/network/tcpip/ip/lwip_glue/tcp.c
+ * PURPOSE:     lwIP TCP glue for the TCP/IP driver
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
+ *
+ * tcp_new_ip_type(IPADDR_TYPE_ANY) is the dual-stack PCB in
+ * lwip/src/include/lwip/tcp.h. An IPv4 connect still uses this PCB.
+ */
+
 #include <debug.h>
 #include <lwip/tcpip.h>
 
@@ -36,15 +48,22 @@ void
 LibTCPDumpPcb(PVOID SocketContext)
 {
     struct tcp_pcb *pcb = (struct tcp_pcb*)SocketContext;
-    unsigned int addr = lwip_ntohl(pcb->remote_ip.addr);
-
     DbgPrint("\tState: %s\n", tcp_state_str[pcb->state]);
-    DbgPrint("\tRemote: (%d.%d.%d.%d, %d)\n",
-    (addr >> 24) & 0xFF,
-    (addr >> 16) & 0xFF,
-    (addr >> 8) & 0xFF,
-    addr & 0xFF,
-    pcb->remote_port);
+    if (IP_IS_V4_VAL(pcb->remote_ip))
+    {
+        unsigned int addr = lwip_ntohl(ip_addr_get_ip4_u32(&pcb->remote_ip));
+
+        DbgPrint("\tRemote: (%d.%d.%d.%d, %d)\n",
+                 (addr >> 24) & 0xFF,
+                 (addr >> 16) & 0xFF,
+                 (addr >> 8) & 0xFF,
+                 addr & 0xFF,
+                 pcb->remote_port);
+    }
+    else
+    {
+        DbgPrint("\tRemote: (IPv6, %d)\n", pcb->remote_port);
+    }
 }
 
 static
@@ -321,7 +340,7 @@ LibTCPSocketCallback(void *arg)
 
     ASSERT(msg);
 
-    msg->Output.Socket.NewPcb = tcp_new();
+    msg->Output.Socket.NewPcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
 
     if (msg->Output.Socket.NewPcb)
     {
@@ -412,7 +431,7 @@ done:
 }
 
 err_t
-LibTCPBind(PCONNECTION_ENDPOINT Connection, ip4_addr_t *const ipaddr, const u16_t port)
+LibTCPBind(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
     err_t ret;

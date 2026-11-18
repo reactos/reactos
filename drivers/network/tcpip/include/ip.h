@@ -1,8 +1,14 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
+ * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
  * FILE:        include/ip.h
  * PURPOSE:     Internet Protocol related definitions
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
+ *
+ * Dhcp6Address holds an IA_NA address from RFC 8415
+ * (https://www.rfc-editor.org/rfc/rfc8415).
  */
 
 #pragma once
@@ -157,10 +163,12 @@ typedef struct _IP_INTERFACE {
     UINT  MTU;                    /* Maximum transmission unit */
     UINT  Speed;                  /* Link speed */
     UINT  Metric;                 /* Interface metric */
-    IP_ADDRESS Unicast;           /* Unicast address */
+    IP_ADDRESS Unicast;           /* Unicast address (IPv4) */
     IP_ADDRESS PointToPoint;      /* Point to point address */
-    IP_ADDRESS Netmask;           /* Netmask */
+    IP_ADDRESS Netmask;           /* Netmask (IPv4) */
     IP_ADDRESS Broadcast;         /* Broadcast */
+    IP_ADDRESS LinkLocal;         /* IPv6 link-local fe80::/64 (RFC 4291 2.5.6) */
+    IP_ADDRESS Dhcp6Address;      /* IPv6 address from DHCPv6 IA_NA (RFC 8415) */
     UNICODE_STRING Name;          /* Adapter name (GUID) */
     UNICODE_STRING Description;   /* Adapter description (Human readable) */
     PUCHAR Address;               /* Pointer to interface address */
@@ -188,6 +196,9 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 #define LOOPBACK_BCASTADDR_IPv4 ((IPv4_RAW_ADDRESS)DH2N(0x7FFFFFFF))
 #define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFF000000))
 
+/* IPv6 fixed header length (RFC 8200 Section 3). */
+#define IPv6_HEADER_SIZE        40
+
 /* Protocol definitions */
 #ifndef IPPROTO_RAW
 #define IPPROTO_RAW     0   /* Raw IP */
@@ -196,6 +207,10 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 #define IPPROTO_IGMP    2   /* Internet Group Management Protocol */
 #define IPPROTO_TCP     6   /* Transmission Control Protocol */
 #define IPPROTO_UDP     17  /* User Datagram Protocol */
+/* Next Header value for ICMPv6 (RFC 8200 / RFC 4443). */
+#ifndef IPPROTO_ICMPV6
+#define IPPROTO_ICMPV6  58
+#endif
 
 /* Timeout timer constants */
 #define IP_TIMEOUT 1000 /* Timeout in milliseconds */

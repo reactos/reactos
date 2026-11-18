@@ -36,6 +36,16 @@ NTSTATUS AddGenericHeaderIPv4(
     UINT ExtraLength,
     PVOID *NextHeader );
 
+NTSTATUS AddGenericHeaderIPv6(
+    PADDRESS_FILE AddrFile,
+    PIP_ADDRESS RemoteAddress,
+    PIP_ADDRESS LocalAddress,
+    PIP_PACKET IPPacket,
+    UINT DataLength,
+    UINT Protocol,
+    UINT ExtraLength,
+    PVOID *NextHeader );
+
 NTSTATUS BuildRawIpPacket(
     PADDRESS_FILE AddrFile,
     PIP_PACKET Packet,

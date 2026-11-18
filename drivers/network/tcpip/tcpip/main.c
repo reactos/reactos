@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        tcpip/main.c
  * PURPOSE:     Driver entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
@@ -20,6 +22,7 @@
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;
 PDEVICE_OBJECT IPDeviceObject    = NULL;
+PDEVICE_OBJECT IP6DeviceObject   = NULL;
 PDEVICE_OBJECT RawIPDeviceObject = NULL;
 NDIS_HANDLE GlobalPacketPool     = NULL;
 NDIS_HANDLE GlobalBufferPool     = NULL;
@@ -161,21 +164,41 @@ NTSTATUS TiCreateFileObject(
 
         Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength + 1); //0-term
 
-        if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
-            (Address->TAAddressCount != 1) ||
-            (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
-            (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP))
+        if (Address->TAAddressCount != 1)
         {
             TI_DbgPrint(MIN_TRACE, ("Parameters are invalid:\n"));
             TI_DbgPrint(MIN_TRACE, ("AddressCount: %d\n", Address->TAAddressCount));
-            if( Address->TAAddressCount == 1 )
+            ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* TDI_ADDRESS_TYPE_IP6 and TA_IP6_ADDRESS are sdk/include/psdk/tdi.h. */
+        if (Address->Address[0].AddressType == TDI_ADDRESS_TYPE_IP)
+        {
+            if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
+                (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP))
             {
                 TI_DbgPrint(MIN_TRACE, ("AddressLength: %u\n",
                             Address->Address[0].AddressLength));
-                TI_DbgPrint(MIN_TRACE, ("AddressType: %u\n",
-                            Address->Address[0].AddressType));
+                ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+                return STATUS_INVALID_PARAMETER;
             }
-
+        }
+        else if (Address->Address[0].AddressType == TDI_ADDRESS_TYPE_IP6)
+        {
+            if ((EaInfo->EaValueLength < sizeof(TA_IP6_ADDRESS)) ||
+                (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP6))
+            {
+                TI_DbgPrint(MIN_TRACE, ("AddressLength: %u\n",
+                            Address->Address[0].AddressLength));
+                ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+        else
+        {
+            TI_DbgPrint(MIN_TRACE, ("AddressType: %u\n",
+                        Address->Address[0].AddressType));
             ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
             return STATUS_INVALID_PARAMETER;
         }
@@ -208,7 +231,7 @@ NTSTATUS TiCreateFileObject(
 
         Shared = (IrpSp->Parameters.Create.ShareAccess != 0);
 
-        Status = FileOpenAddress(&Request, Address, Protocol, Shared, NULL);
+        Status = FileOpenAddress(&Request, (PTRANSPORT_ADDRESS)Address, Protocol, Shared, NULL);
         if (NT_SUCCESS(Status))
         {
             IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
@@ -821,6 +844,9 @@ VOID NTAPI TiUnload(
     if (RawIPDeviceObject)
         IoDeleteDevice(RawIPDeviceObject);
 
+    if (IP6DeviceObject)
+        IoDeleteDevice(IP6DeviceObject);
+
     if (IPDeviceObject) {
         ChewShutdown();
         IoDeleteDevice(IPDeviceObject);
@@ -847,6 +873,7 @@ DriverEntry(
 {
     NTSTATUS Status;
     UNICODE_STRING strIpDeviceName = RTL_CONSTANT_STRING(DD_IP_DEVICE_NAME);
+    UNICODE_STRING strIp6DeviceName = RTL_CONSTANT_STRING(DD_IP6_DEVICE_NAME);
     UNICODE_STRING strRawDeviceName = RTL_CONSTANT_STRING(DD_RAWIP_DEVICE_NAME);
     UNICODE_STRING strUdpDeviceName = RTL_CONSTANT_STRING(DD_UDP_DEVICE_NAME);
     UNICODE_STRING strTcpDeviceName = RTL_CONSTANT_STRING(DD_TCP_DEVICE_NAME);
@@ -875,6 +902,15 @@ DriverEntry(
     }
 
     ChewInit( IPDeviceObject );
+
+    /* Create IPv6 IP device object (Icmp6CreateFile opens \\Device\\Ip6). */
+    Status = IoCreateDevice(DriverObject, 0, &strIp6DeviceName,
+        FILE_DEVICE_NETWORK, 0, FALSE, &IP6DeviceObject);
+    if (!NT_SUCCESS(Status)) {
+        TI_DbgPrint(MIN_TRACE, ("Failed to create IP6 device object. Status (0x%X).\n", Status));
+        TiUnload(DriverObject);
+        return Status;
+    }
 
     /* Create RawIP device object */
     Status = IoCreateDevice(DriverObject, 0, &strRawDeviceName,
@@ -981,6 +1017,7 @@ DriverEntry(
 
     /* Use direct I/O */
     IPDeviceObject->Flags    |= DO_DIRECT_IO;
+    IP6DeviceObject->Flags   |= DO_DIRECT_IO;
     RawIPDeviceObject->Flags |= DO_DIRECT_IO;
     UDPDeviceObject->Flags   |= DO_DIRECT_IO;
     TCPDeviceObject->Flags   |= DO_DIRECT_IO;

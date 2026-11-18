@@ -398,20 +398,34 @@ VOID ControlChannelFree(
  */
 NTSTATUS FileOpenAddress(
   PTDI_REQUEST Request,
-  PTA_IP_ADDRESS Address,
+  PTRANSPORT_ADDRESS Address,
   USHORT Protocol,
   BOOLEAN Shared,
   PVOID Options)
 {
   PADDRESS_FILE AddrFile;
   UINT AllocatedPort;
+  PTA_IP_ADDRESS Ip4Address;
+  PTA_IP6_ADDRESS Ip6Address;
+  USHORT AddressType;
+  USHORT Port = 0;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
-  /* If it's shared and has a port specified, look for a match */
-  if ((Shared != FALSE) && (Address->Address[0].Address[0].sin_port != 0))
+  if (!Address || Address->TAAddressCount != 1)
   {
-    AddrFile = AddrFindShared(NULL, Address->Address[0].Address[0].sin_port, Protocol);
+    return STATUS_INVALID_ADDRESS;
+  }
+
+  AddressType = Address->Address[0].AddressType;
+  Ip4Address = (PTA_IP_ADDRESS)Address;
+  Ip6Address = (PTA_IP6_ADDRESS)Address;
+
+  /* If it's shared and has a port specified, look for a match */
+  if ((Shared != FALSE) && AddressType == TDI_ADDRESS_TYPE_IP &&
+      (Ip4Address->Address[0].Address[0].sin_port != 0))
+  {
+    AddrFile = AddrFindShared(NULL, Ip4Address->Address[0].Address[0].sin_port, Protocol);
     if (AddrFile != NULL)
     {
         Request->Handle.AddressHandle = AddrFile;
@@ -451,11 +465,38 @@ NTSTATUS FileOpenAddress(
 
   KeQuerySystemTime(&AddrFile->CreationTime);
 
-  /* Make sure address is a local unicast address or 0 */
-  /* FIXME: IPv4 only */
-  AddrFile->Family = Address->Address[0].AddressType;
-  AddrFile->Address.Address.IPv4Address = Address->Address[0].Address[0].in_addr;
-  AddrFile->Address.Type = IP_ADDRESS_V4;
+  /* Local unicast or unspecified (IPv4 or IPv6). */
+  AddrFile->Family = AddressType;
+  if (AddressType == TDI_ADDRESS_TYPE_IP6)
+  {
+      if (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP6)
+      {
+          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+          return STATUS_INVALID_ADDRESS;
+      }
+      AddrFile->Address.Type = IP_ADDRESS_V6;
+      RtlCopyMemory(AddrFile->Address.Address.IPv6Address,
+                    Ip6Address->Address[0].Address[0].sin6_addr,
+                    sizeof(IPv6_RAW_ADDRESS));
+      Port = Ip6Address->Address[0].Address[0].sin6_port;
+  }
+  else if (AddressType == TDI_ADDRESS_TYPE_IP)
+  {
+      if (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP)
+      {
+          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+          return STATUS_INVALID_ADDRESS;
+      }
+      AddrFile->Address.Type = IP_ADDRESS_V4;
+      AddrFile->Address.Address.IPv4Address =
+          Ip4Address->Address[0].Address[0].in_addr;
+      Port = Ip4Address->Address[0].Address[0].sin_port;
+  }
+  else
+  {
+      ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+      return STATUS_INVALID_ADDRESS;
+  }
 
   if (!AddrIsUnspecified(&AddrFile->Address) &&
       !AddrLocateInterface(&AddrFile->Address)) {
@@ -470,10 +511,10 @@ NTSTATUS FileOpenAddress(
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
-      if (Address->Address[0].Address[0].sin_port)
+      if (Port)
       {
           /* The client specified an explicit port so we force a bind to this */
-          AllocatedPort = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+          AllocatedPort = TCPAllocatePort(Port);
 
           /* Check for bind success */
           if (AllocatedPort == (UINT)-1)
@@ -484,7 +525,7 @@ NTSTATUS FileOpenAddress(
           AddrFile->Port = AllocatedPort;
 
           /* Sanity check */
-          ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
+          ASSERT(Port == AddrFile->Port);
       }
       else if (!AddrIsUnspecified(&AddrFile->Address))
       {
@@ -512,11 +553,9 @@ NTSTATUS FileOpenAddress(
 
   case IPPROTO_UDP:
       TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
-      AllocatedPort = UDPAllocatePort(Address->Address[0].Address[0].sin_port);
+      AllocatedPort = UDPAllocatePort(Port);
 
-      if ((Address->Address[0].Address[0].sin_port &&
-           AllocatedPort != Address->Address[0].Address[0].sin_port) ||
-           AllocatedPort == (UINT)-1)
+      if ((Port && AllocatedPort != Port) || AllocatedPort == (UINT)-1)
       {
           ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
           return STATUS_ADDRESS_ALREADY_EXISTS;
@@ -524,8 +563,7 @@ NTSTATUS FileOpenAddress(
       AddrFile->Port = AllocatedPort;
 
       TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
-                             AddrFile->Port,
-                             Address->Address[0].Address[0].sin_port));
+                             AddrFile->Port, Port));
 
       AddEntity(CL_TL_ENTITY, AddrFile, CL_TL_UDP);
 
@@ -533,6 +571,7 @@ NTSTATUS FileOpenAddress(
       break;
 
   case IPPROTO_ICMP:
+  case IPPROTO_ICMPV6:
     AddrFile->Port = 0;
     AddrFile->Send = ICMPSendDatagram;
 

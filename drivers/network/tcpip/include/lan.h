@@ -85,10 +85,6 @@ typedef struct LAN_ADAPTER {
 #define LAN_PROTO_ARP  0x0002 /* Address Resolution Protocol */
 
 
-NDIS_STATUS LANRegisterAdapter(
-    PNDIS_STRING AdapterName,
-		PNDIS_STRING RegistryPath);
-
 NDIS_STATUS LANUnregisterAdapter(
     PLAN_ADAPTER Adapter);
 
@@ -99,6 +95,7 @@ NTSTATUS LANRegisterProtocol(
 NTSTATUS NTAPI LanRegisterProtocol6(PUNICODE_STRING Name);
 VOID NTAPI LanDeregisterProtocol6(VOID);
 VOID NTAPI LanSetBindAdapter6(PVOID Handler);
+VOID NTAPI VerosBindReadyProtocols(VOID);
 VOID NTAPI LanSetSendComplete6(PVOID Handler);
 VOID NTAPI LanSetOidComplete6(PVOID Handler);
 VOID NTAPI LanSetBindingContext6(NDIS_HANDLE Binding, PVOID Context);

@@ -3,11 +3,16 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        transport/tcp/tcp.c
  * PURPOSE:     Transmission Control Protocol
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Art Yerkes (arty@users.sf.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000  Created
  *   arty 12/21/2004 Added accept
+ *
+ * IPv6 connect binds the interface link-local from include/address.h
+ * (RFC 4291 Section 2.5.6, https://www.rfc-editor.org/rfc/rfc4291).
  */
 
 #include "precomp.h"
@@ -298,6 +303,24 @@ NTSTATUS TCPTranslateError(const err_t err)
     return Status;
 }
 
+static
+void
+TcpIpAddrFromAddress(ip_addr_t *Dest, PIP_ADDRESS Src)
+{
+    if (Src->Type == IP_ADDRESS_V6)
+    {
+        ip6_addr_t Ip6;
+
+        ip6_addr_set_zero(&Ip6);
+        RtlCopyMemory(Ip6.addr, Src->Address.IPv6Address, sizeof(IPv6_RAW_ADDRESS));
+        ip_addr_copy_from_ip6(*Dest, Ip6);
+    }
+    else
+    {
+        ip_addr_set_ip4_u32_val(*Dest, Src->Address.IPv4Address);
+    }
+}
+
 NTSTATUS TCPConnect
 ( PCONNECTION_ENDPOINT Connection,
   PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -342,17 +365,39 @@ NTSTATUS TCPConnect
 
     if (AddrIsUnspecified(&Connection->AddressFile->Address))
     {
+        IP_ADDRESS BindIp;
+
         if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
         {
             UnlockObject(Connection);
             return STATUS_NETWORK_UNREACHABLE;
         }
 
-        bindaddr.addr = NCE->Interface->Unicast.Address.IPv4Address;
+        if (RemoteAddress.Type == IP_ADDRESS_V6)
+        {
+            if (NCE->Interface == Loopback)
+            {
+                AddrInitIPv6Loopback(&BindIp);
+            }
+            else if (!AddrIsUnspecified(&NCE->Interface->LinkLocal))
+            {
+                BindIp = NCE->Interface->LinkLocal;
+            }
+            else
+            {
+                BindIp = NCE->Address;
+            }
+            TcpIpAddrFromAddress(&bindaddr, &BindIp);
+        }
+        else
+        {
+            ip_addr_set_ip4_u32_val(bindaddr,
+                                    NCE->Interface->Unicast.Address.IPv4Address);
+        }
     }
     else
     {
-        bindaddr.addr = Connection->AddressFile->Address.Address.IPv4Address;
+        TcpIpAddrFromAddress(&bindaddr, &Connection->AddressFile->Address);
     }
 
     Status = TCPTranslateError(LibTCPBind(Connection,
@@ -366,7 +411,21 @@ NTSTATUS TCPConnect
     }
 
     /* Copy bind address into connection */
-    Connection->AddressFile->Address.Address.IPv4Address = bindaddr.addr;
+    if (RemoteAddress.Type == IP_ADDRESS_V6)
+    {
+        if (AddrIsUnspecified(&Connection->AddressFile->Address))
+        {
+            Connection->AddressFile->Address.Type = IP_ADDRESS_V6;
+            RtlCopyMemory(Connection->AddressFile->Address.Address.IPv6Address,
+                          ip_2_ip6(&bindaddr)->addr,
+                          sizeof(IPv6_RAW_ADDRESS));
+        }
+    }
+    else
+    {
+        Connection->AddressFile->Address.Address.IPv4Address =
+            ip_addr_get_ip4_u32(&bindaddr);
+    }
     /* Check if we had an unspecified port */
     if (!Connection->AddressFile->Port)
     {
@@ -392,7 +451,7 @@ NTSTATUS TCPConnect
         Connection->AddressFile->Port = AllocatedPort;
     }
 
-    connaddr.addr = RemoteAddress.Address.IPv4Address;
+    TcpIpAddrFromAddress(&connaddr, &RemoteAddress);
 
     Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
     if (!Bucket)
@@ -684,7 +743,7 @@ NTSTATUS TCPGetSockAddress
 
     UnlockObject(Connection);
 
-    AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
+    AddressIP->Address[0].Address[0].in_addr = ip_addr_get_ip4_u32(&ipaddr);
 
     RtlZeroMemory(&AddressIP->Address[0].Address[0].sin_zero,
                   sizeof(AddressIP->Address[0].Address[0].sin_zero));

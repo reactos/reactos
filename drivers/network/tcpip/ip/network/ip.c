@@ -3,12 +3,19 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        network/ip.c
  * PURPOSE:     Internet Protocol module
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * Link-local fe80::/64 from RFC 4291 Section 2.5.6 / Appendix A
+ * (https://www.rfc-editor.org/rfc/rfc4291).
  */
 
 #include "precomp.h"
+
+#include <dhcp6.h>
 
 #define __LWIP_INET_H__
 #include "lwip/netifapi.h"
@@ -161,9 +168,12 @@ VOID IPDispatchProtocol(
         AddrInitIPv4(&SrcAddress, ((PIPv4_HEADER)(IPPacket->Header))->SrcAddr);
         break;
     case IP_ADDRESS_V6:
-        /* FIXME: IPv6 addresses not supported */
-        TI_DbgPrint(MIN_TRACE, ("IPv6 datagram discarded.\n"));
-        return;
+        Protocol = ((PIPv6_HEADER)(IPPacket->Header))->NextHeader;
+        RtlCopyMemory(&SrcAddress.Address.IPv6Address,
+                      ((PIPv6_HEADER)(IPPacket->Header))->SrcAddr,
+                      sizeof(IPv6_RAW_ADDRESS));
+        SrcAddress.Type = IP_ADDRESS_V6;
+        break;
     default:
         TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
         return;
@@ -223,6 +233,8 @@ PIP_INTERFACE IPCreateInterface(
 	IF->PointToPoint.Type = IP_ADDRESS_V4;
 	IF->Netmask.Type = IP_ADDRESS_V4;
 	IF->Broadcast.Type = IP_ADDRESS_V4;
+	AddrInitIPv6Unspecified(&IF->LinkLocal);
+	AddrInitIPv6Unspecified(&IF->Dhcp6Address);
 
     TcpipInitializeSpinLock(&IF->Lock);
 
@@ -262,6 +274,8 @@ VOID IPDestroyInterface(
 VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS NetworkAddress;
+    IP_ADDRESS LinkLocalMask;
+    PNEIGHBOR_CACHE_ENTRY NCE6;
 
     /* Add a permanent neighbor for this NTE */
     NCE = NBAddNeighbor(IF, &IF->Unicast,
@@ -283,7 +297,39 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     if (IF != Loopback)
        ARPTransmit(NULL, NULL, IF);
 
+    /*
+     * Link-local fe80::/64 from the MAC (RFC 4291 2.5.6 / Appendix A).
+     * On-link for Neighbor Discovery when a peer exists (RFC 4861).
+     */
+    if (IF != Loopback &&
+        IF->Address && IF->AddressLength == 6 &&
+        AddrFormLinkLocalEui64(&IF->LinkLocal, IF->Address, IF->AddressLength))
+    {
+        NCE6 = NBLocateNeighbor(&IF->LinkLocal, IF);
+        if (!NCE6)
+        {
+            NCE6 = NBAddNeighbor(IF, &IF->LinkLocal,
+                                 IF->Address, IF->AddressLength,
+                                 NUD_PERMANENT, 0);
+        }
+        if (NCE6)
+        {
+            AddrInitIPv6(&LinkLocalMask,
+                         WH2N(0xFFFF), WH2N(0xFFFF), WH2N(0xFFFF), WH2N(0xFFFF),
+                         0, 0, 0, 0);
+            AddrWidenAddress(&NetworkAddress, &IF->LinkLocal, &LinkLocalMask);
+            RouterAddRoute(&NetworkAddress, &LinkLocalMask, NCE6, 1);
+        }
+        else
+        {
+            AddrInitIPv6Unspecified(&IF->LinkLocal);
+        }
+    }
+
     TCPUpdateInterfaceIPInformation(IF);
+
+    if (IF != Loopback)
+        DHCP6StartOnInterface(IF);
 }
 
 BOOLEAN IPRegisterInterface(
@@ -331,6 +377,7 @@ BOOLEAN IPRegisterInterface(
 VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS GeneralRoute;
+    IP_ADDRESS LinkLocalMask;
 
     NCE = NBLocateNeighbor(&IF->Unicast, IF);
     if (NCE)
@@ -343,6 +390,21 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
        RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
 
        NBRemoveNeighbor(NCE);
+    }
+
+    if (!AddrIsUnspecified(&IF->LinkLocal))
+    {
+       NCE = NBLocateNeighbor(&IF->LinkLocal, IF);
+       if (NCE)
+       {
+           AddrInitIPv6(&LinkLocalMask,
+                        WH2N(0xFFFF), WH2N(0xFFFF), WH2N(0xFFFF), WH2N(0xFFFF),
+                        0, 0, 0, 0);
+           AddrWidenAddress(&GeneralRoute, &IF->LinkLocal, &LinkLocalMask);
+           RouterRemoveRoute(&GeneralRoute, &IF->LinkLocal);
+           NBRemoveNeighbor(NCE);
+       }
+       AddrInitIPv6Unspecified(&IF->LinkLocal);
     }
 }
 
@@ -451,6 +513,9 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
     /* Start neighbor cache subsystem */
     NBStartup();
 
+    /* DHCPv6 client sketch (idle until a server path exists). */
+    DHCP6Startup();
+
     /* Fill the protocol dispatch table with pointers
        to the default protocol handler */
     for (i = 0; i < IP_PROTOCOL_TABLE_SIZE; i++)
@@ -485,6 +550,8 @@ NTSTATUS IPShutdown(
 
     /* Shutdown neighbor cache subsystem */
     NBShutdown();
+
+    DHCP6Shutdown();
 
     /* Shutdown routing subsystem */
     RouterShutdown();

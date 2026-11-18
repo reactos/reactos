@@ -16,6 +16,7 @@
 #define DD_TCP_DEVICE_NAME      L"\\Device\\NTTcp"
 #define DD_UDP_DEVICE_NAME      L"\\Device\\NTUdp"
 #define DD_IP_DEVICE_NAME       L"\\Device\\NTIp"
+#define DD_IP6_DEVICE_NAME      L"\\Device\\NTIp6"
 #define DD_RAWIP_DEVICE_NAME    L"\\Device\\NTRawIp"
 
 /* For NDIS protocol registration */
@@ -24,6 +25,8 @@
 #define DD_TCP_DEVICE_NAME      L"\\Device\\Tcp"
 #define DD_UDP_DEVICE_NAME      L"\\Device\\Udp"
 #define DD_IP_DEVICE_NAME       L"\\Device\\Ip"
+/* Icmp6CreateFile opens this name (dll/win32/iphlpapi/icmp.c). */
+#define DD_IP6_DEVICE_NAME      L"\\Device\\Ip6"
 #define DD_RAWIP_DEVICE_NAME    L"\\Device\\RawIp"
 
 /* For NDIS protocol registration */

@@ -3,12 +3,21 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        transport/udp/udp.c
  * PURPOSE:     User Datagram Protocol routines
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *
+ * UDPv6 uses the IPv6 pseudo-header checksum (RFC 8200 Section 8.1
+ * https://www.rfc-editor.org/rfc/rfc8200). DHCPv6 client port 546 is
+ * RFC 8415 Section 7.2 (https://www.rfc-editor.org/rfc/rfc8415).
  */
 
 #include "precomp.h"
+
+#include <icmp.h>
+#include <dhcp6.h>
 
 BOOLEAN UDPInitialized = FALSE;
 PORT_SET UDPPorts;
@@ -74,6 +83,46 @@ NTSTATUS AddUDPHeaderIPv4(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS AddUDPHeaderIPv6(
+    PADDRESS_FILE AddrFile,
+    PIP_ADDRESS RemoteAddress,
+    USHORT RemotePort,
+    PIP_ADDRESS LocalAddress,
+    USHORT LocalPort,
+    PIP_PACKET IPPacket,
+    PVOID Data,
+    UINT DataLength)
+/*
+ * FUNCTION: Adds an IPv6 and UDP header (RFC 8200 / RFC 768 via pseudo-header)
+ */
+{
+    PUDP_HEADER UDPHeader;
+    NTSTATUS Status;
+    UINT UdpLength;
+
+    Status = AddGenericHeaderIPv6(AddrFile, RemoteAddress, LocalAddress,
+                                  IPPacket, DataLength, IPPROTO_UDP,
+                                  sizeof(UDP_HEADER), (PVOID *)&UDPHeader);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    UdpLength = DataLength + sizeof(UDP_HEADER);
+    UDPHeader->SourcePort = LocalPort;
+    UDPHeader->DestPort = RemotePort;
+    UDPHeader->Checksum = 0;
+    UDPHeader->Length = WH2N((USHORT)UdpLength);
+    RtlCopyMemory(IPPacket->Data, Data, DataLength);
+
+    UDPHeader->Checksum = IPv6PseudoChecksum(LocalAddress, RemoteAddress,
+                                             (USHORT)UdpLength, IPPROTO_UDP,
+                                             UDPHeader, UdpLength);
+    /* UDPv6 checksum must not be zero (RFC 768 / RFC 8200 8.1). */
+    if (UDPHeader->Checksum == 0)
+        UDPHeader->Checksum = 0xFFFF;
+
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS BuildUDPPacket(
     PADDRESS_FILE AddrFile,
@@ -99,10 +148,12 @@ NTSTATUS BuildUDPPacket(
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    /* FIXME: Assumes IPv4 */
-    IPInitializePacket(Packet, IP_ADDRESS_V4);
+    IPInitializePacket(Packet, RemoteAddress->Type);
 
-    Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
+    if (RemoteAddress->Type == IP_ADDRESS_V6)
+        Packet->TotalSize = IPv6_HEADER_SIZE + sizeof(UDP_HEADER) + DataLen;
+    else
+        Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
 
     /* Prepare packet */
     Status = AllocatePacketWithBuffer(&Packet->NdisPacket,
@@ -125,8 +176,9 @@ NTSTATUS BuildUDPPacket(
                                       LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
             break;
         case IP_ADDRESS_V6:
-            /* FIXME: Support IPv6 */
-            TI_DbgPrint(MIN_TRACE, ("IPv6 UDP datagrams are not supported.\n"));
+            Status = AddUDPHeaderIPv6(AddrFile, RemoteAddress, RemotePort,
+                                      LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
+            break;
         default:
             Status = STATUS_UNSUCCESSFUL;
             break;
@@ -229,6 +281,18 @@ NTSTATUS UDPSendDatagram(
 		RemotePort = RemoteAddressTa->Address[0].Address[0].sin_port;
 		break;
 
+    case TDI_ADDRESS_TYPE_IP6:
+    {
+        PTA_IP6_ADDRESS RemoteAddressTa6 =
+            (PTA_IP6_ADDRESS)ConnInfo->RemoteAddress;
+        RemoteAddress.Type = IP_ADDRESS_V6;
+        RtlCopyMemory(RemoteAddress.Address.IPv6Address,
+                      RemoteAddressTa6->Address[0].Address[0].sin6_addr,
+                      sizeof(IPv6_RAW_ADDRESS));
+        RemotePort = RemoteAddressTa6->Address[0].Address[0].sin6_port;
+        break;
+    }
+
     default:
 		UnlockObject(AddrFile);
 		return STATUS_UNSUCCESSFUL;
@@ -246,7 +310,32 @@ NTSTATUS UDPSendDatagram(
             return STATUS_NETWORK_UNREACHABLE;
         }
 
-        LocalAddress = NCE->Interface->Unicast;
+        if (RemoteAddress.Type == IP_ADDRESS_V6)
+        {
+            /* AddrInitIPv6Loopback expands to a compound statement; brace
+             * the if so else-if chains stay attached (clang expected
+             * expression at the else). */
+            if (NCE->Interface == Loopback)
+            {
+                AddrInitIPv6Loopback(&LocalAddress);
+            }
+            else if (DHCP6SourceForDestination(NCE->Interface, &RemoteAddress,
+                                               &LocalAddress))
+            {
+            }
+            else if (!AddrIsUnspecified(&NCE->Interface->LinkLocal))
+            {
+                LocalAddress = NCE->Interface->LinkLocal;
+            }
+            else
+            {
+                LocalAddress = NCE->Address;
+            }
+        }
+        else
+        {
+            LocalAddress = NCE->Interface->Unicast;
+        }
     }
     else
     {
@@ -337,10 +426,10 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 
   /* IPv6 packet */
   case IP_ADDRESS_V6:
-    TI_DbgPrint(MIN_TRACE, ("Discarded IPv6 UDP datagram (%i bytes).\n", IPPacket->TotalSize));
-
-    /* FIXME: IPv6 is not supported */
-    return;
+    IPv4Header = NULL;
+    DstAddress = &IPPacket->DstAddr;
+    SrcAddress = &IPPacket->SrcAddr;
+    break;
 
   default:
     return;
@@ -349,13 +438,36 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
   UDPHeader = (PUDP_HEADER)IPPacket->Data;
 
   /* Calculate and validate UDP checksum */
-  i = UDPv4ChecksumCalculate(IPv4Header,
-                             (PUCHAR)UDPHeader,
-                             WH2N(UDPHeader->Length));
-  if (i != DH2N(0x0000FFFF) && UDPHeader->Checksum != 0)
+  if (IPPacket->Type == IP_ADDRESS_V4)
   {
-      TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
-      return;
+      i = UDPv4ChecksumCalculate(IPv4Header,
+                                 (PUCHAR)UDPHeader,
+                                 WH2N(UDPHeader->Length));
+      if (i != DH2N(0x0000FFFF) && UDPHeader->Checksum != 0)
+      {
+          TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
+          return;
+      }
+  }
+  else
+  {
+      USHORT Saved = UDPHeader->Checksum;
+      UINT UdpLength = WN2H(UDPHeader->Length);
+
+      if (Saved == 0)
+      {
+          TI_DbgPrint(MIN_TRACE, ("UDPv6 checksum zero; discarded.\n"));
+          return;
+      }
+      UDPHeader->Checksum = 0;
+      if (IPv6PseudoChecksum(SrcAddress, DstAddress, (USHORT)UdpLength,
+                             IPPROTO_UDP, UDPHeader, UdpLength) != Saved)
+      {
+          UDPHeader->Checksum = Saved;
+          TI_DbgPrint(MIN_TRACE, ("Bad UDPv6 checksum; discarded.\n"));
+          return;
+      }
+      UDPHeader->Checksum = Saved;
   }
 
   /* Sanity checks */
@@ -370,6 +482,12 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 
   /* Go to UDP data area */
   IPPacket->Data = (PVOID)((ULONG_PTR)IPPacket->Data + sizeof(UDP_HEADER));
+
+  if (IPPacket->Type == IP_ADDRESS_V6 &&
+      UDPHeader->DestPort == WH2N(DHCP6_CLIENT_PORT))
+  {
+      DHCP6Receive((PUCHAR)IPPacket->Data, DataSize);
+  }
 
   /* Locate a receive request on destination address file object
      and deliver the packet if one is found. If there is no receive
