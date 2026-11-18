@@ -132,24 +132,22 @@ VOID NTAPI DispCancelRequest(
     PCONNECTION_ENDPOINT Connection;
     BOOLEAN DequeuedIrp = TRUE;
 
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
+    /* Once the cancel lock is released the request may complete on another thread, so read it first */
     IrpSp         = IoGetCurrentIrpStackLocation(Irp);
     FileObject    = IrpSp->FileObject;
     TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
     MinorFunction = IrpSp->MinorFunction;
 
-    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
-
-    Irp->IoStatus.Status = STATUS_CANCELLED;
-    Irp->IoStatus.Information = 0;
-
 #if DBG
     if (!Irp->Cancel)
         TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
 #endif
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
 
     /* Try canceling the request */
     switch(MinorFunction) {
@@ -199,8 +197,12 @@ VOID NTAPI DispCancelRequest(
         break;
     }
 
+    /* Only a request taken off our queues is ours to complete; otherwise its completion owns it */
     if (DequeuedIrp)
+    {
+       Irp->IoStatus.Information = 0;
        IRPFinish(Irp, STATUS_CANCELLED);
+    }
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -221,21 +223,22 @@ VOID NTAPI DispCancelListenRequest(
     PFILE_OBJECT FileObject;
     PCONNECTION_ENDPOINT Connection;
 
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
+    /* Once the cancel lock is released the request may complete on another thread, so read it first */
     IrpSp         = IoGetCurrentIrpStackLocation(Irp);
     FileObject    = IrpSp->FileObject;
     TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
     ASSERT( TDI_LISTEN == IrpSp->MinorFunction);
 
-    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X).\n", Irp));
-
 #if DBG
     if (!Irp->Cancel)
         TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
 #endif
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X).\n", Irp));
 
     /* Try canceling the request */
     Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
