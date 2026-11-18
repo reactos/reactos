@@ -1,5 +1,5 @@
 [package]
-name = "rtl8139n"
+name = "rtl8139"
 version = "0.1.0"
 edition = "2021"
 publish = false

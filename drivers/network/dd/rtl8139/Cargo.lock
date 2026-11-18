@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "rtl8139n"
+name = "rtl8139"
 version = "0.1.0"
