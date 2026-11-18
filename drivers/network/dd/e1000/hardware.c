@@ -4,6 +4,16 @@
  * PURPOSE:     Hardware specific functions
  * COPYRIGHT:   2018 Mark Jansen (mark.jansen@reactos.org)
  *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Mark Jansen
+ *              Victor Perevertkin
+ *              Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * output/desktop-boot-20261118T111133Z.log — MM FAULT va 0x400 then
+ * Fatal System Error 0x0000001e after MiniportHalt on early init.
+ * drivers/network/dd/e1000/e1000hw.h — E1000_REG_TCTL 0x0400.
  */
 
 #include "nic.h"
@@ -644,6 +654,14 @@ NICDisableTxRx(
     ULONG Value;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* Skip register access when IoBase is unset. Guest log
+     * output/desktop-boot-20261118T111133Z.log faulted at VA 0x400
+     * (E1000_REG_TCTL in e1000hw.h) after MiniportHalt on early init. */
+    if (!Adapter->IoBase)
+    {
+        return NDIS_STATUS_SUCCESS;
+    }
 
     E1000ReadUlong(Adapter, E1000_REG_TCTL, &Value);
     Value &= ~E1000_TCTL_EN;

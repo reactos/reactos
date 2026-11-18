@@ -4,6 +4,15 @@
  * PURPOSE:     Sending packets
  * COPYRIGHT:   Copyright 2018 Mark Jansen <mark.jansen@reactos.org>
  *              Copyright 2019 Victor Perevertkin <victor.perevertkin@reactos.org>
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Mark Jansen
+ *              Victor Perevertkin
+ *              Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * output/e1000-fix-20261118T113431Z.log — ASSERT sgList != NULL at
+ * MiniportSend after NDIS6 TX while ScatterGatherListPacketInfo was null.
  */
 
 #include "nic.h"
@@ -59,10 +68,17 @@ MiniportSend(
 
     sgList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet, ScatterGatherListPacketInfo);
 
-    ASSERT(sgList != NULL);
-    ASSERT(sgList->NumberOfElements == 1);
-    ASSERT((sgList->Elements[0].Address.LowPart & 3) == 0);
-    ASSERT(sgList->Elements[0].Length <= MAXIMUM_FRAME_SIZE);
+    /* Guest log output/e1000-fix-20261118T113431Z.log hit ASSERT(sgList
+     * != NULL) here when NDIS5 SEND left ScatterGatherListPacketInfo
+     * unset. Fail the send instead of breaking into KDB. */
+    if (sgList == NULL ||
+        sgList->NumberOfElements != 1 ||
+        (sgList->Elements[0].Address.LowPart & 3) != 0 ||
+        sgList->Elements[0].Length > MAXIMUM_FRAME_SIZE)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Invalid scatter-gather list\n"));
+        return NDIS_STATUS_FAILURE;
+    }
 
     if (Adapter->TxFull)
     {

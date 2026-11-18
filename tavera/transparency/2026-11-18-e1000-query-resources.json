@@ -1,0 +1,40 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What short-buffer status should NdisMQueryAdapterResources return on the documented size probe so e1000 MiniportInitialize does not treat the sizing call as failure and MiniportHalt does not fault through a null IoBase at TCTL?",
+  "allowedInputs": [
+    {
+      "source": "https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff553571(v=vs.85)",
+      "where": "size probe; BufferSize IN/OUT; status unnamed"
+    },
+    {
+      "source": "sdk/include/ddk/ndis.h",
+      "where": "NDIS_STATUS_RESOURCES; NDIS_STATUS_BUFFER_TOO_SHORT 0xC0010016"
+    },
+    {
+      "source": "drivers/network/dd/e1000/ndis.c",
+      "where": "expects NDIS_STATUS_RESOURCES on first NdisMQueryAdapterResources call"
+    },
+    {
+      "source": "drivers/network/dd/dc21x4/init.c",
+      "where": "expects NDIS_STATUS_RESOURCES on first NdisMQueryAdapterResources call"
+    },
+    {
+      "source": "drivers/network/dd/nvnet/init.c",
+      "where": "expects NDIS_STATUS_RESOURCES on first NdisMQueryAdapterResources call"
+    },
+    {
+      "source": "drivers/network/dd/e1000/e1000hw.h",
+      "where": "E1000_REG_TCTL 0x0400"
+    },
+    {
+      "source": "output/desktop-boot-20261118T111133Z.log",
+      "where": "Unexpected failure of NdisMQueryAdapterResources (0xc0010016); MM FAULT va 0000000000000400; Fatal System Error: 0x0000001e"
+    }
+  ],
+  "harness": {
+    "guest": "build-amd64/bootcd.iso",
+    "name": "LiveCD e1000 default NIC",
+    "traceOrReplayId": "desktop-boot-20261118T111133Z",
+    "logSha256": "264c116932c98a3ede77d1c042dc8e0fefeab764cf13a3ca5dd75a40bbc72929"
+  }
+}

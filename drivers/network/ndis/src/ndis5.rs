@@ -36,6 +36,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismcanceltimer
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisopenconfiguration
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismqueryadapterresources
+ * https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff553571(v=vs.85)
+ * Short-buffer status for that size probe is NDIS_STATUS_RESOURCES in
+ * sdk/include/ddk/ndis.h because drivers/network/dd/e1000/ndis.c,
+ * drivers/network/dd/dc21x4/init.c, and drivers/network/dd/nvnet/init.c
+ * test for RESOURCES on the first call. Learn names the size probe only.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadpcislotinformation
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiswritepcislotinformation
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememorywithtag
@@ -77,6 +82,13 @@
  * loopback done 1 1, no Fatal System Error.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreemapregisters
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiswriteerrorlogentry
+ * e1000 MiniportSend reads ScatterGatherListPacketInfo
+ * (sdk/include/ddk/ndis.h). Guest log
+ * output/e1000-fix-20261118T113431Z.log asserted sgList != NULL in
+ * drivers/network/dd/e1000/send.c after NDIS6 TX. One-element
+ * SCATTER_GATHER_LIST layout is sdk/include/xdk/iotypes.h (same
+ * offsets as src/lib.rs SG_LIST_BYTES / SG_ADDR_AT / SG_LEN_AT).
+ * MmGetPhysicalAddress is sdk/include/xdk/mmfuncs.h.
  */
 
 use core::mem::size_of;
@@ -125,6 +137,8 @@ unsafe extern "system" {
         irp: *mut u8,
     ) -> *mut u8;
     fn MmBuildMdlForNonPagedPool(mdl: *mut u8);
+    /* sdk/include/xdk/mmfuncs.h */
+    fn MmGetPhysicalAddress(base: *mut u8) -> u64;
     /* UNICODE_STRING in sdk/include/xdk/ntdef.h; NdisInitUnicodeString. */
     fn RtlInitUnicodeString(destination: *mut u8, source: *const u16);
     /* sdk/include/xdk/kefuncs.h; ntoskrnl.spec export. */
@@ -419,7 +433,6 @@ const LEGACY_KIND: u32 = u32::from_le_bytes(*b"L5so");
 const INVALID_PARAMETER: u32 = 0xC000_000D;
 const BAD_VERSION: u32 = 0xC001_0004;
 const PENDING: u32 = 0x0000_0103;
-const BUFFER_TOO_SHORT: u32 = 0xC001_0016;
 const BLOCK_BYTES: usize = 0x400;
 const CHARS_KEEP: usize = 0x100;
 const NBL_BYTES: usize = 512;
@@ -465,6 +478,16 @@ const TIMER_CTX: usize = 0x88;
  * output/ndis-disk-20261117T154756Z.log completed with a bad NBL when
  * Sent lived inside the descriptor. sdk/include/ddk/ndis.h NDIS_PACKET. */
 const PACKET_BYTES: usize = 0x100;
+/* NDIS_PACKET_OOB_DATA in sdk/include/ddk/ndis.h on x64 (two ULONGLONG,
+ * two UINT, PVOID, NDIS_STATUS, 8-byte align). */
+const OOB_BYTES: usize = 40;
+/* ScatterGatherListPacketInfo in sdk/include/ddk/ndis.h. */
+const SG_INFO_INDEX: usize = 5;
+/* One-element SCATTER_GATHER_LIST — sdk/include/xdk/iotypes.h; same
+ * sizes as src/lib.rs. */
+const SG_LIST_BYTES: usize = 0x28;
+const SG_ADDR_AT: usize = 0x10;
+const SG_LEN_AT: usize = 0x18;
 const DMA32_LIMIT: u64 = 0xFFFF_FFFF;
 /* lan.c NBL_DATA_* / FirstNetBuffer. Bookkeeping at 0x10 and 0x18 is
  * this file's frame and MDL, not a Windows field. */
@@ -516,6 +539,7 @@ struct Sent {
     copy: *mut u8,
     mdl: *mut u8,
     mp: *mut u8,
+    sg: *mut u8,
 }
 
 static mut ACTIVE: *mut Legacy = ptr::null_mut();
@@ -819,11 +843,13 @@ fn finish_send(packet: *mut u8) {
         let mp = (*sent).mp;
         let mdl = (*sent).mdl;
         let copy = (*sent).copy;
+        let sg = (*sent).sg;
         (*sent).kind = 0;
         (*sent).nbl = ptr::null_mut();
         (*sent).mp = ptr::null_mut();
         (*sent).mdl = ptr::null_mut();
         (*sent).copy = ptr::null_mut();
+        (*sent).sg = ptr::null_mut();
         ptr::write_unaligned(packet.add(8) as *mut *mut u8, ptr::null_mut());
         ptr::write_unaligned(packet.add(16) as *mut *mut u8, ptr::null_mut());
         DbgPrint(
@@ -839,6 +865,9 @@ fn finish_send(packet: *mut u8) {
         /* Individually IoFreeMdl, copy, and packet each passed. Free all
          * with OobOffset set and Head unlinked. Tags 5sdC/5sdP name the
          * 0x19 block if the combination still fails. */
+        if !sg.is_null() {
+            ExFreePoolWithTag(sg, PACKET_TAG);
+        }
         if !mdl.is_null() {
             IoFreeMdl(mdl);
         }
@@ -1005,9 +1034,27 @@ fn build_packet(mp: *mut u8, nbl: *mut u8) -> *mut u8 {
         }
         return ptr::null_mut();
     }
+    /* One-element SG list for e1000 MiniportSend
+     * (drivers/network/dd/e1000/send.c ScatterGatherListPacketInfo).
+     * Layout: sdk/include/xdk/iotypes.h. Guest log
+     * output/e1000-fix-20261118T113431Z.log asserted sgList != NULL. */
+    let sg = unsafe { ExAllocatePoolWithTag(0, SG_LIST_BYTES, PACKET_TAG) };
+    if sg.is_null() {
+        unsafe {
+            IoFreeMdl(owned);
+            ExFreePoolWithTag(copy, COPY_TAG);
+            ExFreePoolWithTag(packet, PACKET_TAG);
+        }
+        return ptr::null_mut();
+    }
     let sent = sent_of(packet);
     unsafe {
         MmBuildMdlForNonPagedPool(owned);
+        let physical = MmGetPhysicalAddress(copy);
+        ptr::write_bytes(sg, 0, SG_LIST_BYTES);
+        ptr::write_unaligned(sg as *mut u32, 1);
+        ptr::write_unaligned(sg.add(SG_ADDR_AT) as *mut u64, physical);
+        ptr::write_unaligned(sg.add(SG_LEN_AT) as *mut u32, got);
         ptr::write_bytes(packet, 0, PACKET_BYTES + size_of::<Sent>());
         ptr::write_unaligned(packet as *mut u32, span_pages(owned as *const Mdl));
         ptr::write_unaligned(packet.add(4) as *mut u32, got);
@@ -1018,11 +1065,16 @@ fn build_packet(mp: *mut u8, nbl: *mut u8) -> *mut u8 {
         /* NdisPacketOobOffset — sdk/include/ddk/ndis.h NDIS_PACKET_PRIVATE. */
         ptr::write_unaligned(packet.add(42) as *mut u16, PACKET_OOB_AT);
         *packet.add(41) = 0x80;
+        /* NDIS_PER_PACKET_INFO_FROM_PACKET — sdk/include/ddk/ndis.h. */
+        let info = packet
+            .add(PACKET_OOB_AT as usize + OOB_BYTES + SG_INFO_INDEX * size_of::<*mut u8>());
+        ptr::write_unaligned(info as *mut *mut u8, sg);
         (*sent).kind = SENT_KIND;
         (*sent).nbl = nbl;
         (*sent).copy = copy;
         (*sent).mdl = owned;
         (*sent).mp = mp;
+        (*sent).sg = sg;
     }
     packet
 }
@@ -1571,12 +1623,17 @@ pub unsafe extern "system" fn NdisMQueryAdapterResources(
         write_status(status, RESOURCES);
         return;
     }
+    /* Learn size probe: BufferSize 0 then allocate need bytes.
+     * https://learn.microsoft.com/en-us/previous-versions/windows/hardware/network/ff553571(v=vs.85)
+     * Short buffer uses RESOURCES (sdk/include/ddk/ndis.h) so
+     * drivers/network/dd/e1000/ndis.c, dc21x4/init.c, and nvnet/init.c
+     * accept the sizing call. Learn does not name that status. */
     let count = read_u32(partial, CM_COUNT_AT) as usize;
     let need = (CM_DESC_AT + count * CM_DESC_BYTES) as u32;
     let have = unsafe { *bytes };
     unsafe { *bytes = need };
     if list.is_null() || have < need {
-        write_status(status, BUFFER_TOO_SHORT);
+        write_status(status, RESOURCES);
         return;
     }
     unsafe { ptr::copy_nonoverlapping(partial, list, need as usize) };

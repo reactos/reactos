@@ -464,6 +464,13 @@ pub unsafe extern "system" fn LanDeregisterProtocol6() {
 }
 
 pub fn make_bind_parameters() -> *mut u8 {
+    /* fill_adapter_name used to run only from LanRegisterProtocol6.
+     * BINDALL for ndisuio can run first; ADAPTER_NAME stayed length 0
+     * and drivers/network/ndisuio/protocol.c BindAdapterByName called
+     * ExAllocatePool(NonPagedPool, 0). Guest log
+     * output/e1000-fix-20261118T113038Z.log: NDISUIO BIND6 then
+     * Assertion NumberOfBytes != 0 in ntoskrnl/mm/ARM3/expool.c. */
+    fill_adapter_name();
     let block = protocol::alloc_bytes(BIND_BYTES);
     if block.is_null() {
         return ptr::null_mut();

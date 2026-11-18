@@ -1,0 +1,36 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does e1000 MiniportSend assert sgList != NULL after LiveCD reaches wallpaper with a working NDIS5 INIT, and how should NDIS5 build_packet supply ScatterGatherListPacketInfo?",
+  "allowedInputs": [
+    {
+      "source": "output/e1000-fix-20261118T113431Z.log",
+      "where": "NDIS5 INIT 00000000; NDIS6 TX; Assertion sgList != NULL; drivers/network/dd/e1000/send.c line 62"
+    },
+    {
+      "source": "drivers/network/dd/e1000/send.c",
+      "where": "NDIS_PER_PACKET_INFO_FROM_PACKET ScatterGatherListPacketInfo"
+    },
+    {
+      "source": "sdk/include/ddk/ndis.h",
+      "where": "ScatterGatherListPacketInfo; NDIS_PER_PACKET_INFO_FROM_PACKET; NDIS_PACKET_OOB_DATA"
+    },
+    {
+      "source": "sdk/include/xdk/iotypes.h",
+      "where": "SCATTER_GATHER_LIST NumberOfElements Reserved Elements Address Length"
+    },
+    {
+      "source": "drivers/network/ndis/src/lib.rs",
+      "where": "SG_LIST_BYTES 0x28 SG_ADDR_AT 0x10 SG_LEN_AT 0x18 one-element fallback"
+    },
+    {
+      "source": "sdk/include/xdk/mmfuncs.h",
+      "where": "MmGetPhysicalAddress"
+    }
+  ],
+  "harness": {
+    "guest": "build-amd64/bootcd.iso",
+    "name": "LiveCD e1000 user nic",
+    "traceOrReplayId": "e1000-fix-20261118T113431Z",
+    "logSha256": "93ab0159b6bd01492153abefee45cf0b630bde9013a7f01efeccbbad415b975e"
+  }
+}

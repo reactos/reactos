@@ -1,5 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS NDIS User I/O driver
  * FILE:        drivers/network/ndisuio/protocol.c
  * PURPOSE:     Protocol stuff
@@ -458,9 +459,20 @@ BindAdapterByName(PNDIS_STRING DeviceName,
      * whether or not the caller passes one */
     NameLength = DeviceName->Length;
     if (NameLength >= sizeof(WCHAR) &&
+        DeviceName->Buffer &&
         DeviceName->Buffer[NameLength / sizeof(WCHAR) - 1] == UNICODE_NULL)
     {
         NameLength -= sizeof(WCHAR);
+    }
+
+    /* Zero length hits ASSERT(NumberOfBytes != 0) in
+     * ntoskrnl/mm/ARM3/expool.c. Guest log
+     * output/e1000-fix-20261118T113038Z.log: NDISUIO BIND6 then that
+     * assert when BINDALL AdapterName length was still 0. */
+    if (NameLength == 0 || !DeviceName->Buffer)
+    {
+        ExFreePool(AdapterContext);
+        return NDIS_STATUS_RESOURCES;
     }
 
     AdapterContext->DeviceName.Length =

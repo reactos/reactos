@@ -1,0 +1,28 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does NDISUIO BIND6 after e1000 MiniportInitialize assert NumberOfBytes != 0 in ExAllocatePool, and how should BINDALL AdapterName be filled so BindAdapterByName does not allocate zero bytes?",
+  "allowedInputs": [
+    {
+      "source": "output/e1000-fix-20261118T113038Z.log",
+      "where": "NDIS5 INIT 00000000; NDISUIO BIND6; Assertion NumberOfBytes != 0; ntoskrnl/mm/ARM3/expool.c line 1922"
+    },
+    {
+      "source": "drivers/network/ndis/src/prot6.rs",
+      "where": "make_bind_parameters writes ADAPTER_NAME; fill_adapter_name only from LanRegisterProtocol6"
+    },
+    {
+      "source": "drivers/network/ndisuio/protocol.c",
+      "where": "BindAdapterByName ExAllocatePool(NonPagedPool, NameLength) from DeviceName->Length"
+    },
+    {
+      "source": "ntoskrnl/mm/ARM3/expool.c",
+      "where": "ASSERT(NumberOfBytes != 0) at line 1922"
+    }
+  ],
+  "harness": {
+    "guest": "build-amd64/bootcd.iso",
+    "name": "LiveCD e1000 user nic",
+    "traceOrReplayId": "e1000-fix-20261118T113038Z",
+    "logSha256": "108e8b9a75543afb371fe4ac226ec619943b102239e56b30c0e1b4f1905fbf37"
+  }
+}
