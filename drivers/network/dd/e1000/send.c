@@ -4,10 +4,10 @@
  * PURPOSE:     Sending packets
  * COPYRIGHT:   Copyright 2018 Mark Jansen <mark.jansen@reactos.org>
  *              Copyright 2019 Victor Perevertkin <victor.perevertkin@reactos.org>
- *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ *              Copyright 2026 Ryan Wilson <ryan@taveraos.com>
  * PROGRAMMERS: Mark Jansen
  *              Victor Perevertkin
- *              Ryan Wilson <ryan@verosnt.com>
+ *              Ryan Wilson <ryan@taveraos.com>
  */
 
 /*

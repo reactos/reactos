@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ *              Copyright 2026 Ryan Wilson <ryan@taveraos.com>
  * PROJECT:     ReactOS NDIS User I/O driver
  * FILE:        drivers/network/ndisuio/protocol.c
  * PURPOSE:     Protocol stuff
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)
- *              Ryan Wilson <ryan@verosnt.com>
+ *              Ryan Wilson <ryan@taveraos.com>
  */
 
 /*

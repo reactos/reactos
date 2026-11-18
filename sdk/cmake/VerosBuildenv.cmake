@@ -2,8 +2,8 @@
 # LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
 # FILE:        sdk/cmake/VerosBuildenv.cmake
 # PURPOSE:     Locate the buildenv tools directory for nested or side-by-side layouts
-# COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
+# COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@taveraos.com>
+# PROGRAMMERS: Ryan Wilson <ryan@taveraos.com>
 
 # Nested:   <buildenv>/source  +  <buildenv>/tools
 # Side-by-side: <ws>/source  +  <ws>/buildenv/tools
