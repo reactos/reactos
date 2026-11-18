@@ -1,0 +1,25 @@
+---
+description: Raw-format probing and implementation happen in separate sessions
+alwaysApply: true
+---
+
+# Probe and implementation separation
+
+Two kinds of probing are treated differently.
+
+**API-behavior probes** call documented APIs on the Windows 10 22H2 guest and record status codes, return values, and user-visible output. The same session may probe and implement. This is the normal workflow under [windows-capture.mdc](windows-capture.mdc).
+
+**Raw-format probes** capture bytes Windows writes below the API: raw disk sectors from the guest image, on-disk file system structures, registry hive files, or other persisted binary formats. For these, use two sessions:
+
+1. **Probe session.** Designs and runs the probe, stores captures under `output/<tool>/`, and writes a spec at `veros/specs/<component>.md`. Every statement in the spec cites a capture file and the probe step that produced it. The probe session does not edit implementation code for that component.
+2. **Implementation session.** A new session that has not seen the raw captures being interpreted, only the spec and the logs the spec cites. It implements from the spec and verifies with a differential probe (`DIFF ... END OK`). If the spec is missing a fact, it asks for a new probe-session pass instead of inferring the fact itself.
+
+Name both sessions in the transparency note for the implementation commit.
+
+Raw-format probing reads the guest's disk image or files only. It never reads Windows memory, binaries, or debugger output; those stay forbidden under [clean-room-symbols-and-debuggers.mdc](clean-room-symbols-and-debuggers.mdc).
+
+```text
+Right: probe session diffs sectors after CreateFileW, writes veros/specs/ntfs-mft-record.md; new session implements from it
+Right: one session calls NtQueryVolumeInformationFile on Windows and VerOS and matches the status
+Wrong: one session reads hex dumps of the guest disk and writes the driver struct in the same chat
+```

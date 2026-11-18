@@ -1,0 +1,21 @@
+---
+description: No Microsoft symbols, debuggers, or memory dumps of Microsoft code
+alwaysApply: true
+---
+
+# Symbols and debuggers
+
+Microsoft debug symbols are forbidden inputs. Do not download, load, or read a `.pdb` from the Microsoft symbol server or from any other copy. Do not set `_NT_SYMBOL_PATH` to a Microsoft server. A symbol name, type, offset, or size seen through a symbol file does not enter this tree.
+
+Do not attach WinDbg, KD, x64dbg, GDB, or another debugger to the Windows 10 guest or to a Microsoft binary. Do not single-step, set breakpoints in, or view memory of Microsoft code. Do not take or read a kernel or process dump of the Windows 10 guest.
+
+The only way in to the Windows 10 guest is our own probe and the captures in [windows-capture.mdc](windows-capture.mdc): names this tree already has, called through `GetProcAddress` or the syscall interface, with status and return values logged.
+
+Debugging the VerOS NT boot with GDB through QEMU is allowed. Load only symbols this tree built.
+
+```text
+Right: gdb on the VerOS NT boot with symbols from build-amd64/
+Right: DIFF NtQueryInformationProcess 0xC0000004 from the probe log
+Wrong: dt nt!_EPROCESS in WinDbg against the Windows guest
+Wrong: symchk or symstore pulling ntoskrnl.pdb
+```

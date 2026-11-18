@@ -1,0 +1,28 @@
+---
+description: Third-party public pages count only when they were not built from forbidden inputs
+alwaysApply: true
+---
+
+# Third-party sources
+
+A page being public does not make it an allowed source. A third-party page, book, talk, or repository counts under [clean-room.mdc](clean-room.mdc) only when its own information did not come from Windows source, leaked NT source, the Windows Research Kernel, disassembly, decompiler output, Microsoft debug symbols, or WDK or SDK headers.
+
+These are not sources. Do not open them for this tree:
+
+- Geoff Chappell's Windows pages (geoffchappell.com)
+- Vergilius Project and other struct dumps generated from Microsoft symbols
+- Syscall number tables built from Microsoft binaries, such as j00ru's tables
+- ReactOS-adjacent wikis or posts that quote leaked source or the Windows Research Kernel
+- Blog posts, write-ups, or videos that walk through Microsoft code in a disassembler or debugger
+- Undocumented-API sites whose prototypes or layouts come from symbols or disassembly
+
+When a page does not say where its information came from, treat it as not a source. Use a Learn URL, a public specification, code already in this tree, or a guest log instead.
+
+Wine and ReactOS code already in this tree, or pulled under `REACTOS_LINEAGE_IMPORTS`, stays allowed as in-tree code. Do not pull new code from any other Windows reimplementation project without Ryan's approval.
+
+```text
+Right: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/... for a documented DDI
+Right: dll/win32/kernel32/client/file/create.c already in this tree
+Wrong: a struct offset from Vergilius Project because it is public
+Wrong: a syscall number from a public table built from ntdll.dll
+```
