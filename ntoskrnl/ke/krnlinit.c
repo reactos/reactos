@@ -286,6 +286,23 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     }
 }
 
+/*
+ * Declared in sdk/include/xdk/kefuncs.h. Single-node systems return 0:
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kequeryhighestnodenumber
+ * output/e1000e-20261118T033752Z.log: Missing API 'KeQueryHighestNodeNumber'
+ * while loading e1q62x64.sys (status c0000262). KeNumberNodes is this file.
+ */
+USHORT
+NTAPI
+KeQueryHighestNodeNumber(VOID)
+{
+    if (KeNumberNodes == 0)
+    {
+        return 0;
+    }
+    return (USHORT)(KeNumberNodes - 1);
+}
+
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI

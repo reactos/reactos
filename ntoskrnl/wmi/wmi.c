@@ -3,7 +3,14 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/wmi/wmi.c
  * PURPOSE:         I/O Windows Management Instrumentation (WMI) Support
+ * COPYRIGHT:       Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ *
+ * EtwRegister / EtwUnregister / EtwWrite: sdk/include/xdk/wmifuncs.h;
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-etwwrite
+ * output/e1000e-20261118T033107Z.log: Missing API 'EtwUnregister'
+ * PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt: EtwWrite
  */
 
 /* INCLUDES *****************************************************************/
@@ -444,6 +451,66 @@ NtTraceEvent(IN ULONG TraceHandle,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * EtwRegister / EtwUnregister: declared in sdk/include/xdk/wmifuncs.h
+ * (REGHANDLE is ULONGLONG in sdk/include/psdk/evntprov.h).
+ * output/e1000e-20261118T033107Z.log: Missing API 'EtwUnregister'
+ * while loading e1q62x64.sys (status c0000262).
+ */
+NTSTATUS
+NTAPI
+EtwRegister(IN LPCGUID ProviderId,
+            IN PETWENABLECALLBACK EnableCallback OPTIONAL,
+            IN PVOID CallbackContext OPTIONAL,
+            OUT PREGHANDLE RegHandle)
+{
+    UNREFERENCED_PARAMETER(ProviderId);
+    UNREFERENCED_PARAMETER(EnableCallback);
+    UNREFERENCED_PARAMETER(CallbackContext);
+    if (RegHandle == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    *RegHandle = 1;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+EtwUnregister(IN REGHANDLE RegHandle)
+{
+    UNREFERENCED_PARAMETER(RegHandle);
+    return STATUS_SUCCESS;
+}
+
+/*
+ * Declared in sdk/include/xdk/wmifuncs.h. Learn: STATUS_SUCCESS when the
+ * provider is not enabled for any session (events not logged):
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-etwwrite
+ * PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt Symbol: EtwWrite
+ * (batched with IoGetAffinityInterrupt after output/e1000e-20261118T034236Z.log).
+ */
+NTSTATUS
+NTAPI
+EtwWrite(IN REGHANDLE RegHandle,
+         IN PCEVENT_DESCRIPTOR EventDescriptor,
+         IN LPCGUID ActivityId OPTIONAL,
+         IN ULONG UserDataCount,
+         IN PEVENT_DATA_DESCRIPTOR UserData OPTIONAL)
+{
+    UNREFERENCED_PARAMETER(RegHandle);
+    UNREFERENCED_PARAMETER(EventDescriptor);
+    UNREFERENCED_PARAMETER(ActivityId);
+    UNREFERENCED_PARAMETER(UserData);
+
+    if (UserDataCount > 128)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*Eof*/

@@ -412,6 +412,11 @@
 @ stdcall IoGetConfigurationInformation()
 @ stdcall IoGetCurrentProcess()
 @ stdcall IoGetDeviceAttachmentBaseRef(ptr)
+; output/e1000e-20261118T034236Z.log: Missing API 'IoGetAffinityInterrupt'
+; while loading e1q62x64.sys (status c0000262). Declared in
+; sdk/include/xdk/iofuncs.h; Learn WdmlibIoGetAffinityInterrupt:
+; https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/iointex/nf-iointex-wdmlibiogetaffinityinterrupt
+@ stdcall IoGetAffinityInterrupt(ptr ptr)
 @ stdcall IoGetDeviceInterfaceAlias(ptr ptr ptr)
 @ stdcall -version=0x602+ IoGetDeviceInterfacePropertyData(ptr ptr long long long ptr ptr ptr)
 @ stdcall IoGetDeviceInterfaces(ptr ptr long ptr)
@@ -637,6 +642,10 @@
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
+; output/vmxnet3-20261117T162951Z.log: Missing API 'KeGetCurrentIrql'
+; while loading vmxnet3.sys (status c0000262). KxGetCurrentIrql in
+; ke/amd64/irql.c wraps the FORCEINLINE in sdk/include/xdk/amd64/ke.h.
+@ cdecl -arch=x86_64 KeGetCurrentIrql() KxGetCurrentIrql
 @ cdecl -arch=x86_64 -private KeLowerIrql(long) KxLowerIrql
 @ extern KeNumberProcessors
 @ stdcall -arch=i386,arm KeProfileInterrupt(ptr)
@@ -649,6 +658,11 @@
 @ stdcall KeGetProcessorIndexFromNumber(ptr)
 @ stdcall KeQueryMaximumProcessorCount()
 @ stdcall KeQueryMaximumProcessorCountEx(long)
+; output/e1000e-20261118T033752Z.log: Missing API 'KeQueryHighestNodeNumber'
+; while loading e1q62x64.sys (status c0000262). Declared in
+; sdk/include/xdk/kefuncs.h; return value for single-node from
+; https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kequeryhighestnodenumber
+@ stdcall KeQueryHighestNodeNumber()
 @ stdcall -arch=i386,arm KeQueryInterruptTime()
 ;@ cdecl -arch=x86_64 KeQueryMultiThreadProcessorSet
 ;@ cdecl -arch=x86_64 KeQueryPrcbAddress
@@ -954,6 +968,13 @@
 @ stdcall PoQueueShutdownWorkItem(ptr)
 @ stdcall PoRegisterDeviceForIdleDetection(ptr long long long)
 @ stdcall PoRegisterDeviceNotify(ptr long long long ptr ptr)
+; PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt
+; Symbol: PoRegisterPowerSettingCallback / PoUnregisterPowerSettingCallback
+; (batched after output/e1000e-20261118T034236Z.log). Declared in
+; sdk/include/xdk/pofuncs.h;
+; https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-poregisterpowersettingcallback
+; https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-pounregisterpowersettingcallback
+@ stdcall PoRegisterPowerSettingCallback(ptr ptr ptr ptr ptr)
 @ stdcall PoRegisterSystemState(ptr long)
 @ stdcall PoRequestPowerIrp(ptr long long ptr ptr ptr)
 @ stdcall PoRequestShutdownEvent(ptr)
@@ -962,6 +983,7 @@
 @ stdcall PoSetSystemState(long)
 @ stdcall PoShutdownBugCheck(long long ptr ptr ptr ptr)
 @ stdcall PoStartNextPowerIrp(ptr)
+@ stdcall PoUnregisterPowerSettingCallback(ptr)
 @ stdcall PoUnregisterSystemState(ptr)
 @ stdcall ProbeForRead(ptr long long)
 @ stdcall ProbeForWrite(ptr long long)
@@ -1428,6 +1450,14 @@
 @ stdcall -arch=i386,arm WRITE_REGISTER_UCHAR(ptr long)
 @ stdcall -arch=i386,arm WRITE_REGISTER_ULONG(ptr long)
 @ stdcall -arch=i386,arm WRITE_REGISTER_USHORT(ptr long)
+; output/e1000e-20261118T033107Z.log: Missing API 'EtwUnregister'
+; while loading e1q62x64.sys (status c0000262). Declarations in
+; sdk/include/xdk/wmifuncs.h; REGHANDLE in sdk/include/psdk/evntprov.h.
+; PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt Symbol: EtwWrite
+; https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-etwwrite
+@ stdcall EtwRegister(ptr ptr ptr ptr)
+@ stdcall EtwUnregister(int64)
+@ stdcall EtwWrite(int64 ptr ptr long ptr)
 @ stdcall WmiFlushTrace(ptr)
 @ fastcall WmiGetClock(long ptr)
 @ stdcall WmiQueryTrace(ptr)
@@ -1625,6 +1655,9 @@
 @ cdecl memchr()
 @ cdecl -arch=x86_64 memcmp()
 @ cdecl memcpy()
+; PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt Symbol: memcpy_s
+; https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/memcpy-s-wmemcpy-s
+@ cdecl memcpy_s(ptr long ptr long)
 @ cdecl memmove()
 @ cdecl memset()
 @ cdecl qsort()

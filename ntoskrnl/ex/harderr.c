@@ -3,12 +3,18 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ex/harderr.c
  * PURPOSE:         Error Functions and Status/Exception Dispatching/Raising
+ * COPYRIGHT:       Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ *
+ * memcpy_s: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/memcpy-s-wmemcpy-s
+ * PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt Symbol: memcpy_s
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <errno.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -782,6 +788,41 @@ _purecall(VOID)
 {
     /* Not supported in Kernel Mode */
     RtlRaiseStatus(STATUS_NOT_IMPLEMENTED);
+}
+
+/*
+ * CRT-secure copy exported by ntoskrnl for kernel drivers. Behavior and
+ * EINVAL (22) / ERANGE (34) from
+ * https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/memcpy-s-wmemcpy-s
+ * PE import list virtual-machines/veros-ntfs/e1q62x64-imports.txt Symbol: memcpy_s
+ * (batched after output/e1000e-20261118T034236Z.log).
+ */
+errno_t
+__cdecl
+memcpy_s(void *dest, size_t destSize, const void *src, size_t count)
+{
+    if (count == 0)
+    {
+        return 0;
+    }
+
+    if (dest == NULL)
+    {
+        return EINVAL;
+    }
+
+    if ((src == NULL) || (destSize < count))
+    {
+        RtlZeroMemory(dest, destSize);
+        if (src == NULL)
+        {
+            return EINVAL;
+        }
+        return ERANGE;
+    }
+
+    RtlCopyMemory(dest, src, count);
+    return 0;
 }
 
 /* EOF */
