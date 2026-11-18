@@ -26,6 +26,13 @@
  * veros-app-basics name=Firefox but never veros-snapshot-keys — processes
  * await requestProcInfo never settled, so Troubleshoot 5s nsITimer could
  * not run done() on the blocked main thread.
+ *
+ * Omit KeQueryRuntimeProcess under ProcessLock. That helper walks the
+ * KPROCESS thread list at SYNCH; holding the EPROCESS push lock across
+ * it left SPI stalling after the ThreadListHead fix (serial-App-
+ * 20261118T073631Z: basics filled, snapshot-keys still missing). Firefox
+ * GetProcInfo ignores SPI UserTime/KernelTime (uses CycleTime /
+ * GetProcessTimes); leave those fields zero from the buffer wipe.
  */
 
 /* INCLUDES *****************************************************************/
@@ -922,7 +929,6 @@ ExpQuerySystemProcessInformation(
     USHORT ImageNameLength;
     PLIST_ENTRY CurrentEntry;
     ULONG TotalSize = 0, ThreadsCount;
-    ULONG TotalUser, TotalKernel;
     PUCHAR Current;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN Overflow = FALSE;
@@ -1095,10 +1101,14 @@ ExpQuerySystemProcessInformation(
                     ThreadInfo = (PSYSTEM_THREAD_INFORMATION)((PUCHAR)ThreadInfo + ThreadInfoSize);
                 }
 
-                /* Query total user/kernel times of a process */
-                TotalKernel = KeQueryRuntimeProcess(&Process->Pcb, &TotalUser);
-                SpiCurrent->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
-                SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
+                /*
+                 * Do not call KeQueryRuntimeProcess under ProcessLock.
+                 * It walks the KPROCESS thread list at SYNCH; holding the
+                 * EPROCESS push lock across that walk stalled SPI after
+                 * the ThreadListHead fix. UserTime/KernelTime stay zero
+                 * from RtlZeroMemory above; Firefox GetProcInfo does not
+                 * use them.
+                 */
             }
 
             /* Unlock the Process */
