@@ -1,0 +1,35 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Does missing kernel32!GetThreadDescription hang Firefox GetProcInfoSync / Troubleshoot.processes after QueryProcessCycleTime and QueryThreadCycleTime, and how should the export be supplied?",
+  "allowedInputs": [
+    {
+      "title": "GetThreadDescription",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getthreaddescription"
+    },
+    {
+      "title": "Mozilla ProcInfo_win.cpp GetProcInfoSync",
+      "url": "https://raw.githubusercontent.com/mozilla-firefox/firefox/main/toolkit/components/processtools/ProcInfo_win.cpp"
+    },
+    {
+      "title": "Guest serial missing GetThreadDescription",
+      "path": "output/ntdll-apps/serial-App-20261118T043942Z.log",
+      "marker": "LDR: missing export GetThreadDescription"
+    },
+    {
+      "title": "In-tree GetThreadDescription body and SetThreadDescription export",
+      "path": "dll/win32/kernel32/kernel32_vista/ThreadDescription.c"
+    },
+    {
+      "title": "In-tree kernel32_vista.spec already exports GetThreadDescription",
+      "path": "dll/win32/kernel32/kernel32_vista/kernel32_vista.spec"
+    },
+    {
+      "title": "In-tree ThreadNameInformation query",
+      "path": "ntoskrnl/ps/query.c"
+    },
+    {
+      "title": "Reported: GetProcAddress(Kernel32, GetThreadDescription) is optional; NULL only skips thread names. CycleTime stubs caused empty-map reject; after CycleTime, hang is elsewhere in GetProcInfoSync (STS), not the missing export.",
+      "note": "Reported: serial shows LdrGetProcedureAddress missing export pair; Mozilla resolves dynamically and continues without names"
+    }
+  ]
+}

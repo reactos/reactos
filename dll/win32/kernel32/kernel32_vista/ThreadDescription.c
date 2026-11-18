@@ -3,6 +3,18 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     NT10+ Thread Description helpers
  * COPYRIGHT:   Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * GetThreadDescription is already implemented here and exported from
+ * kernel32_vista.spec; kernel32.spec only had SetThreadDescription.
+ * Guest: output/ntdll-apps/serial-App-20261118T043942Z.log
+ * marker LDR: missing export GetThreadDescription / kernel32.dll!GetThreadDescription
+ * (LdrGetProcedureAddress / GetProcAddress — Firefox ProcInfo_win.cpp).
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getthreaddescription
+ * In-tree twin: SetThreadDescription in this file; NtQueryInformationThread
+ * ThreadNameInformation in ntoskrnl/ps/query.c.
  */
 
 #include "k32_vista.h"
