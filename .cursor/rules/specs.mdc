@@ -1,0 +1,35 @@
+---
+description: Specs say what a component does, from allowed sources only
+alwaysApply: true
+---
+
+# Specs
+
+SPDX-License-Identifier: GPL-2.0-or-later
+
+A spec lives at `tavera/specs/<component>.md`. It is written for an implementer who will not open the sources. Describe observable behavior. Leave out internal algorithms, private data structures, and control flow.
+
+The session that writes a spec does not implement that component. Raw-format specs also follow [clean-room-probe-separation.mdc](clean-room-probe-separation.mdc).
+
+Sources are only those [clean-room.mdc](clean-room.mdc) and [clean-room-third-party-sources.mdc](clean-room-third-party-sources.mdc) allow: a public document with its title and URL, a public specification, code already in this tree, or a guest log with its marker. A book counts only when that rule allows it. WDK headers, SDK headers, disassembly, symbol dumps, and leaked source stop the spec.
+
+Write every interface in your own words. Do not paste wording or sample code from a source.
+
+Keep the file comment block the specs in `tavera/specs/` already use (`PROJECT`, `LICENSE`, `FILE`, `PURPOSE`, `COPYRIGHT`, `PROGRAMMERS`). Then these sections, in this order. A new spec has all ten. An edit that changes behavior fills any missing section that edit depends on.
+
+1. **Header and provenance.** Component name, version, author, date, and a statement that only allowed sources were used.
+2. **Sources.** Each public document, in-tree header, or test, with the link and the date it was read. Microsoft Learn pages and public specifications belong here. Each Windows observation names the build, such as Windows 10 22H2 build 19045. Every later claim points at one of these entries.
+3. **Purpose and scope.** What the component does, what is in scope, and what is left out on purpose.
+4. **Interfaces.** Each function, structure, constant, and export: name, parameters, types, calling convention, return values, and error codes.
+5. **Behavior.** What each call does: order of operations, side effects, threading and IRQL, memory ownership, and edge cases.
+6. **Observed behavior.** Each black-box result on Windows: the exact input, the exact output, and the Windows build.
+7. **Compatibility notes.** Quirks real software depends on, and what Windows 10 22H2 does compared with older versions.
+8. **Test plan.** Tests the implementer can run on Windows and on Tavera OS and compare. The tests confirm behavior. They do not say how to code it.
+9. **Open questions.** Anything unknown or unverified. An open question stays open. Do not fill it by guessing.
+10. **Review log.** Who reviewed the spec and confirmed it has no implementation detail from a forbidden source.
+
+```text
+Right: "CreateFileW returns ERROR_FILE_NOT_FOUND when the path is missing", cited to a Learn page and a DIFF line on build 19045.
+Wrong: a copied prototype, a pasted sample, or a paragraph about the internal path Windows takes.
+Wrong: a WDK header, a symbol dump, or an unnamed "public spec" in Sources.
+```

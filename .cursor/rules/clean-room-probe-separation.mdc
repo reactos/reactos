@@ -11,7 +11,7 @@ Two kinds of probing are treated differently.
 
 **Raw-format probes** capture bytes Windows writes below the API: raw disk sectors from the guest image, on-disk file system structures, registry hive files, or other persisted binary formats. For these, use two sessions:
 
-1. **Probe session.** Designs and runs the probe, stores captures under `output/<tool>/`, and writes a spec at `tavera/specs/<component>.md`. Every statement in the spec cites a capture file and the probe step that produced it. The probe session does not edit implementation code for that component.
+1. **Probe session.** Designs and runs the probe, stores captures under `output/<tool>/`, and writes a spec at `tavera/specs/<component>.md` in the form [specs.mdc](specs.mdc) requires. Every statement in the spec cites a capture file and the probe step that produced it. The probe session does not edit implementation code for that component.
 2. **Implementation session.** A new session that has not seen the raw captures being interpreted, only the spec and the logs the spec cites. It implements from the spec and verifies with a differential probe (`DIFF ... END OK`). If the spec is missing a fact, it asks for a new probe-session pass instead of inferring the fact itself.
 
 Name both sessions in the transparency note for the implementation commit.
