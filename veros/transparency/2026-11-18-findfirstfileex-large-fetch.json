@@ -1,0 +1,29 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does Firefox PromiseWorker getChildren on empty thumbnails return Win32 87 while FindFirstFileW succeeds on the same directory?",
+  "allowedInputs": [
+    {
+      "title": "FindFirstFileExW function (FIND_FIRST_EX_LARGE_FETCH)",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-findfirstfileexw"
+    },
+    {
+      "title": "In-tree FIND_FIRST_EX_LARGE_FETCH",
+      "path": "sdk/include/psdk/minwinbase.h"
+    },
+    {
+      "title": "direnum-probe FindFirstFileExW LARGE_FETCH FAIL gle=87",
+      "path": "output/ntdll-apps/direnum-falsify-guest-log/direnum-probe.txt",
+      "marker": "FindFirstFileExW ... [Basic LARGE_FETCH]\r\n  FAIL gle=87 (0x57)"
+    },
+    {
+      "title": "Reported: Browser Console get children thumbnails NS_ERROR_GENERATE_FAILURE(44, 87)",
+      "note": "Reported: Ryan's Browser Console showed PromiseWorker could not get children of thumbnails with NS_ERROR_GENERATE_FAILURE(44, 87)"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "direnum-findfirstfileex-large-fetch",
+    "traceOrReplayId": "direnum-falsify-guest-log/direnum-probe.txt",
+    "logSha256": "8f6a0c24807fc82deaa42554ab1231b641f5219b3047fccb5d4102672d050cb1"
+  }
+}
