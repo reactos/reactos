@@ -129,6 +129,7 @@ BEGIN
     IDS_BELGIAN_FRENCH_LAYOUT "Бельгийская (французская)"
     IDS_BELGIAN_LAYOUT "Бельгийская (с точкой)"
     IDS_BENGALI_LAYOUT "Бенгальская"
+    IDS_BOSNIAN_CYRILLIC_LAYOUT "Bosnian (Cyrillic)"
     IDS_BULGARIAN_LAYOUT "Болгарская"
     IDS_BULGARIAN_BDS_LAYOUT "Болгарская (BDS 5237-1978)"
     IDS_BULGARIAN_LATIN_LAYOUT "Болгарская (латиница)"
