@@ -1932,6 +1932,64 @@ typedef struct _RTL_UNICODE_STRING_BUFFER
     WCHAR MinimumStaticBufferForTerminalNul;
 } RTL_UNICODE_STRING_BUFFER, *PRTL_UNICODE_STRING_BUFFER;
 
+typedef enum _RTL_FEATURE_CONFIGURATION_TYPE
+{
+    RtlFeatureConfigurationBoot,
+    RtlFeatureConfigurationRuntime,
+    RtlFeatureConfigurationCount
+} RTL_FEATURE_CONFIGURATION_TYPE;
+
+typedef ULONG RTL_FEATURE_ID;
+
+typedef struct _SYSTEM_FEATURE_CONFIGURATION_QUERY
+{
+    RTL_FEATURE_CONFIGURATION_TYPE ConfigurationType;
+    RTL_FEATURE_ID FeatureId;
+} SYSTEM_FEATURE_CONFIGURATION_QUERY, *PSYSTEM_FEATURE_CONFIGURATION_QUERY;
+
+typedef ULONGLONG RTL_FEATURE_CHANGE_STAMP, *PRTL_FEATURE_CHANGE_STAMP;
+
+typedef struct _RTL_FEATURE_CONFIGURATION
+{
+    ULONG FeatureId;
+    union
+    {
+        ULONG Flags;
+        struct
+        {
+            ULONG Priority : 4;
+            ULONG EnabledState : 2;
+            ULONG IsWexpConfiguration : 1;
+            ULONG HasSubscriptions : 1;
+            ULONG Variant : 6;
+            ULONG VariantPayloadKind : 2;
+            ULONG Reserved : 16;
+        };
+    };
+    ULONG VariantPayload;
+} RTL_FEATURE_CONFIGURATION, *PRTL_FEATURE_CONFIGURATION;
+
+typedef struct _SYSTEM_FEATURE_CONFIGURATION_INFORMATION
+{
+    RTL_FEATURE_CHANGE_STAMP ChangeStamp;
+    RTL_FEATURE_CONFIGURATION Configuration;
+} SYSTEM_FEATURE_CONFIGURATION_INFORMATION, *PSYSTEM_FEATURE_CONFIGURATION_INFORMATION;
+
+// https://ntdoc.m417z.com/system_feature_configuration_section_type
+typedef enum _SYSTEM_FEATURE_CONFIGURATION_SECTION_TYPE
+{
+    SystemFeatureConfigurationSectionTypeBoot = 0,
+    SystemFeatureConfigurationSectionTypeRuntime = 1,
+    SystemFeatureConfigurationSectionTypeUsageTriggers = 2,
+    SystemFeatureConfigurationSectionTypeGoverned = 3,
+    SystemFeatureConfigurationSectionTypeCount
+} SYSTEM_FEATURE_CONFIGURATION_SECTION_TYPE;
+
+typedef struct _SYSTEM_FEATURE_CONFIGURATION_SECTIONS_REQUEST
+{
+    RTL_FEATURE_CHANGE_STAMP PreviousChangeStamps[SystemFeatureConfigurationSectionTypeCount];
+} SYSTEM_FEATURE_CONFIGURATION_SECTIONS_REQUEST, *PSYSTEM_FEATURE_CONFIGURATION_SECTIONS_REQUEST;
+
 #ifndef NTOS_MODE_USER
 
 #ifndef MAKEINTRESOURCE
