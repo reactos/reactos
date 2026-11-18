@@ -319,11 +319,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
  * AllocateSharedMemory needs NDIS_SHARED_MEMORY_PARAMETERS; that layout
  * is not in sdk/include yet, so the stub logs and returns FAILURE.
- * Processor Ex / RSS Ex stay out of NdisGetRoutineAddress until a guest
- * log measures those buffers (output/vmxnet3-20261118T052250Z.log:
- * RSSEX FAILURE made FILTER c000009a). Soft IRQ already succeeded on
- * that e1000e boot (NDIS IRQ soft / IRQOK), so MSIX config returns
- * FAILURE.
+ * Processor Ex / RSS Ex sizes measured on output/ndis-discovery/windows.log
+ * (DIFF END OK): SPIEX total 0x78 header 80 01 28; RSSEX total 0x48
+ * header b1 02 28. Prior FAILURE stub made FILTER c000009a
+ * (output/vmxnet3-20261118T052250Z.log). Soft IRQ already succeeded on
+ * e1000e (NDIS IRQ soft / IRQOK), so MSIX config returns FAILURE.
  * output/netkvm-20261116T022127Z.log names NdisMFreeSharedMemory.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreesharedmemory
  * That page returns no status.
@@ -613,15 +613,14 @@ static POOLS: &[Routine] = &[
         name: "NdisGetProcessorInformation",
         address: NdisGetProcessorInformation as *const (),
     },
-    /* Do not publish NdisGetProcessorInformationEx or
-     * NdisGetRssProcessorInformation through NdisGetRoutineAddress.
-     * output/vmxnet3-20261118T013944Z.log: those names MISS, then
-     * NDIS SPI / NDIS FILTER 00000000 and START. output/vmxnet3-
-     * 20261118T052250Z.log: after the RSSEX stub resolved the miss,
-     * NDIS RSSEX fail and NDIS FILTER c000009a blocked
-     * IRP_MN_FILTER_RESOURCE_REQUIREMENTS. Keep the PE exports for
-     * direct imports; leave GetRoutineAddress as MISS until the RSS
-     * info buffer size is measured on a guest log. */
+    Routine {
+        name: "NdisGetProcessorInformationEx",
+        address: NdisGetProcessorInformationEx as *const (),
+    },
+    Routine {
+        name: "NdisGetRssProcessorInformation",
+        address: NdisGetRssProcessorInformation as *const (),
+    },
     Routine {
         name: "NdisCurrentProcessorIndex",
         address: NdisCurrentProcessorIndex as *const (),
@@ -1766,6 +1765,23 @@ pub extern "system" fn NdisSystemProcessorCount() -> i8 {
  * 36 bytes through RssCpuCount, 4-byte pad for an 8-byte pointer,
  * 8-byte RssProcessors, 64*16 CpuInfo = 0x430. */
 const SPI_SIZE: u16 = 0x430;
+/* output/ndis-discovery/windows.log DIFF END OK: SPX dump for
+ * NdisGetProcessorInformationEx. Header type 0x80 rev 1 size 0x28;
+ * total buffer 0x78 = 0x28 + 4 * 0x14 on that 4-CPU guest. */
+const SPIEX_HDR_SIZE: usize = 0x28;
+const SPIEX_ENTRY_SIZE: usize = 0x14;
+const SPIEX_COUNT_AT: usize = 0x10;
+const SPIEX_OFFSET_AT: usize = 0x1C;
+const SPIEX_ENTRY_SIZE_AT: usize = 0x24;
+/* Same log: RSX dump for NdisGetRssProcessorInformation. Header type
+ * 0xB1 rev 2 size 0x28; total 0x48 = 0x28 + 4 * 8. */
+const RSSEX_HDR_SIZE: usize = 0x28;
+const RSSEX_ENTRY_SIZE: usize = 8;
+const RSSEX_COUNT_AT: usize = 0x0C;
+const RSSEX_OFFSET_AT: usize = 0x14;
+const RSSEX_COUNT2_AT: usize = 0x18;
+const RSSEX_STRIDE_AT: usize = 0x1C;
+const RSSEX_COUNT3_AT: usize = 0x24;
 const SPI_FLAGS_AT: usize = 4;
 const SPI_VENDOR_AT: usize = 8;
 const SPI_PACKAGES_AT: usize = 12;
@@ -1871,38 +1887,123 @@ pub unsafe extern "system" fn NdisSystemActiveProcessorCount(active: *mut usize)
 #[no_mangle]
 pub unsafe extern "system" fn NdisGetProcessorInformationEx(
     _handle: *mut u8,
-    _info: *mut u8,
+    info: *mut u8,
     size: *mut usize,
 ) -> u32 {
-    /* output/e1000e-20261118T041602Z.log: NDIS MISS
-     * NdisGetProcessorInformationEx.
-     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex
-     * Layout is not measured yet. PE export only; GetRoutineAddress
-     * leaves this name as MISS (see POOLS comment). Return
-     * NDIS_STATUS_BUFFER_TOO_SHORT from sdk/include/ddk/ndis.h so a
-     * direct import with Size 0 does not look like a hard FAILURE. */
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetprocessorinformationex
+     * returns SUCCESS or BUFFER_TOO_SHORT (sdk/include/ddk/ndis.h).
+     * output/ndis-discovery/windows.log DIFF END OK: size 0 →
+     * 0xC0010016 with Size OUT 0x78; success fill SPX* header
+     * 80 01 28, entry stride 0x14 at offset 0x28. */
+    let count = KeQueryActiveProcessorCountEx(0);
+    let n = if count == 0 {
+        1usize
+    } else if (count as usize) > SPI_MAX_CPUS {
+        SPI_MAX_CPUS
+    } else {
+        count as usize
+    };
+    let need = SPIEX_HDR_SIZE + n * SPIEX_ENTRY_SIZE;
     let asked = if size.is_null() { 0 } else { *size };
-    DbgPrint(b"NDIS SPIEX short size %p %08x\n\0".as_ptr(), size, asked as u32);
-    SPI_BUFFER_TOO_SHORT
+    DbgPrint(
+        b"NDIS SPIEX size %p %08x need %08x\n\0".as_ptr(),
+        size,
+        asked as u32,
+        need as u32,
+    );
+    if size.is_null() || asked < need {
+        if !size.is_null() {
+            *size = need;
+        }
+        return SPI_BUFFER_TOO_SHORT;
+    }
+    if info.is_null() {
+        return 0xC000_000D;
+    }
+    core::ptr::write_bytes(info, 0, need);
+    *info = 0x80;
+    *info.add(1) = 1;
+    core::ptr::write_unaligned(info.add(2) as *mut u16, SPIEX_HDR_SIZE as u16);
+    /* SPX0010 count dword; SPX0008/000c/0014/0018/0020 from the same dump. */
+    core::ptr::write_unaligned(info.add(8) as *mut u32, 2);
+    core::ptr::write_unaligned(info.add(0x0C) as *mut u32, 1);
+    core::ptr::write_unaligned(info.add(SPIEX_COUNT_AT) as *mut u32, n as u32);
+    core::ptr::write_unaligned(info.add(0x14) as *mut u32, n as u32);
+    core::ptr::write_unaligned(info.add(0x18) as *mut u32, 1);
+    core::ptr::write_unaligned(info.add(SPIEX_OFFSET_AT) as *mut u32, SPIEX_HDR_SIZE as u32);
+    core::ptr::write_unaligned(info.add(0x20) as *mut u32, n as u32);
+    core::ptr::write_unaligned(info.add(SPIEX_ENTRY_SIZE_AT) as *mut u32, SPIEX_ENTRY_SIZE as u32);
+    for i in 0..n {
+        let entry = info.add(SPIEX_HDR_SIZE + i * SPIEX_ENTRY_SIZE);
+        /* SPX dump entry0: ULONG 0 at +0, ULONG index at +4 on later
+         * entries, ff ff at +0x0A, then 00 00 (i+1) 00 at +0x0C. */
+        core::ptr::write_unaligned(entry.add(4) as *mut u32, i as u32);
+        *entry.add(0x0A) = 0xFF;
+        *entry.add(0x0B) = 0xFF;
+        core::ptr::write_unaligned(entry.add(0x0C) as *mut u32, (i as u32 + 1) << 16);
+    }
+    *size = need;
+    log_block(b"NDIS SPIEXB ", info, 0x40.min(need), true);
+    0
 }
 
 #[no_mangle]
 pub unsafe extern "system" fn NdisGetRssProcessorInformation(
     _handle: *mut u8,
-    _info: *mut u8,
+    info: *mut u8,
     size: *mut usize,
 ) -> u32 {
-    /* output/e1000e-20261118T041602Z.log: NDIS MISS
-     * NdisGetRssProcessorInformation.
-     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetrssprocessorinformation
      * returns SUCCESS or BUFFER_TOO_SHORT. output/vmxnet3-
-     * 20261118T052250Z.log: returning FAILURE here made Filter return
-     * c000009a. PE export only; GetRoutineAddress leaves this name as
-     * MISS so Filter uses SPI again (output/vmxnet3-20261118T013944Z.log).
-     * Direct imports with Size 0 get BUFFER_TOO_SHORT. */
+     * 20261118T052250Z.log: FAILURE made Filter return c000009a.
+     * output/ndis-discovery/windows.log DIFF END OK: adapter-handle
+     * size 0 → 0xC0010016 Size OUT 0x48; success RSX* header b1 02 28,
+     * entry stride 8 at offset 0x28. */
+    let count = KeQueryActiveProcessorCountEx(0);
+    let n = if count == 0 {
+        1usize
+    } else if (count as usize) > SPI_MAX_CPUS {
+        SPI_MAX_CPUS
+    } else {
+        count as usize
+    };
+    let need = RSSEX_HDR_SIZE + n * RSSEX_ENTRY_SIZE;
     let asked = if size.is_null() { 0 } else { *size };
-    DbgPrint(b"NDIS RSSEX short size %p %08x\n\0".as_ptr(), size, asked as u32);
-    SPI_BUFFER_TOO_SHORT
+    DbgPrint(
+        b"NDIS RSSEX size %p %08x need %08x\n\0".as_ptr(),
+        size,
+        asked as u32,
+        need as u32,
+    );
+    if size.is_null() || asked < need {
+        if !size.is_null() {
+            *size = need;
+        }
+        return SPI_BUFFER_TOO_SHORT;
+    }
+    if info.is_null() {
+        return 0xC000_000D;
+    }
+    core::ptr::write_bytes(info, 0, need);
+    *info = 0xB1;
+    *info.add(1) = 2;
+    core::ptr::write_unaligned(info.add(2) as *mut u16, RSSEX_HDR_SIZE as u16);
+    core::ptr::write_unaligned(info.add(RSSEX_COUNT_AT) as *mut u32, n as u32);
+    core::ptr::write_unaligned(info.add(RSSEX_OFFSET_AT) as *mut u32, RSSEX_HDR_SIZE as u32);
+    core::ptr::write_unaligned(info.add(RSSEX_COUNT2_AT) as *mut u32, n as u32);
+    core::ptr::write_unaligned(info.add(RSSEX_STRIDE_AT) as *mut u32, RSSEX_ENTRY_SIZE as u32);
+    /* RSX0020: 00 00 03 00 then count again on the measured dump. */
+    core::ptr::write_unaligned(info.add(0x20) as *mut u32, 0x0003_0000);
+    core::ptr::write_unaligned(info.add(RSSEX_COUNT3_AT) as *mut u32, n as u32);
+    for i in 0..n {
+        let entry = info.add(RSSEX_HDR_SIZE + i * RSSEX_ENTRY_SIZE);
+        /* RSX0030..: Group 0, Number = i (PROCESSOR_NUMBER packing in
+         * sdk/include/xdk/ntbasedef.h). */
+        *entry.add(2) = i as u8;
+    }
+    *size = need;
+    log_block(b"NDIS RSSEXB ", info, 0x40.min(need), true);
+    0
 }
 
 #[no_mangle]
