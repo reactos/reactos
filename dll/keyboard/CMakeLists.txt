@@ -86,6 +86,7 @@ list(APPEND _keyboard_layouts
     kbdsg
     kbdsl
     kbdsl1
+    kbdsmsfi
     kbdsmsno
     kbdsp
     kbdsw

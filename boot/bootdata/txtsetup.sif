@@ -566,6 +566,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000419 = "Russian"
 00010419 = "Russian (Typewriter)"
 0001043B = "Sami Extended Norway"
+0002083B = "Sami Extended Finland-Sweden"
 00000C1A = "Serbian (Cyrillic)"
 0000081A = "Serbian (Latin)"
 0000041B = "Slovak (QWERTZ)"
@@ -686,6 +687,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000455 = kbdbur.dll
 00000481 = kbdmaori.dll
 0000048F = kbdeo.dll
+0002083B = kbdsmsfi.dll
 
 [HiveInfs.Install]
 ; Called "HiveInfs.Fresh" on Windows
