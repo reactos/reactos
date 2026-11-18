@@ -196,7 +196,6 @@
 #define IDS_BULGARIAN_PHONETIC_BDS_LAYOUT              5135
 #define IDS_BULGARIAN_BDS_LAYOUT                       5136
 #define IDS_GERMAN_RISTOME_LAYOUT                      5137
-#define IDS_GERMAN_NEO_11_LAYOUT                       5138
 #define IDS_GERMAN_DE_ERGO_LAYOUT                      5139
 #define IDS_BURMESE_LAYOUT                             5140
 #define IDS_UKRAINIAN_STUDENT_LAYOUT                   5141
@@ -207,3 +206,5 @@
 #define IDS_MAORI_LAYOUT                               5146
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
 #define IDS_PERSIAN_STANRDARD_LAYOUT                   5213
+#define IDS_GERMAN_NEO_11_LAYOUT                       5997 /* FIXME */
+#define IDS_NORWEGIAN_WITH_SAMI_LAYOUT                 5138
