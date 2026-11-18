@@ -1,0 +1,22 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which NTFS log, quota-value, and encrypted-file body paths were removed because the provenance audit found no allowed source for them?",
+  "allowedInputs": [
+    "drivers/filesystems/ntfs/ntfs3x.c",
+    "drivers/filesystems/ntfs/ntfs.h",
+    "drivers/filesystems/ntfs/fsctl.c",
+    "drivers/filesystems/ntfs/mft.c",
+    "drivers/filesystems/ntfs/rw.c",
+    "drivers/filesystems/ntfs/fcb.c",
+    "dll/win32/advapi32/misc/efs.c",
+    "sdk/lib/fslib/ntfslib/ntfslib.h",
+    "Reported: the provenance audit said those three paths had no Learn URL, in-tree header, or guest log for the on-disk transform.",
+    "output/livecd-quarantine-ntfs-20261118T085847Z.log winlogon desktop assignment"
+  ],
+  "harness": {
+    "guest": "QEMU TCG live CD bootcd.iso -boot d with virtual-machines/veros-ntfs/disk.qcow2 -snapshot -nic none",
+    "name": "quarantine NTFS create/read smoke",
+    "traceOrReplayId": "output/livecd-quarantine-ntfs-20261118T085847Z.log",
+    "logSha256": "8bb3131d7032c6d935d9aa89131f24d8368ea371336b82a2491d04896203a192"
+  }
+}
