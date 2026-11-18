@@ -1,15 +1,10 @@
 <html>
 <head>
+<script src="winetest.js" type="text/javascript"></script>
+</head>
+<head>
 <script>
 var testevent_divid2_called = false, testevent_document_called = false, cnt=0;
-
-function ok(b,m) {
-    return external.ok(b, m);
-}
-
-function broken(expr) {
-    return external.broken(expr);
-}
 
 function ondataavailable_test() {
     var evobj, div, b = false;
@@ -100,9 +95,11 @@ function test_handler_this() {
     }
 
     function registerHandler(name, target) {
-        var b = target.attachEvent("onclick", function() {
+        var b = target.attachEvent("onclick", function(event_arg) {
             ok(this === window, "this !== window");
             calls.push(name+"*");
+            with(todo_wine)
+            ok(event_arg != window.event, "event_arg == window.event");
         });
         ok(b, "attachEvent failed");
     }
@@ -126,11 +123,12 @@ function test_insert_script() {
 
     var readystatechange_log = "";
     e.onreadystatechange = function() {
+        ok(window.event.srcElement === e, "srcElement != e");
         readystatechange_log += "," + e.readyState;
         ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
         if(e.readyState === "complete") {
             ok(readystatechange_log === "append,complete", "readystatechange_log = " + readystatechange_log);
-            external.reportSuccess();
+            reportSuccess();
         }
     }
 
@@ -157,13 +155,155 @@ function test_string_event_handler() {
     ok(string_handler_called === false, "string handler called");
 }
 
+function test_body_events() {
+    var f = function() {}, g = function() {};
+
+    document.body.onload = f;
+    ok(document.body.onload === f, "body.onload != f");
+    ok(window.onload === f, "window.onload != f");
+
+    document.body.onfocus = f;
+    ok(document.body.onfocus === f, "body.onfocus != f");
+    ok(window.onfocus === f, "window.onfocus != f");
+    window.onfocus = g;
+    ok(document.body.onfocus === g, "body.onfocus != g");
+    ok(window.onfocus === g, "window.onfocus != g");
+
+    var onclick_called = false;
+    var onclick_handler = function() { onclick_called = true; };
+    document.body.attachEvent("onclick", onclick_handler);
+    window.detachEvent("onclick", onclick_handler);
+    document.body.click();
+    ok(onclick_called, "onclick handler not invoked");
+}
+
+function test_event_target() {
+    var div = document.createElement("div");
+    document.body.appendChild(div);
+
+    var last_event_arg;
+    div.attachEvent("onclick", function(event_arg) {
+        ok(event_arg.srcElement === div, "srcElement != div");
+        last_event_arg = event_arg;
+    });
+
+    div.click();
+    with(todo_wine)
+    ok(last_event_arg.srcElement === null, "srcElement != null");
+
+    document.body.removeChild(div);
+}
+
+function test_attach_event() {
+    var calls;
+
+    var div = document.createElement("div");
+    document.body.appendChild(div);
+
+    function listener() {
+        calls += "listener,";
+    }
+
+    function listener2() {
+        calls += "listener2,";
+    }
+
+    /* if the same listener is added twice, it will be called twice */
+    div.attachEvent("onclick", listener);
+    div.attachEvent("onclick", listener2);
+    div.attachEvent("onclick", listener);
+
+    calls = "";
+    div.click();
+    ok(calls === "listener,listener2,listener,", "calls = " + calls);
+
+    /* remove listener once, it will be called once */
+    div.detachEvent("onclick", listener);
+
+    calls = "";
+    div.click();
+    ok(calls === "listener2,listener,", "calls = " + calls);
+
+    div.detachEvent("onclick", listener);
+    div.detachEvent("onclick", listener2);
+
+    calls = "";
+    div.click();
+    ok(calls === "", "calls = " + calls);
+
+    document.body.removeChild(div);
+}
+
+function test_listener_order() {
+    if(!("documentMode" in document)) {
+        win_skip("Skipping test_listener_order on too old IE");
+        return;
+    }
+
+    var div = document.createElement("div");
+    document.body.appendChild(div);
+
+    var calls;
+    function record_call(msg) {
+        return function() { calls += msg + "," };
+    }
+
+    div.attachEvent("onclick", record_call("click1"));
+    div.onclick = record_call("onclick");
+    div.attachEvent("onclick", record_call("click2"));
+    div.attachEvent("onclick", record_call("click3"));
+
+    calls = "";
+    div.click();
+    ok(calls === "onclick,click3,click2,click1,", "calls = " + calls);
+
+    document.body.removeChild(div);
+}
+
+function test_attach_in_attach() {
+    var calls;
+
+    var div = document.createElement("div");
+    document.body.appendChild(div);
+
+    /* listener attached inside onevent handler will be invoked in this propagation */
+    div.onclick = function () {
+        calls += "div.onclick,";
+        div.attachEvent("onclick", function() {
+            calls += "div.click,";
+            /* listener attached inside another attached listener will not be invoked */
+            div.attachEvent("onclick", function () { ok(false, "unexpected call"); });
+        });
+    }
+
+    calls = "";
+    div.click();
+    ok(calls === "div.onclick,div.click,", "calls = " + calls);
+
+    document.body.removeChild(div);
+}
+
+function test_event_obj_props(e) {
+    var i, props = [
+        "altKey", "button", "cancelBubble", "clientX", "clientY", "ctrlKey", "data", "fromElement", "keyCode", "offsetX", "offsetY",
+        "origin", "qualifier", "reason", "returnValue", "screenX", "screenY", "shiftKey", "source", "srcElement", "srcFilter",
+        "toElement", "type", "url", "x", "y" ];
+    for(i = 0; i < props.length; i++)
+        ok(props[i] in e, props[i] + " not in event obj");
+
+    props = [ "imeCompositionChange", "imeNotifyCommand", "imeNotifyData", "imeRequest", "imeRequestData", "issession", "keyboardLayout" ];
+    for(i = 0; i < props.length; i++)
+        ok(!(props[i] in e), props[i] + " in event obj");
+}
+
 window.onload = function() {
+    test_event_obj_props(window.event);
     try {
         ok(inlscr_complete_called, "onreadystatechange not fired");
-        ok(extern_res_script_rs === "eval,complete1,",
-            "extern_res_script_rs = " + extern_res_script_rs + " expected eval,complete1,");
-        ok(extern_http_script_rs === "loading,loaded,complete,",
-            "extern_http_script_rs = " + extern_http_script_rs + " expected loading,loaded,complete,");
+        ok(extern_res_script_rs === "eval,complete1," || extern_res_script_rs == "loaded0,eval,complete1,",
+            "extern_res_script_rs = " + extern_res_script_rs + " expected (loaded0)?,eval,complete1,");
+        ok(extern_http_script_rs === "loading,loaded,complete," || extern_http_script_rs === "complete,",
+            "extern_http_script_rs = " + extern_http_script_rs + " expected loading,loaded,complete, or complete,");
 
         ok(cnt == 1, "cnt=" + cnt + " exception during loading?");
         ok(this === window, "this !== window");
@@ -178,6 +318,11 @@ window.onload = function() {
         test_handler_this();
         test_insert_script();
         test_string_event_handler();
+        test_body_events();
+        test_event_target();
+        test_attach_event();
+        test_listener_order();
+        test_attach_in_attach();
     }catch(e) {
         ok(false, "Got an exception: " + e.message);
     }
@@ -189,7 +334,11 @@ img.src = "http://test.winehq.org/tests/winehq_snapshot/index_files/winehq_logo_
 
 var img_onload_called = false;
 img.onload = function() {
-    external.trace("img.onload");
+    trace("img.onload");
+    img_onload_called = true;
+}
+img.onerror = function() {
+    trace("img.onerror");
     img_onload_called = true;
 }
 </script>
@@ -229,7 +378,7 @@ function extern_res_script_readystatechange() {
     if(elem.readyState != "loading")
         extern_res_script_rs += elem.readyState + extern_cnt + ",";
     else
-        external.trace("Got loading readyState from external res script.");
+        trace("Got loading readyState from external res script.");
 }
 
 function http_script_readystatechange() {

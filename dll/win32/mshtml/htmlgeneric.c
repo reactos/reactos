@@ -18,11 +18,19 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLGenericElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLGenericElement IHTMLGenericElement_iface;
+#ifdef __REACTOS__
+};
+#else
 } HTMLGenericElement;
+#endif
 
 static inline HTMLGenericElement *impl_from_IHTMLGenericElement(IHTMLGenericElement *iface)
 {
