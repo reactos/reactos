@@ -10,6 +10,12 @@
  *              Hervé Poussineau (hpoussin@reactos.org)
  *              Pierre Schweitzer (pierre@reactos.org)
  *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * Sources: NtfsClearRenameTarget ReplaceIfExists — in-tree
+ *          drivers/filesystems/vfatfs/finfo.c vfatPrepareTargetForRename
+ *          (OpenHandleCount / MmFlushImageSection / delete cached FCB);
+ *          output/ntdll-apps/direnum-falsify-guest-log/direnum-probe.txt
+ *          marker "MoveFileExW REPLACE_EXISTING" / "FAIL gle=5".
  */
 
 /* INCLUDES *****************************************************************/
@@ -1444,12 +1450,29 @@ NtfsClearRenameTarget(
     if (Scratch->Flags & FRH_DIRECTORY)
         return STATUS_ACCESS_DENIED;
 
-    /* A cached FCB means it's open or still mapped */
+    /*
+     * A table hit is not enough to deny the replace. After close, the
+     * destination often still has a cached FCB with OpenHandleCount 0.
+     * Deny only when a handle is open, the file is read-only, or a section
+     * still maps it — same gate vfatPrepareTargetForRename uses.
+     */
     ExistingFcb = NtfsGrabFCBFromTable(DeviceExt, NewPath);
     if (ExistingFcb != NULL)
     {
+        if (ExistingFcb->OpenHandleCount != 0 ||
+            (ExistingFcb->Entry.FileAttributes & NTFS_FILE_TYPE_READ_ONLY) ||
+            !MmFlushImageSection(&ExistingFcb->SectionObjectPointers, MmFlushForDelete))
+        {
+            NtfsReleaseFCB(DeviceExt, ExistingFcb);
+            return STATUS_ACCESS_DENIED;
+        }
+
+        Status = NtfsDeleteFileRecord(DeviceExt, ExistingMft, CaseSensitive);
+        if (NT_SUCCESS(Status))
+            NtfsRemoveFCBFromTable(DeviceExt, ExistingFcb);
+
         NtfsReleaseFCB(DeviceExt, ExistingFcb);
-        return STATUS_ACCESS_DENIED;
+        return Status;
     }
 
     return NtfsDeleteFileRecord(DeviceExt, ExistingMft, CaseSensitive);

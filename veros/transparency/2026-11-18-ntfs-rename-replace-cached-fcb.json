@@ -1,0 +1,29 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does MoveFileExW MOVEFILE_REPLACE_EXISTING on an NTFS profile file return ERROR_ACCESS_DENIED (gle=5) after the destination was created and closed?",
+  "allowedInputs": [
+    {
+      "title": "In-tree vfatPrepareTargetForRename OpenHandleCount gate",
+      "path": "drivers/filesystems/vfatfs/finfo.c"
+    },
+    {
+      "title": "In-tree NtfsClearRenameTarget cached-FCB deny",
+      "path": "drivers/filesystems/ntfs/finfo.c"
+    },
+    {
+      "title": "direnum-probe MoveFileExW REPLACE_EXISTING FAIL gle=5",
+      "path": "output/ntdll-apps/direnum-falsify-guest-log/direnum-probe.txt",
+      "marker": "MoveFileExW REPLACE_EXISTING"
+    },
+    {
+      "title": "Reported: sessionCheckpoints.json.tmp to final NS_ERROR_FILE_ACCESS_DENIED",
+      "note": "Reported: Firefox stderr and Browser Console showed atomic .tmp overwrite ACCESS_DENIED on the profile"
+    }
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "direnum-movefileex-replace",
+    "traceOrReplayId": "direnum-falsify-guest-log/direnum-probe.txt",
+    "logSha256": "8dea9612d193150fded407220eb3c61e0c79e4d16ff7846dd455e64a7b7c70b6"
+  }
+}
