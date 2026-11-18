@@ -112,6 +112,7 @@
 @ stdcall NdisMDeregisterIoPortRange()
 @ stdcall NdisMMapIoSpace()
 @ stdcall NdisProcessorNumberToIndex()
+@ stdcall NdisProcessorIndexToNumber(long ptr)
 @ stdcall NDIS_BUFFER_TO_SPAN_PAGES(ptr)
 @ stdcall NdisAllocateBuffer(ptr ptr ptr ptr long)
 @ stdcall NdisAllocateBufferPool(ptr ptr long)

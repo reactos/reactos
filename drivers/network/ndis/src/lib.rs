@@ -350,6 +350,13 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisprocessornumbertoindex
  * The argument is PROCESSOR_NUMBER from sdk/include/xdk/ntbasedef.h.
  * The return is KeGetProcessorIndexFromNumber.
+ * output/vmxnet3-20261118T013944Z.log names NdisProcessorIndexToNumber
+ * (NDIS MISS). No public Learn page for that NDIS name.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetprocessornumberfromindex
+ * output/ndis-discovery/windows.log (DIFF END OK): PRESENT; call
+ * NTSTATUS(ULONG, PPROCESSOR_NUMBER) index 0 returns 0 and writes
+ * Group 0 Number 0 Reserved 0 (DIFF SCAN STATUS); round-trip through
+ * NdisProcessorNumberToIndex returns 0.
  */
 
 #![no_std]
@@ -401,6 +408,7 @@ unsafe extern "system" {
     fn KeQueryActiveProcessorCountEx(group: u16) -> u32;
     fn KeGetCurrentIrql() -> u8;
     fn KeGetProcessorIndexFromNumber(processor: *const u8) -> u32;
+    fn KeGetProcessorNumberFromIndex(index: u32, processor: *mut u8) -> i32;
     fn KeInitializeEvent(event: *mut u8, kind: u8, state: u8);
     fn KeSetEvent(event: *mut u8, increment: i32, wait: u8) -> i32;
     fn KeResetEvent(event: *mut u8) -> i32;
@@ -2313,6 +2321,26 @@ pub extern "system" fn NdisProcessorNumberToIndex(processor: u32) -> u32 {
 }
 
 #[no_mangle]
+pub unsafe extern "system" fn NdisProcessorIndexToNumber(
+    index: u32,
+    processor: *mut u8,
+) -> i32 {
+    /* output/vmxnet3-20261118T013944Z.log: NDIS MISS
+     * NdisProcessorIndexToNumber.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetprocessornumberfromindex
+     * output/ndis-discovery/windows.log DIFF END OK: PRESENT; STATUS 0
+     * for index 0 with Group/Number/Reserved 0; round-trip index 0.
+     * PROCESSOR_NUMBER is sdk/include/xdk/ntbasedef.h. */
+    if processor.is_null() {
+        return 0xC000_000Du32 as i32; /* STATUS_INVALID_PARAMETER */
+    }
+    unsafe {
+        DbgPrint(b"NDIS IDX2NUM %08x\n\0".as_ptr(), index);
+        KeGetProcessorNumberFromIndex(index, processor)
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "system" fn NdisInitializeEvent(event: *mut u8) {
     /* NDIS_EVENT is a KEVENT in sdk/include/ddk/ndis.h.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializeevent */
@@ -3420,6 +3448,7 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisMMapIoSpace", address: NdisMMapIoSpace as *const () },
     Routine { name: "NdisMUnmapIoSpace", address: NdisMUnmapIoSpace as *const () },
     Routine { name: "NdisProcessorNumberToIndex", address: NdisProcessorNumberToIndex as *const () },
+    Routine { name: "NdisProcessorIndexToNumber", address: NdisProcessorIndexToNumber as *const () },
     Routine { name: "NdisMSynchronizeWithInterruptEx", address: NdisMSynchronizeWithInterruptEx as *const () },
     Routine { name: "NdisMRegisterInterruptEx", address: NdisMRegisterInterruptEx as *const () },
     Routine { name: "NdisMDeregisterInterruptEx", address: NdisMDeregisterInterruptEx as *const () },
