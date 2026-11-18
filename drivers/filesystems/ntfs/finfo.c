@@ -14,8 +14,15 @@
  * Sources: NtfsClearRenameTarget ReplaceIfExists — in-tree
  *          drivers/filesystems/vfatfs/finfo.c vfatPrepareTargetForRename
  *          (OpenHandleCount / MmFlushImageSection / delete cached FCB);
+ *          drivers/filesystems/vfatfs/finfo.c uses RenameInfo->ReplaceIfExists
+ *          for the same FileRenameInformation buffer field;
+ *          drivers/filesystems/ntfs/btree.c refuses a duplicate index key with
+ *          STATUS_OBJECT_NAME_COLLISION;
  *          output/ntdll-apps/direnum-falsify-guest-log/direnum-probe.txt
- *          marker "MoveFileExW REPLACE_EXISTING" / "FAIL gle=5".
+ *          marker "MoveFileExW REPLACE_EXISTING" / "FAIL gle=5";
+ *          Reported: Browser Console Move overwrite sessionCheckpoints.json.tmp
+ *          → sessionCheckpoints.json (NS_ERROR_FILE_ALREADY_EXISTS) while .tmp
+ *          write succeeded.
  */
 
 /* INCLUDES *****************************************************************/
@@ -1731,6 +1738,15 @@ NtfsSetRenameInformation(
     if (TargetFileObject == NULL)
         TargetDirMft = OldParentMft;
 
+    /*
+     * Prefer the FileRenameInformation buffer bit, the same field vfat reads.
+     * A stale stack ReplaceIfExists of FALSE turns a REPLACE move into
+     * STATUS_OBJECT_NAME_COLLISION (ERROR_ALREADY_EXISTS / NS_ERROR_FILE_ALREADY_EXISTS)
+     * even though MoveFileExW passed MOVEFILE_REPLACE_EXISTING.
+     */
+    if (RenameInfo->ReplaceIfExists)
+        ReplaceIfExists = TRUE;
+
     /* Original is scratch space until it holds the backup below */
     Status = NtfsClearRenameTarget(DeviceExt, Fcb, TargetDirMft, &NewName, NewPath, ReplaceIfExists, CaseSensitive, Original);
     if (!NT_SUCCESS(Status))
@@ -1751,6 +1767,33 @@ NtfsSetRenameInformation(
                               NewValue,
                               NewValueLength,
                               CaseSensitive);
+    /*
+     * btree insert returns OBJECT_NAME_COLLISION when the index still holds the
+     * name after Clear (duplicate key or a Find miss). Clear again and retry once
+     * when replace is allowed; CommitRename rolls the file record back on failure.
+     */
+    if (Status == STATUS_OBJECT_NAME_COLLISION && ReplaceIfExists)
+    {
+        Status = NtfsClearRenameTarget(DeviceExt, Fcb, TargetDirMft, &NewName, NewPath, ReplaceIfExists, CaseSensitive, Original);
+        if (NT_SUCCESS(Status))
+        {
+            /* CommitRename may have dirtied FileRecord before rolling the disk back. */
+            Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+            if (NT_SUCCESS(Status))
+            {
+                RtlCopyMemory(Original, FileRecord, DeviceExt->NtfsInfo.BytesPerFileRecord);
+                Status = NtfsCommitRename(DeviceExt,
+                                          Fcb,
+                                          FileRecord,
+                                          Original,
+                                          OldParentMft,
+                                          TargetDirMft,
+                                          NewValue,
+                                          NewValueLength,
+                                          CaseSensitive);
+            }
+        }
+    }
     if (!NT_SUCCESS(Status))
         goto Quit;
 

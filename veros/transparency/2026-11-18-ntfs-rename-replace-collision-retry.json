@@ -1,0 +1,30 @@
+{
+  "question": "Why does Firefox IOUtils MoveFileExW(MOVEFILE_REPLACE_EXISTING) of sessionCheckpoints.json.tmp onto sessionCheckpoints.json return NS_ERROR_FILE_ALREADY_EXISTS (STATUS_OBJECT_NAME_COLLISION) when the .tmp write succeeded?",
+  "allowedInputs": [
+    {
+      "kind": "in-tree",
+      "path": "drivers/filesystems/ntfs/finfo.c",
+      "note": "NtfsClearRenameTarget returns STATUS_OBJECT_NAME_COLLISION when ReplaceIfExists is FALSE; NtfsCommitRename / btree insert can also return COLLISION if the index still holds the name after Clear."
+    },
+    {
+      "kind": "in-tree",
+      "path": "drivers/filesystems/vfatfs/finfo.c",
+      "note": "vfatPrepareTargetForRename / rename path reads RenameInfo->ReplaceIfExists from the FileRenameInformation buffer."
+    },
+    {
+      "kind": "in-tree",
+      "path": "drivers/filesystems/ntfs/btree.c",
+      "note": "Duplicate index key insert returns STATUS_OBJECT_NAME_COLLISION."
+    },
+    {
+      "kind": "Reported",
+      "note": "Browser Console: Move overwrite with temporary file; could not move sessionCheckpoints.json.tmp to sessionCheckpoints.json (NS_ERROR_FILE_ALREADY_EXISTS); .tmp can be written."
+    },
+    {
+      "kind": "public",
+      "title": "MS-FSCC FileRenameInformation ReplaceIfExists",
+      "url": "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/1d2673a8-8fb9-4a95-a669-38ce11162810"
+    }
+  ],
+  "spdx": "GPL-2.0-or-later"
+}
