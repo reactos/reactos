@@ -17,6 +17,15 @@
  * veros-snapshot-keys processes=ok after long wait. Firefox matches SPI
  * by PID (ProcInfo_win.cpp); basename of ImageFileName is the existing
  * fallback in this file when locate returns empty.
+ *
+ * SPI thread walk: use Process->ThreadListHead / ETHREAD.ThreadListEntry
+ * under ProcessLock (same pairing as PsGetNextProcessThread in
+ * ntoskrnl/ps/process.c). Walking Pcb.ThreadListHead / Tcb.ThreadListEntry
+ * without the KPROCESS lock could loop under concurrent thread churn while
+ * ProcessLock stayed held; guest serial-App-20261118T062219Z wrote
+ * veros-app-basics name=Firefox but never veros-snapshot-keys — processes
+ * await requestProcInfo never settled, so Troubleshoot 5s nsITimer could
+ * not run done() on the blocked main thread.
  */
 
 /* INCLUDES *****************************************************************/
@@ -951,7 +960,7 @@ ExpQuerySystemProcessInformation(
             if ((Process->ProcessExiting) &&
                 (Process->Pcb.Header.SignalState) &&
                 !(Process->ActiveThreads) &&
-                (IsListEmpty(&Process->Pcb.ThreadListHead)))
+                (IsListEmpty(&Process->ThreadListHead)))
             {
                 DPRINT1("Process %p (%s:%p) is a zombie\n",
                         Process, Process->ImageFileName, Process->UniqueProcessId);
@@ -964,11 +973,16 @@ ExpQuerySystemProcessInformation(
                 goto Skip;
             }
 
+            /*
+             * Walk EPROCESS ThreadListHead under ProcessLock — same list
+             * PsGetNextProcessThread uses. Do not walk Pcb.ThreadListHead
+             * here; that KPROCESS list is not paired with ProcessLock.
+             */
             ThreadsCount = 0;
-            CurrentEntry = Process->Pcb.ThreadListHead.Flink;
-            while (CurrentEntry != &Process->Pcb.ThreadListHead)
+            CurrentEntry = Process->ThreadListHead.Flink;
+            while (CurrentEntry != &Process->ThreadListHead)
             {
-                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
+                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, ThreadListEntry);
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
             }
@@ -1051,11 +1065,11 @@ ExpQuerySystemProcessInformation(
 
                 /* Now do the threads */
                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
-                for (CurrentEntry = Process->Pcb.ThreadListHead.Flink;
-                     CurrentEntry != &Process->Pcb.ThreadListHead;
+                for (CurrentEntry = Process->ThreadListHead.Flink;
+                     CurrentEntry != &Process->ThreadListHead;
                      CurrentEntry = CurrentEntry->Flink)
                 {
-                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
+                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, ThreadListEntry);
 
                     ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
                     ThreadInfo->UserTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.UserTime, KeMaximumIncrement);
