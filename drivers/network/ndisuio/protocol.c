@@ -1,9 +1,19 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS User I/O driver
- * FILE:        protocol.c
+ * FILE:        drivers/network/ndisuio/protocol.c
  * PURPOSE:     Protocol stuff
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)
+ *              Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * NDIS 6 open uses NdisOpenAdapterEx with open-parameters header type
+ * 0x87 revision 1 size 0x40 from drivers/network/lldp/src/lib.rs /
+ * drivers/network/ndis/src/prot6.rs. AdapterName sits at bind+16 on x64
+ * (prot6.rs). Learn:
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisopenadapterex
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_bind_adapter_ex
  */
 
 #include "ndisuio.h"
@@ -378,17 +388,55 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
     return Status;
 }
 
+NDIS_STATUS
+NTAPI
+NdisOpenAdapterEx(
+    NDIS_HANDLE NdisProtocolHandle,
+    NDIS_HANDLE ProtocolBindingContext,
+    PVOID OpenParameters,
+    NDIS_HANDLE BindContext,
+    PNDIS_HANDLE NdisBindingHandle);
+
+#define OPEN_BYTES 0x40
+#define OPEN_NAME_AT 8
+#define OPEN_MEDIUM_AT 16
+#define OPEN_MEDIUM_COUNT_AT 24
+#define OPEN_SELECTED_AT 32
+
+static
+VOID
+PutU16Local(PUCHAR Buffer, ULONG Offset, USHORT Value)
+{
+    Buffer[Offset] = (UCHAR)(Value & 0xFF);
+    Buffer[Offset + 1] = (UCHAR)((Value >> 8) & 0xFF);
+}
+
+static
+VOID
+PutPtrLocal(PUCHAR Buffer, ULONG Offset, PVOID Value)
+{
+    ULONG_PTR Address = (ULONG_PTR)Value;
+    ULONG i;
+
+    for (i = 0; i < sizeof(PVOID); i++)
+    {
+        Buffer[Offset + i] = (UCHAR)((Address >> (8 * i)) & 0xFF);
+    }
+}
+
 static
 NDIS_STATUS
-BindAdapterByName(PNDIS_STRING DeviceName)
+BindAdapterByName(PNDIS_STRING DeviceName,
+                  NDIS_HANDLE BindContext)
 {
-    NDIS_STATUS OpenErrorStatus;
     PNDISUIO_ADAPTER_CONTEXT AdapterContext;
     NDIS_MEDIUM SupportedMedia[1] = {NdisMedium802_3};
-    UINT SelectedMedium;
+    ULONG SelectedMedium = 0;
     NDIS_STATUS Status;
     NDIS_REQUEST Request;
     ULONG NameLength;
+    UCHAR OpenParams[OPEN_BYTES];
+    NDIS_HANDLE BindingHandle = NULL;
 
     /* Allocate the adapter context */
     AdapterContext = ExAllocatePool(NonPagedPool, sizeof(*AdapterContext));
@@ -455,18 +503,22 @@ BindAdapterByName(PNDIS_STRING DeviceName)
         return Status;
     }
 
-    /* Send the open request */
-    NdisOpenAdapter(&Status,
-                    &OpenErrorStatus,
-                    &AdapterContext->BindingHandle,
-                    &SelectedMedium,
-                    SupportedMedia,
-                    1,
-                    GlobalProtocolHandle,
-                    AdapterContext,
-                    DeviceName,
-                    0,
-                    NULL);
+    /* NDIS 6 open-parameters header type 0x87 revision 1 size 0x40 */
+    RtlZeroMemory(OpenParams, OPEN_BYTES);
+    OpenParams[0] = 0x87;
+    OpenParams[1] = 1;
+    PutU16Local(OpenParams, 2, OPEN_BYTES);
+    PutPtrLocal(OpenParams, OPEN_NAME_AT, DeviceName);
+    PutPtrLocal(OpenParams, OPEN_MEDIUM_AT, SupportedMedia);
+    PutU16Local(OpenParams, OPEN_MEDIUM_COUNT_AT, 1);
+    PutPtrLocal(OpenParams, OPEN_SELECTED_AT, &SelectedMedium);
+
+    Status = NdisOpenAdapterEx(GlobalProtocolHandle,
+                               AdapterContext,
+                               OpenParams,
+                               BindContext,
+                               &BindingHandle);
+    AdapterContext->BindingHandle = BindingHandle;
 
     /* Wait for a pending open */
     if (Status == NDIS_STATUS_PENDING)
@@ -490,7 +542,10 @@ BindAdapterByName(PNDIS_STRING DeviceName)
         return Status;
     }
 
-    /* Get the MAC options */
+    /* MAC options are best-effort. NdisRequest is NDIS 5 and returns
+     * not-supported on the NDIS 6 binding from NdisOpenAdapterEx
+     * (drivers/network/ndis/src/ndis5.rs). Leave MacOptions 0 and still
+     * publish the binding so QUERY_BINDING can succeed. */
     Request.RequestType = NdisRequestQueryInformation;
     Request.DATA.QUERY_INFORMATION.Oid = OID_GEN_MAC_OPTIONS;
     Request.DATA.QUERY_INFORMATION.InformationBuffer = &AdapterContext->MacOptions;
@@ -498,8 +553,6 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     NdisRequest(&Status,
                 AdapterContext->BindingHandle,
                 &Request);
-
-    /* Wait for a pending request */
     if (Status == NDIS_STATUS_PENDING)
     {
         KeWaitForSingleObject(&AdapterContext->AsyncEvent,
@@ -509,30 +562,10 @@ BindAdapterByName(PNDIS_STRING DeviceName)
                               NULL);
         Status = AdapterContext->AsyncStatus;
     }
-
-    /* Check the final status */
     if (Status != NDIS_STATUS_SUCCESS)
     {
-        NDIS_STATUS CloseStatus;
-
-        DPRINT1("Failed to get MAC options with status 0x%x\n", Status);
-
-        NdisCloseAdapter(&CloseStatus,
-                         AdapterContext->BindingHandle);
-        if (CloseStatus == NDIS_STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&AdapterContext->AsyncEvent,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
-        }
-
-        NdisFreePacketPool(AdapterContext->PacketPoolHandle);
-        NdisFreeBufferPool(AdapterContext->BufferPoolHandle);
-        RtlFreeUnicodeString(&AdapterContext->DeviceName);
-        ExFreePool(AdapterContext);
-        return Status;
+        DPRINT1("MAC options query status 0x%x; continuing with 0\n", Status);
+        AdapterContext->MacOptions = 0;
     }
 
     /* Add the adapter context to the global list */
@@ -551,8 +584,9 @@ NduBindAdapter(PNDIS_STATUS Status,
                PVOID SystemSpecific1,
                PVOID SystemSpecific2)
 {
-    /* Use our helper function to create a context for this adapter */
-    *Status = BindAdapterByName(DeviceName);
+    UNREFERENCED_PARAMETER(SystemSpecific1);
+    UNREFERENCED_PARAMETER(SystemSpecific2);
+    *Status = BindAdapterByName(DeviceName, BindContext);
 }
 
 VOID
@@ -561,7 +595,41 @@ NduUnbindAdapter(PNDIS_STATUS Status,
                  NDIS_HANDLE ProtocolBindingContext,
                  NDIS_HANDLE UnbindContext)
 {
-    /* This is forced unbind. UnbindAdapterByContext() will take care of
-     * invalidating file handles pointer to this adapter for us */
+    UNREFERENCED_PARAMETER(UnbindContext);
     *Status = UnbindAdapterByContext(ProtocolBindingContext);
+}
+
+NDIS_STATUS
+NTAPI
+NduBindAdapterEx(NDIS_HANDLE ProtocolDriverContext,
+                 NDIS_HANDLE BindContext,
+                 PVOID BindParameters)
+{
+    PNDIS_STRING DeviceName;
+
+    UNREFERENCED_PARAMETER(ProtocolDriverContext);
+
+    if (!BindParameters)
+    {
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    /* AdapterName UNICODE_STRING* at bind+16 (prot6.rs / lldp). */
+    DeviceName = *(PNDIS_STRING *)((PUCHAR)BindParameters + 16);
+    if (!DeviceName)
+    {
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    DbgPrint("NDISUIO BIND6\n");
+    return BindAdapterByName(DeviceName, BindContext);
+}
+
+NDIS_STATUS
+NTAPI
+NduUnbindAdapterEx(NDIS_HANDLE UnbindContext,
+                   NDIS_HANDLE ProtocolBindingContext)
+{
+    UNREFERENCED_PARAMETER(UnbindContext);
+    return UnbindAdapterByContext(ProtocolBindingContext);
 }
