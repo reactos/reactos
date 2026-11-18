@@ -1,0 +1,48 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Catalog e1000 (e1g6032e, DEV_100E) unwind MiniportInitializeEx after IRQOK when e1000e had already accepted?",
+  "allowedInputs": [
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes",
+      "where": "NdisMSetMiniportAttributes accepts measured attribute headers"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_general_attributes",
+      "where": "general attributes object type used with NdisMSetMiniportAttributes"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_offload_attributes",
+      "where": "offload attributes object type for measured HDR a0 01 0028"
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_hardware_assist_attributes",
+      "where": "hardware-assist attributes object type for measured HDR af 02 0030"
+    },
+    {
+      "source": "drivers/network/ndis/src/register.rs",
+      "where": "existing accept of measured HDR 9f 02 00e0 from NetKVM/e1000e"
+    },
+    {
+      "source": "output/e1000-20261118T050916Z.log",
+      "where": "NDIS HDR a0 01 0028 then NDIS HDR 9f 01 00d8 then NDIS INIT c0000001; no NDIS6 IP"
+    },
+    {
+      "source": "output/e1000-20261118T051620Z.log",
+      "where": "NDIS HDR 9f 01 00d8; NDIS INIT 00000000; NDIS6 IP 10.0.2.15; PING CHECK done 2 2 and done 1 1"
+    },
+    {
+      "source": "output/e1000e-20261118T040036Z.log",
+      "where": "NDIS HDR af 02 0030 then NDIS INIT c000000d before that header was accepted"
+    },
+    {
+      "source": "output/e1000e-20261118T044744Z.log",
+      "where": "contrast: e1000e passed NDIS HDR 9f 02 00e0 before INIT 00000000"
+    }
+  ],
+  "harness": {
+    "guest": "virtual-machines/veros-ntfs/disk.qcow2",
+    "name": "Boot-E1000",
+    "traceOrReplayId": "e1000-20261118T051620Z",
+    "logSha256": "705693bb003f01ffc68302a62c247cc4e5e4392c58e6ff983cdbc959339f9765"
+  }
+}

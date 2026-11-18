@@ -23,6 +23,13 @@
  * the probe method, not a Windows field.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
+ * output/e1000e-20261118T040036Z.log: NDIS HDR af 02 0030 then INIT
+ * c000000d; accept that measured hardware-assist attributes header.
+ * output/e1000-20261118T050916Z.log: NDIS HDR a0 01 0028 then
+ * NDIS HDR 9f 01 00d8 then NDIS INIT c0000001. Accept those measured
+ * offload and general-attributes headers (e1000e used 9f 02 00e0).
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_offload_attributes
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_hardware_assist_attributes
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatereceivenetbufferlists
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismoidrequestcomplete
@@ -186,10 +193,26 @@ const ATTR_ADD_SIZE: u16 = 0x14;
  * An earlier Windows try of type 0x9F revision 0 size 4 did not return.
  * A later Windows try of type 0x9F revision 2 size 0xE0 after an
  * accepted 0x9E size 0x1C also did not return. Do not call either
- * 0x9F shape again. */
+ * 0x9F shape again.
+ * output/e1000-20261118T050916Z.log printed NDIS HDR 9f 01 00d8 then
+ * NDIS INIT c0000001; accept that measured revision/size pair too.
+ * Same log printed NDIS HDR a0 01 0028 before the 9f block.
+ * output/e1000e-20261118T040036Z.log printed NDIS HDR af 02 0030. */
 const ATTR_GENERAL_TYPE: u8 = 0x9F;
 const ATTR_GENERAL_REVISION: u8 = 2;
 const ATTR_GENERAL_SIZE: u16 = 0xE0;
+const ATTR_GENERAL_REVISION_E1000: u8 = 1;
+const ATTR_GENERAL_SIZE_E1000: u16 = 0xD8;
+/* output/e1000-20261118T050916Z.log / output/e1000e-20261118T044744Z.log
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_offload_attributes */
+const ATTR_OFFLOAD_TYPE: u8 = 0xA0;
+const ATTR_OFFLOAD_REVISION: u8 = 1;
+const ATTR_OFFLOAD_SIZE: u16 = 0x28;
+/* output/e1000e-20261118T040036Z.log
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_hardware_assist_attributes */
+const ATTR_HWASSIST_TYPE: u8 = 0xAF;
+const ATTR_HWASSIST_REVISION: u8 = 2;
+const ATTR_HWASSIST_SIZE: u16 = 0x30;
 const INVALID_PARAMETER: u32 = 0xC000_000D;
 /* Capture 2026-11-15T161901Z: ReturnNetBufferListsHandler / indicate
  * delivery offset on the miniport characteristics. */
@@ -1117,7 +1140,19 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
     if kind == ATTR_ADD_TYPE && revision == ATTR_ADD_REVISION && size == ATTR_ADD_SIZE {
         return 0;
     }
-    if kind == ATTR_GENERAL_TYPE && revision == ATTR_GENERAL_REVISION && size == ATTR_GENERAL_SIZE {
+    if kind == ATTR_GENERAL_TYPE
+        && ((revision == ATTR_GENERAL_REVISION && size == ATTR_GENERAL_SIZE)
+            || (revision == ATTR_GENERAL_REVISION_E1000 && size == ATTR_GENERAL_SIZE_E1000))
+    {
+        return 0;
+    }
+    if kind == ATTR_OFFLOAD_TYPE && revision == ATTR_OFFLOAD_REVISION && size == ATTR_OFFLOAD_SIZE {
+        return 0;
+    }
+    if kind == ATTR_HWASSIST_TYPE
+        && revision == ATTR_HWASSIST_REVISION
+        && size == ATTR_HWASSIST_SIZE
+    {
         return 0;
     }
     INVALID_PARAMETER
