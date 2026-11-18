@@ -10,8 +10,6 @@
     "sdk/include/xdk/cmtypes.h CM_PARTIAL_RESOURCE_LIST Count at offset 4 and PartialResourceList after Count, InterfaceType, and BusNumber",
     "sdk/include/ddk/ndis.h NDIS_RESOURCE_LIST is CM_PARTIAL_RESOURCE_LIST; NDIS_STATUS_RESOURCE_CONFLICT is 0xC001001E",
     "sdk/include/xdk/iotypes.h DRIVER_OBJECT.DriverExtension, AddDevice, MajorFunction, and StartDevice AllocatedResources on the stack",
-    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_VirtIO.cpp CPciResources::Init reads RList->Count after NdisMGetBusData",
-    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Driver.cpp MiniportInitializeEx passes AllocatedResources into that Init",
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes names the second attributes structure without giving its type byte",
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kequeryactiveprocessorcountex",
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetprocessornumberfromindex",
@@ -21,7 +19,8 @@
     "sdk/include/vcruntime/crtdefs.h _TRUNCATE",
     "sdk/include/xdk/ntbasedef.h ALL_PROCESSOR_GROUPS",
     "sdk/include/xdk/ketypes.h INVALID_PROCESSOR_INDEX",
-    "ntoskrnl/ke/processor.c KeNumberProcessors and KeQueryMaximumProcessorCountEx group behavior already in this file"
+    "ntoskrnl/ke/processor.c KeNumberProcessors and KeQueryMaximumProcessorCountEx group behavior already in this file",
+    "Removed virtio-win driver URLs. The call and the sizes stay on the Learn DDI pages, the in-tree NDIS headers, and the netkvm and ndis-discovery logs already listed."
   ],
   "harness": {
     "guest": "VerOS",

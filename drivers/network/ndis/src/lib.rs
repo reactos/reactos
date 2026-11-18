@@ -59,15 +59,14 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex
  * output/netkvm-20261116T071255Z.log printed NDIS POOL 80 01 0010, then
  * NDIS STUB NdisMRegisterInterruptEx, then NDIS INIT c0000002
- * (STATUS_NOT_IMPLEMENTED in sdk/include/psdk/ntstatus.h). Public
- * NetKVM ParaNdis_FinishSpecificInitialization calls that register
- * after the pool allocate. output/netkvm-20261116T071822Z.log printed
- * NDIS IRQ 84 01 0060 and NDIS IRQOK. NDIS_STATUS_SUCCESS is 0 in
- * sdk/include/ddk/ndis.h. Deregister returns no status. Capture
- * 2026-11-16T080419Z reached DIFF END OK: after NdisMRegisterInterruptEx
- * the dword at characteristics offset 0x50 became 1 and the pointer at
- * 0x58 stayed null (DIFF IRQA0050). Those OUT offsets are the probe's
- * count from the public characteristics page, confirmed by that dump.
+ * (STATUS_NOT_IMPLEMENTED in sdk/include/psdk/ntstatus.h).
+ * output/netkvm-20261116T071822Z.log printed NDIS IRQ 84 01 0060 and
+ * NDIS IRQOK. NDIS_STATUS_SUCCESS is 0 in sdk/include/ddk/ndis.h.
+ * Deregister returns no status. Capture 2026-11-16T080419Z reached
+ * DIFF END OK: after NdisMRegisterInterruptEx the dword at
+ * characteristics offset 0x50 became 1 and the pointer at 0x58 stayed
+ * null (DIFF IRQA0050). Those OUT offsets are the probe's count from
+ * the public characteristics page, confirmed by that dump.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_interrupt_characteristics
  * Soft register stores handlers and parses CM resources without
  * IoConnectInterrupt during InitializeEx. Connect runs after Restart
@@ -845,9 +844,8 @@ pub unsafe extern "system" fn NdisReadConfiguration(
      * printed NDIS KEY DisableMSI. ntoskrnl/io/iomgr/irq.c
      * CONNECT_MESSAGE_BASED does not connect a handler.
      * output/netkvm-20261117T023507Z.log: NDIS IRQCONN and no NDIS IRQISR.
-     * DisableMSI is the NetKVM Parameters value (virtio-win NetKVM
-     * Parameters, https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/NetKVM-base.inf).
-     * Integer 1 keeps the miniport on the line interrupt this file connects. */
+     * DisableMSI is the keyword that log named. Integer 1 keeps the
+     * miniport on the line interrupt this file connects. */
     unsafe { DbgPrint(b"NDIS READ %08x\n\0".as_ptr(), _kind) };
     log_keyword(b"NDIS KEY ", _keyword);
     if status.is_null() || parameter.is_null() {
@@ -2875,9 +2873,7 @@ pub unsafe extern "system" fn NdisMFreeNetBufferSGList(
  * until after Restart (IRQ_ARMED). Armed DPC with a null
  * ReceiveThrottleParameters faulted in netkvm.sys
  * (output/netkvm-20261116T112400Z.log) and at DISPATCH asserted
- * APC_LEVEL (output/netkvm-20261116T113013Z.log). Public NetKVM
- * MiniportInterruptDPC reads MaxNblsToIndicate from that pointer
- * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/6340662c/NetKVM/wlh/ParaNdis6_Impl.cpp).
+ * APC_LEVEL (output/netkvm-20261116T113013Z.log).
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_receive_throttle_parameters */
 const IRQ_KIND: u32 = u32::from_le_bytes(*b"IRso");
@@ -3049,10 +3045,8 @@ unsafe extern "system" fn ndis_interrupt_dpc(
     }
     let dpc: MiniportDpcFn = core::mem::transmute(dpc_ptr);
     dpc(miniport_ctx, dpc_context, throttle, core::ptr::null_mut());
-    /* Public NetKVM MiniportInterrupt disables the virtqueues; NDIS must
-     * call EnableInterruptEx after the DPC returns
-     * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc
-     * https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp).
+    /* NDIS must call EnableInterruptEx after the DPC returns
+     * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc).
      * output/netkvm-20261116T131159Z.log printed 0 IRQISR / 266 IRQDPC syn. */
     call_line_irq_handler(context, IRQ_ENABLE_AT);
     let more = core::ptr::read_unaligned(context.add(IRQ_THROTTLE_MORE_AT) as *const u32);

@@ -2,12 +2,14 @@
   "spdx": "GPL-2.0-or-later",
   "question": "How should cryptbase.dll be provided so Firefox LoadLibrary(cryptbase.dll) succeeds when SystemFunction036 and related exports already live in advapi32?",
   "allowedInputs": [
-    "https://source.winehq.org/WineAPI/cryptbase.html cryptbase.dll exports SystemFunction001-005, 028, 029, 034, 036, 040, 041",
+    "https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom SystemFunction036 in Advapi32.dll",
+    "dll/win32/cryptbase/cryptbase.spec thin forwarder to advapi32 SystemFunction* exports",
     "dll/win32/advapi32/advapi32.spec already in this tree, SystemFunction001 through SystemFunction041 implemented locally",
     "dll/win32/lz32/lz32.spec already in this tree, pure forwarder DLL pattern with ENTRYPOINT 0",
     "output/ntdll-apps/serial-App-20261116T054944Z.log marker: LDR: missing dll cryptbase.dll",
     "output/ntdll-apps/serial-App-20261116T054944Z.log marker: No VAD at address 0000000000000000",
-    "output/ntdll-apps/firefox-silent-fail4-cryptbase-gaps.txt"
+    "output/ntdll-apps/firefox-silent-fail4-cryptbase-gaps.txt",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "amd64 installed veros-ntfs after EtwEventRegister RegHandle fix, TCG, App mode",

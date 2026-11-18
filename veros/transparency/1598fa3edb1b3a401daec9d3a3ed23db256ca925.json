@@ -1,0 +1,8 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What did 1598fa3edb1b3a401daec9d3a3ed23db256ca925 change in the loader?",
+  "allowedInputs": [
+    "dll/ntdll/ldr/ldrinit.c",
+    "Reported: the commit only removed a duplicate late-TLS trace print."
+  ]
+}

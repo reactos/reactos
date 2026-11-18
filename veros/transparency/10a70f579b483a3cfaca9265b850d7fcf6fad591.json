@@ -2,10 +2,10 @@
   "spdx": "GPL-2.0-or-later",
   "question": "What did 10a70f579b483a3cfaca9265b850d7fcf6fad591 change for NTFS index growth, the file key, and a quiet log?",
   "allowedInputs": [
-    "Reported: the commit says a packed index grows in the file record, a large index takes a free leaf, EncryptFileW stores the key so a later open can read the file, and a Windows log with nothing left to replay mounts read-write.",
     "drivers/filesystems/ntfs/ntfs3x.c",
     "drivers/filesystems/ntfs/fcb.c",
     "drivers/filesystems/ntfs/ntfs.h",
-    "Reported: this commit has no Cursor trailer. No guest log cited by it was still on disk when this note was written."
+    "Reported: this commit has no Cursor trailer. No guest log cited by it was still on disk when this note was written.",
+    "The on-disk claims in the old wording are withdrawn. Standard information stays the struct in sdk/lib/fslib/ntfslib/ntfslib.h. Log replay, the quota value, and the encrypted file body are unimplemented until a later note cites a Learn page, an in-tree header, or a guest log."
   ]
 }

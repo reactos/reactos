@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which citation-only comments and transparency entries were rewritten so they no longer name denylisted third-party pages as layout sources?",
+  "allowedInputs": [
+    "Reported: the provenance audit listed virtio-win, Reported NTFS commit wording, Linux/EDK2 watchdog URLs, Wine gitlab URLs, wiki.osdev.org, and third-party NTFS note entries to drop or replace.",
+    "drivers/bus/acpi/acpica/include/actbl3.h",
+    "https://uefi.org/sites/default/files/resources/Watchdog%20Descriptor%20Table.pdf",
+    "Reported: Intel NM10 Express Chipset Datasheet Document Number 322896-001 states the TCOBASE, SMI_EN/TCO_EN, TCO1_STS TIMEOUT, TCO2_STS SECOND_TO/BOOT_STS, TCO_TMR, and TCO_TMR_HLT bits used by PcHaltIchTco.",
+    "sdk/lib/fslib/ntfslib/ntfslib.h",
+    "dll/ntdll/ldr/ldrinit.c",
+    "dll/win32/shell32/wine/shell32_main.c",
+    "dll/win32/iphlpapi/iphlpapi_main.c",
+    "win32ss/user/user32_vista/wine/misc.c",
+    "dll/win32/cryptbase/cryptbase.spec",
+    "dll/win32/comctl32/commctrl.c",
+    "boot/freeldr/freeldr/arch/i386/pc/pcdisk.c",
+    "veros/transparency/2026-11-18-ntfs-quarantine-unsourced.json",
+    "https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom"
+  ]
+}

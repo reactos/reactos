@@ -339,17 +339,21 @@ PcPciRead32(UCHAR Bus, UCHAR Device, UCHAR Function, UCHAR Offset)
 }
 
 /*
- * NM10 (the Acer LPC, 8086:27BC) counts in the ICH7 TCO block. A BIOS call
- * reloads it. The first expiry raises an SMI; if that SMI sees the halt bit
- * already set, Insyde spins and the second expiry resets the CPU. Silence
- * the SMI, clear both timeout bits, then halt. QEMU has no such device.
+ * NM10 LPC 8086:27BC counts in the ICH7 TCO block. A BIOS call reloads it.
+ * The first expiry raises an SMI; if that SMI sees the halt bit already
+ * set, the second expiry resets the CPU. Silence the SMI, clear both
+ * timeout bits, then halt. QEMU has no such device.
  *
- * TCO1_STS + 0x04 bit 0x0008, TCO2_STS + 0x06 bits 0x0002 and 0x0004, and
- * TCO1_CNT + 0x08 bit 0x0800 are in Intel AP-727:
+ * WDAT table layout is drivers/bus/acpi/acpica/include/actbl3.h
+ * (ACPI_TABLE_WDAT / ACPI_WDAT_ENTRY). The UEFI Watchdog Action Table
+ * PDF is also cited where WDAT actions are discussed:
  * https://uefi.org/sites/default/files/resources/Watchdog%20Descriptor%20Table.pdf
- * TCOv2_TMR + 0x12, SMI_EN at PMBASE + 0x30 bit 13, and TCO base PMBASE + 0x60
- * are in https://github.com/torvalds/linux/blob/master/drivers/watchdog/iTCO_wdt.c
- * That file names Intel document 322896-001 for NM10.
+ *
+ * TCO I/O map and bits below are Intel NM10 Express Chipset Datasheet,
+ * Document Number 322896-001: TCOBASE is PMBASE + 60h; SMI_EN at
+ * PMBASE + 30h bit 13 (TCO_EN); TCO1_STS at +04h TIMEOUT bit 3;
+ * TCO2_STS at +06h SECOND_TO_STS bit 1 and BOOT_STS bit 2; TCO_TMR at
+ * +12h bits 9:0; TCO1_CNT at +08h TCO_TMR_HLT bit 11.
  */
 static VOID
 PcHaltIchTco(VOID)

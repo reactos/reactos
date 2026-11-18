@@ -1382,10 +1382,12 @@ HRESULT WINAPI SHLoadNonloadedIconOverlayIdentifiers( VOID )
 
 /*
  * Window IPropertyStore stub for SHGetPropertyStoreForWindow.
- * Follows Wine dlls/shell32/shell32_main.c (wine-9.0):
- * https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/shell32/shell32_main.c
+ * https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shgetpropertystoreforwindow
+ * Implementation in this file (dll/win32/shell32/wine/shell32_main.c).
  * Name from serial-App-20261116T112627Z.log
  * (LDR missing export shell32.DLL!SHGetPropertyStoreForWindow).
+ * The export is the Learn page named here, or the in-tree Wine file named
+ * here. The gitlab.winehq.org URL was not used.
  */
 struct window_prop_store
 {

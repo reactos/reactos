@@ -815,8 +815,8 @@ PcDiskWriteLogicalSectorsLBA(
 
     /*
      * BIOS Int 13h, function 43h. AL = 0 writes without verify. The packet
-     * and registers match function 42h in PcDiskReadLogicalSectorsLBA.
-     * https://wiki.osdev.org/ATA_in_x86_RealMode_(BIOS)
+     * and registers match function 42h in PcDiskReadLogicalSectorsLBA in
+     * this same file (boot/freeldr/freeldr/arch/i386/pc/pcdisk.c).
      */
     RegsIn.b.ah = 0x43;
     RegsIn.b.al = 0x00;

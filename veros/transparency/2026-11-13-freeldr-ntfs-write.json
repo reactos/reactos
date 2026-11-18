@@ -2,7 +2,7 @@
   "spdx": "GPL-2.0-or-later",
   "question": "How can FreeLoader rename and stamp a file on the NTFS boot volume before the kernel starts?",
   "allowedInputs": [
-    "boot/freeldr/freeldr/arch/i386/pc/pcdisk.c already issues Int 13h function 42h for a read. The matching write is function 43h, documented at https://wiki.osdev.org/ATA_in_x86_RealMode_(BIOS). The CHS write is function 03h beside the function 02h read in that same file.",
+    "boot/freeldr/freeldr/arch/i386/pc/pcdisk.c already issues Int 13h function 42h for a read. The matching write is function 43h using the same packet and registers as that read in this same file. The CHS write is function 03h beside the function 02h read in that same file.",
     "drivers/filesystems/ntfs/ntfs.h defines FRH_IN_USE as 0x0001. drivers/filesystems/ntfs/btree.c aligns an index entry length up to 8 bytes.",
     "Reported: a stage delete stayed armed while removed-0 already existed. After the pass wrote the file into a free slot, the manifest started with update-spent-1."
   ]

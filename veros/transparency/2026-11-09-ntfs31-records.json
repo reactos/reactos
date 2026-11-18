@@ -3,9 +3,8 @@
   "question": "New files on an NTFS 3.1 volume were written with the 48-byte NTFS 1.2 $STANDARD_INFORMATION, and open-by-id called record 9 $Quota.",
   "allowedInputs": [
     "drivers/filesystems/ntfs and sdk/lib/fslib/ntfslib already in this tree",
-    "drivers/filesystems/ntfs/notes.txt, which points at http://linux-ntfs.sourceforge.net/ntfs/index.html",
-    "https://flatcap.github.io/linux-ntfs/ntfs/attributes/standard_information.html",
-    "docs/MILESTONES.md milestone 12, which allows a Linux NTFS driver to be read for on-disk behavior"
+    "sdk/lib/fslib/ntfslib/ntfslib.h STANDARD_INFORMATION is 72 bytes (NTFS 3.x)",
+    "docs/MILESTONES.md milestone 12"
   ],
   "harness": {
     "guest": "amd64 live CD, 8192 MB, 4 CPUs, TCG",

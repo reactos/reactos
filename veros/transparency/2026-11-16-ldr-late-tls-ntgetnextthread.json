@@ -5,10 +5,13 @@
     "output/ntdll-apps/serial-App-20261116T104701Z.log marker: User AV in svchost.exe",
     "output/ntdll-apps/serial-App-20261116T104701Z.log marker: User AV rip module ntdll.dll +0x5de60",
     "output/ntdll-apps/serial-App-20261116T104701Z.log marker: Fatal System Error: 0x0000001e",
-    "Wine dlls/ntdll/loader.c alloc_tls_slot at https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c",
+    "https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw",
+    "https://learn.microsoft.com/en-us/windows/win32/dlls/using-thread-local-storage-in-a-dynamic-link-library",
+    "dll/ntdll/ldr/ldrinit.c already in this tree, LdrpHandleTlsData",
     "sdk/include/ndk/psfuncs.h already in this tree, NtGetNextThread",
     "sdk/include/ndk/pstypes.h already in this tree, THREAD_BASIC_INFORMATION.TebBaseAddress",
-    "Reported: froze before the desktop came up"
+    "Reported: froze before the desktop came up",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "amd64 installed veros-ntfs after 4c8ba23 current-thread TLS, TCG, App mode",

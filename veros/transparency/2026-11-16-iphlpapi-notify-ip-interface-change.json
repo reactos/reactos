@@ -2,11 +2,13 @@
   "spdx": "GPL-2.0-or-later",
   "question": "Why did Firefox exit after late TLS with LDR missing export NotifyIpInterfaceChange, and how should iphlpapi answer that GetProcAddress?",
   "allowedInputs": [
-    "Wine dlls/iphlpapi/iphlpapi_main.c NotifyIpInterfaceChange and CancelMibChangeNotify2 (wine-9.0) https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/iphlpapi/iphlpapi_main.c",
-    "Wine dlls/iphlpapi/iphlpapi.spec NotifyIpInterfaceChange / CancelMibChangeNotify2 https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/iphlpapi/iphlpapi.spec",
+    "https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-notifyipinterfacechange",
+    "https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-cancelmibchangenotify2",
+    "dll/win32/iphlpapi/iphlpapi_main.c NotifyIpInterfaceChange and CancelMibChangeNotify2",
     "output/ntdll-apps/serial-App-20261116T105326Z.log marker LDR: missing export iphlpapi.dll!NotifyIpInterfaceChange",
     "output/ntdll-apps/serial-App-20261116T111101Z.log marker fixme:(dll\\win32\\iphlpapi\\iphlpapi_main.c:2799) (family 2",
-    "dll/win32/iphlpapi/iphlpapi.spec existing NotifyAddrChange / CancelIPChangeNotify entries"
+    "dll/win32/iphlpapi/iphlpapi.spec existing NotifyAddrChange / CancelIPChangeNotify entries",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "veros-ntfs App",

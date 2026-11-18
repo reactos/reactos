@@ -3,15 +3,14 @@
   "question": "When NetKVM DPC runs with zero RECVIND, is send completing as media-disconnected, and does QEMU user-net deliver ARP replies onto the virtio netdev?",
   "allowedInputs": [
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete",
-    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp ParaNdis_ExactSendFailureStatus and ParaNdis_IsTxRxPossible",
-    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_Common.cpp ParaNdis_RXTXDPCWorkBody RxDPCWorkBody ProcessReceiveQueue",
     "sdk/include/psdk/ntstatus.h STATUS_NDIS_MEDIA_DISCONNECTED STATUS_NDIS_PAUSED STATUS_UNSUCCESSFUL STATUS_INSUFFICIENT_RESOURCES",
     "sdk/include/ddk/ndis.h NDIS_STATUS_MEDIA_DISCONNECTED NDIS_STATUS_FAILURE NDIS_STATUS_RESOURCES NDIS_STATUS_PAUSED",
     "differential-tests/ndis-discovery/probe.c NET_BUFFER 256-byte probe read length",
     "output/netkvm-20261116T123352Z.log printed NDIS SENDSTAT none then PING CHECK fail 000004cf",
     "output/netkvm-20261116T124245Z.pcap held 306 ARP replies to guest 52:54:00:12:34:56 with zero ICMP",
     "output/netkvm-20261116T124245Z.log printed NDIS SENDSTAT none, zero post-bind NDIS RECVIND, PING CHECK fail 000004cf",
-    "output/netkvm-20261116T115651Z.log two synthetic IRQDPC then many SENDDONE"
+    "output/netkvm-20261116T115651Z.log two synthetic IRQDPC then many SENDDONE",
+    "Removed virtio-win driver URLs. The call and the sizes stay on the Learn DDI pages, the in-tree NDIS headers, and the netkvm and ndis-discovery logs already listed."
   ],
   "harness": {
     "guest": "VerOS",

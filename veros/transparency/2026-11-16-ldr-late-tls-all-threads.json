@@ -2,13 +2,15 @@
   "spdx": "GPL-2.0-or-later",
   "question": "After late-load TLS landed, why did the App guest freeze before the desktop, and how should LdrpHandleTlsData match Wine alloc_tls_slot?",
   "allowedInputs": [
-    "Wine dlls/ntdll/loader.c alloc_tls_slot at https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c",
+    "https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw",
+    "https://learn.microsoft.com/en-us/windows/win32/dlls/using-thread-local-storage-in-a-dynamic-link-library",
     "dll/ntdll/ldr/ldrinit.c already in this tree, LdrpHandleTlsData and LdrpAllocateTls",
     "sdk/include/ndk/peb_teb.h already in this tree, TEB.TlsLinks",
     "output/ntdll-apps/serial-App-20261116T102626Z.log marker: HEAP: Trying to free an invalid address",
     "output/ntdll-apps/serial-App-20261116T102626Z.log marker: User AV in svchost.exe",
     "output/ntdll-apps/serial-App-20261116T102626Z.log marker: Fatal System Error: 0x0000001e",
-    "Reported: guest froze before taskbar and desktop icons appeared"
+    "Reported: guest froze before taskbar and desktop icons appeared",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "amd64 installed veros-ntfs after first LdrpHandleTlsData, TCG, App mode",
@@ -17,4 +19,3 @@
     "logSha256": "2910458d8de955775bdfa8a1ac8c026531cdf5b12144e534eea13a724664ba95"
   }
 }
-

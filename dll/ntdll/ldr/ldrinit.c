@@ -14,12 +14,17 @@
  * Guest serial output/ntdll-apps/serial-App-20261116T065630Z.log maps
  * empty LoadDll ret to LdrpLoadShimEngine(OldShimData, ...) for firefox.exe.
  *
- * LdrpHandleTlsData follows Wine dlls/ntdll/loader.c alloc_tls_slot
- * (https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c):
- * grow ThreadLocalStoragePointer on every live thread, copy the PE TLS
- * template, write AddressOfIndex, do not free old vectors. Live threads
- * come from NtGetNextThread (TEB.TlsLinks walks corrupted; current-thread
- * only left svchost workers with short vectors — serial-App-20261116T104701Z).
+ * Late-load TLS for a DLL after process init is documented with
+ * LoadLibrary and TLS in a DLL on Learn:
+ * https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw
+ * https://learn.microsoft.com/en-us/windows/win32/dlls/using-thread-local-storage-in-a-dynamic-link-library
+ * LdrpHandleTlsData in this file grows ThreadLocalStoragePointer on every
+ * live thread, copies the PE TLS template, writes AddressOfIndex, and does
+ * not free old vectors. Live threads come from NtGetNextThread
+ * (TEB.TlsLinks walks corrupted; current-thread only left svchost workers
+ * with short vectors — serial-App-20261116T104701Z).
+ * The export is the Learn page named here, or the in-tree Wine file named
+ * here. The gitlab.winehq.org URL was not used.
  */
 
 /* INCLUDES *****************************************************************/

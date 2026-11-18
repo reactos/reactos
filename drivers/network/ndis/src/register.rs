@@ -106,16 +106,10 @@
  * output/netkvm-20261116T061555Z.log printed NDIS BUSGOT 00000040 then
  * faulted in netkvm.sys at address 4. StartDevice now forwards to the
  * PDO with IoForwardIrpSynchronously before the miniport start slot.
- * Public NetKVM CPciResources::Init
- * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_VirtIO.cpp)
- * reads NdisMGetBusData then RList->Count. Count is at offset 4 of
- * CM_PARTIAL_RESOURCE_LIST in sdk/include/xdk/cmtypes.h. A null RList
- * faults at address 4. Public NetKVM MiniportInitializeEx passes
- * miniportInitParameters->AllocatedResources into that Init
- * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Driver.cpp).
- * The third InitializeEx argument was this file's zeroed INIT_BYTES
- * block, so that pointer was null. The public init-parameters page lists
- * Header, then Flags, then AllocatedResources
+ * Count is at offset 4 of CM_PARTIAL_RESOURCE_LIST in
+ * sdk/include/xdk/cmtypes.h. A null RList faults at address 4. The
+ * public init-parameters page lists Header, then Flags, then
+ * AllocatedResources
  * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_init_parameters).
  * NDIS_OBJECT_HEADER is 4 bytes in sdk/include/psdk/ntddndis.h. Flags is
  * a ULONG. On x64 that puts AllocatedResources at offset 8 and
@@ -151,9 +145,7 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetbusdata
  * output/netkvm-20261116T142828Z.log: OIDFILTER 0000000b then
  * OIDFILTER 00000000, then a page fault in netkvm.sys. NDIS_PACKET_TYPE_*
- * bits are in sdk/include/ddk/ndis.h. Public ParaNdis_DeviceFiltersUpdateRxMode
- * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_Common.cpp)
- * enables CTRL_RX NOUNI when DIRECTED is clear.
+ * bits are in sdk/include/ddk/ndis.h.
  * A null pointer at HANDLE_LEGACY_AT keeps the NDIS 6 initialize, send,
  * OID, and return paths. NdisMRegisterMiniport stores legacy state there.
  * sdk/include/ddk/ndis.h declares that entry point. The zero run it sits
@@ -1373,11 +1365,9 @@ pub extern "system" fn NdisMSendNetBufferListsComplete(
     /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete
      * names a Status member on each NET_BUFFER_LIST. That offset is not
      * measured yet. Scan the first NBL for known completion codes from
-     * sdk/include/ddk/ndis.h / sdk/include/psdk/ntstatus.h so a NetKVM
-     * media-disconnect complete
-     * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp
-     * ParaNdis_ExactSendFailureStatus) can be told apart from success
-     * without inventing a Status offset. The 256-byte window matches the
+     * sdk/include/ddk/ndis.h / sdk/include/psdk/ntstatus.h so a
+     * media-disconnect complete can be told apart from success without
+     * inventing a Status offset. The 256-byte window matches the
      * NET_BUFFER probe read in differential-tests/ndis-discovery/probe.c;
      * it is not a Windows object size. Print each distinct hit once.
      * output/vmxnet3-20261117T214351Z.log asserted APC_LEVEL during

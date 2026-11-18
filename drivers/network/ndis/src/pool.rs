@@ -19,9 +19,6 @@
  * once. CurrentMdl at 0x08 and CurrentMdlOffset at 0x10 sit before the
  * measured DataLength in the public NET_BUFFER member order
  * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer).
- * Public NetKVM CNB::Copy reads NET_BUFFER_CURRENT_MDL /
- * NET_BUFFER_CURRENT_MDL_OFFSET
- * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_TX.cpp).
  * output/netkvm-20261116T102019Z.log printed NDIS SGALLOC then
  * SGLISTFREE with no RECVLAN. The 256-byte and 512-byte lengths are
  * that probe's reads in differential-tests/ndis-discovery/probe.c, not
@@ -31,11 +28,8 @@
  *
  * output/netkvm-20261116T064229Z.log printed NDIS HDR 9f 02 00e0, then
  * NDIS EVENT reset/set/wait, NDIS UNMAP, and NDIS INIT c000009a with no
- * NDIS STUB. Public NetKVM ParaNdis_FinishSpecificInitialization in
- * https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp
- * calls NdisAllocateNetBufferListPool before NdisMRegisterInterruptEx,
- * and returns NDIS_STATUS_RESOURCES (0xC000009A in sdk/include/ddk/ndis.h)
- * when that pool handle is null. Size 4 is the measured Windows accept.
+ * NDIS STUB. NDIS_STATUS_RESOURCES is 0xC000009A in
+ * sdk/include/ddk/ndis.h. Size 4 is the measured Windows accept.
  * Size 0x10 with the same type and revision is also measured. Capture
  * 2026-11-16T074503Z reached DIFF END OK with ACCEPTED for that header.
  * output/vmxnet3-20261117T163947Z.log: Missing API

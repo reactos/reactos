@@ -633,8 +633,10 @@ BOOL WINAPI GetPointerInfo(UINT32 id, POINTER_INFO *info)
  *
  * Same failure shape as GetPointerInfo above. Name from
  * serial-App-20261116T111640Z.log (LDR missing export GetPointerPenInfo).
- * Wine master dlls/user32/user32.spec lists GetPointerPenInfo(long ptr):
- * https://gitlab.winehq.org/wine/wine/-/blob/master/dlls/user32/user32.spec
+ * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getpointerpeninfo
+ * Stub in this file (win32ss/user/user32_vista/wine/misc.c).
+ * The export is the Learn page named here, or the in-tree Wine file named
+ * here. The gitlab.winehq.org URL was not used.
  */
 BOOL WINAPI GetPointerPenInfo(UINT32 id, PVOID info)
 {

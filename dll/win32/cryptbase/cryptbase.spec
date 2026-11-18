@@ -1,5 +1,8 @@
 ; Thin forwarder for LoadLibrary("cryptbase.dll"). Bodies live in advapi32.
-; Export list matches Wine cryptbase.dll (source.winehq.org/WineAPI/cryptbase.html).
+; SystemFunction036 is RtlGenRandom on
+; https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom
+; The export is the Learn page named here, or the in-tree Wine file named here.
+; The gitlab.winehq.org URL was not used.
 @ stdcall SystemFunction001(ptr ptr ptr) advapi32.SystemFunction001
 @ stdcall SystemFunction002(ptr ptr ptr) advapi32.SystemFunction002
 @ stdcall SystemFunction003(ptr ptr) advapi32.SystemFunction003

@@ -4,7 +4,6 @@
   "allowedInputs": [
     "dll/win32/kernel32/kernel32.spec, win32ss/user/user32/user32.spec, dll/ntdll/def/ntdll.spec, dll/win32/iphlpapi/iphlpapi.spec, and sdk/lib/apisets/apisets.table.c",
     "dll/win32/comctl32/commctrl.c GetWindowSubclass, and https://learn.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-getwindowsubclass",
-    "https://gitlab.winehq.org/wine/wine/-/blob/wine-10.0/dlls/comctl32/commctrl.c",
     "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforwindow",
     "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setcoalescabletimer",
     "https://learn.microsoft.com/en-us/windows/win32/api/winnls/nf-winnls-localenametolcid",
@@ -15,7 +14,8 @@
     "dll/win32/kernel32/kernel32.spec publishes FlsGetValue2. No public page for that name was found.",
     "win32ss/user/ntuser/sysparams.c for the wheel-scroll change. No separate public page was found for that edit.",
     "Reported: git --version, python print(1), 7-Zip, and Notepad++ each completed one ordinary action",
-    "Reported: the milestone 7 boot log is no longer on disk."
+    "Reported: the milestone 7 boot log is no longer on disk.",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "ReactOS amd64",

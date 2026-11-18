@@ -3,14 +3,14 @@
   "question": "Why does FreeLoader reset on the Acer and the ThinkPad when the same boot CD reaches the kernel in QEMU?",
   "allowedInputs": [
     "Reported: both laptops reset in FreeLoader and QEMU still boots",
-    "Reported: an Acer Linux 5.15 dump with an e820 reserved hole, an Insyde WDAT table, and NM10 LPC 8086:27bc. The dump was not given a path.",
-    "https://github.com/torvalds/linux/blob/master/include/acpi/actbl3.h struct acpi_table_wdat",
-    "https://github.com/tianocore/edk2/blob/master/MdePkg/Include/IndustryStandard/WatchdogActionTable.h",
-    "https://github.com/torvalds/linux/blob/master/drivers/watchdog/iTCO_wdt.c names Intel document 322896-001 for NM10",
+    "drivers/bus/acpi/acpica/include/actbl3.h ACPI_TABLE_WDAT / ACPI_WDAT_ENTRY",
+    "Intel NM10 Express Chipset Datasheet, Document Number 322896-001, for TCO I/O map and bits used in PcHaltIchTco",
+    "https://uefi.org/sites/default/files/resources/Watchdog%20Descriptor%20Table.pdf",
     "boot/freeldr/freeldr/arch/i386/hwacpi.c",
     "boot/freeldr/freeldr/arch/uefi/uefimem.c",
     "boot/freeldr/freeldr/ntldr/arch/amd64/winldr.c",
-    "https://uefi.org/specs/UEFI/2.10/07_Services_Boot_Services.html ExitBootServices returns EFI_INVALID_PARAMETER when MapKey is stale, and GetMemoryMap must be called again"
+    "https://uefi.org/specs/UEFI/2.10/07_Services_Boot_Services.html ExitBootServices returns EFI_INVALID_PARAMETER when MapKey is stale, and GetMemoryMap must be called again",
+    "Watchdog table layout is the in-tree ACPICA WDAT header. TCO registers stay only where an Intel public datasheet states them. The Linux driver URL and the unsaved dump are not sources."
   ],
   "harness": {
     "guest": "QEMU SeaBIOS, amd64 boot CD, TCG",

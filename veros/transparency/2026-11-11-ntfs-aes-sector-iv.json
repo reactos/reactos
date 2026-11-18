@@ -2,6 +2,6 @@
   "spdx": "GPL-2.0-or-later",
   "question": "What initialization vector does published ntfs-3g code use for one AES-256 EFS sector?",
   "allowedInputs": [
-    "https://docs.rs/crate/ntfs-3g-sys/0.1.0/source/vendor/ntfs-3g/ntfsprogs/ntfsdecrypt.c ntfs_fek_encrypt_sector and ntfs_fek_decrypt_sector add the file byte offset to 0x5816657be9161312 and 0x1989adbe44918961, then use that pair as the IV for one 512-byte AES-256-CBC sector."
+    "withdrawn; see 2026-11-18-ntfs-quarantine-unsourced.json"
   ]
 }

@@ -2,10 +2,11 @@
   "spdx": "GPL-2.0-or-later",
   "question": "Why did Firefox GetProcAddress fail for SHGetPropertyStoreForWindow after AppUserModelID succeeded?",
   "allowedInputs": [
-    "Wine dlls/shell32/shell32_main.c SHGetPropertyStoreForWindow and window_prop_store (wine-9.0) https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/shell32/shell32_main.c",
-    "Wine dlls/shell32/shell32.spec SHGetPropertyStoreForWindow https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/shell32/shell32.spec",
+    "https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shgetpropertystoreforwindow",
+    "dll/win32/shell32/wine/shell32_main.c SHGetPropertyStoreForWindow and window_prop_store",
     "output/ntdll-apps/serial-App-20261116T112627Z.log marker LDR: missing export shell32.DLL!SHGetPropertyStoreForWindow",
-    "output/ntdll-apps/serial-App-20261116T113115Z.log marker LDR: missing dll dxgi.dll (past PropertyStore; no missing SHGetPropertyStoreForWindow)"
+    "output/ntdll-apps/serial-App-20261116T113115Z.log marker LDR: missing dll dxgi.dll (past PropertyStore; no missing SHGetPropertyStoreForWindow)",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "veros-ntfs App",

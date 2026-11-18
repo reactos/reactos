@@ -8,7 +8,6 @@
     "output/netkvm-20261116T072305Z.log printed NDIS SG 83 01 0024, NDIS SGOK, then NDIS STUB NdisMAllocateSharedMemory and NDIS INIT c000009a",
     "output/netkvm-20261116T072815Z.log printed NDIS SHMEMOK, then NDIS STUB NdisAllocateMdl and faulted at 0xC0000002",
     "output/netkvm-20261116T073201Z.log printed NDIS SHMEMOK, NDIS MDLOK, and NDIS INIT 00000000",
-    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp ParaNdis_FinishSpecificInitialization calls NdisAllocateNetBufferListPool then NdisMRegisterInterruptEx and NdisMRegisterScatterGatherDma",
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatenetbufferlistpool",
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex",
     "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma",
@@ -18,7 +17,8 @@
     "sdk/include/psdk/ntstatus.h STATUS_NOT_IMPLEMENTED is 0xC0000002",
     "sdk/include/xdk/mmfuncs.h MmAllocateContiguousMemory, MmGetPhysicalAddress, MmFreeContiguousMemory, MmBuildMdlForNonPagedPool",
     "ntoskrnl/ntoskrnl.spec IoAllocateMdl and IoFreeMdl",
-    "Reported: Capture 2026-11-15T232142Z measured pool type 0x80 revision 1 size 4; size 0x10 from the NetKVM log is VerOS-only until one Windows call checks it"
+    "Reported: Capture 2026-11-15T232142Z measured pool type 0x80 revision 1 size 4; size 0x10 from the NetKVM log is VerOS-only until one Windows call checks it",
+    "Removed virtio-win driver URLs. The call and the sizes stay on the Learn DDI pages, the in-tree NDIS headers, and the netkvm and ndis-discovery logs already listed."
   ],
   "harness": {
     "guest": "VerOS",

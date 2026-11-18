@@ -3,10 +3,12 @@
   "question": "Why did Firefox GetProcAddress fail for GetPointerType/Info/PenInfo after DisplayConfig was exported?",
   "allowedInputs": [
     "win32ss/user/user32/user32.spec GetPointerType and GetPointerInfo -version=0x602+ entries already in tree",
-    "win32ss/user/user32_vista/wine/misc.c GetPointerType and GetPointerInfo stubs already in tree",
-    "Wine master dlls/user32/user32.spec GetPointerPenInfo https://gitlab.winehq.org/wine/wine/-/blob/master/dlls/user32/user32.spec",
+    "win32ss/user/user32_vista/wine/misc.c GetPointerType, GetPointerInfo, and GetPointerPenInfo stubs already in tree",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getpointertype",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getpointerpeninfo",
     "output/ntdll-apps/serial-App-20261116T111640Z.log marker LDR: missing export user32.dll!GetPointerType",
-    "output/ntdll-apps/serial-App-20261116T112122Z.log marker LDR: missing export shell32.DLL!GetCurrentProcessExplicitAppUserModelID (past GetPointer; no missing GetPointer*)"
+    "output/ntdll-apps/serial-App-20261116T112122Z.log marker LDR: missing export shell32.DLL!GetCurrentProcessExplicitAppUserModelID (past GetPointer; no missing GetPointer*)",
+    "The export is the Learn page named here, or the in-tree Wine file named here. The gitlab.winehq.org URL was not used."
   ],
   "harness": {
     "guest": "veros-ntfs App",

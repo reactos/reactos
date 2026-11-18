@@ -10,11 +10,14 @@
 /*
  * 2018 Pierre Schweitzer
  *
- * NotifyIpInterfaceChange and CancelMibChangeNotify2 follow Wine
- * dlls/iphlpapi/iphlpapi_main.c (wine-9.0):
- * https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/iphlpapi/iphlpapi_main.c
+ * NotifyIpInterfaceChange and CancelMibChangeNotify2:
+ * https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-notifyipinterfacechange
+ * https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-cancelmibchangenotify2
+ * Stubs in this file (dll/win32/iphlpapi/iphlpapi_main.c).
  * Exported without -version= so they appear under DLL_EXPORT_VERSION=0x502
  * (serial-App-20261116T105326Z.log: LDR missing export NotifyIpInterfaceChange).
+ * The export is the Learn page named here, or the in-tree Wine file named
+ * here. The gitlab.winehq.org URL was not used.
  */
 
 #define DEBUG
@@ -2787,7 +2790,7 @@ DWORD WINAPI NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 /******************************************************************
  *    NotifyIpInterfaceChange (IPHLPAPI.@)
  *
- * Wine dlls/iphlpapi/iphlpapi_main.c NotifyIpInterfaceChange (wine-9.0).
+ * https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-notifyipinterfacechange
  */
 DWORD WINAPI NotifyIpInterfaceChange(ADDRESS_FAMILY Family,
                                      PVOID Callback,
@@ -2805,7 +2808,7 @@ DWORD WINAPI NotifyIpInterfaceChange(ADDRESS_FAMILY Family,
 /******************************************************************
  *    CancelMibChangeNotify2 (IPHLPAPI.@)
  *
- * Wine dlls/iphlpapi/iphlpapi_main.c CancelMibChangeNotify2 (wine-9.0).
+ * https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-cancelmibchangenotify2
  */
 DWORD WINAPI CancelMibChangeNotify2(HANDLE NotificationHandle)
 {

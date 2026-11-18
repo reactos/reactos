@@ -2,11 +2,11 @@
   "spdx": "GPL-2.0-or-later",
   "question": "What did 5170a1a576f85a2ad5f54c6aac7ab0b661d57a49 change in NTFS 3.1 metadata and EncryptFileW?",
   "allowedInputs": [
-    "Reported: the commit says Windows 10 22H2 uses 4 KB clusters and one POSIX name, and the journal, quota index, and EncryptFileW have to update that on-disk state instead of failing or returning success without writing it.",
     "drivers/filesystems/ntfs/ntfs3x.c",
     "drivers/filesystems/ntfs/mft.c",
     "dll/win32/advapi32/misc/efs.c",
     "sdk/lib/fslib/ntfslib/ntfslib.c",
-    "Reported: this commit has no Cursor trailer. No guest log cited by it was still on disk when this note was written."
+    "Reported: this commit has no Cursor trailer. No guest log cited by it was still on disk when this note was written.",
+    "The on-disk claims in the old wording are withdrawn. Standard information stays the struct in sdk/lib/fslib/ntfslib/ntfslib.h. Log replay, the quota value, and the encrypted file body are unimplemented until a later note cites a Learn page, an in-tree header, or a guest log."
   ]
 }
