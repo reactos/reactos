@@ -1,3 +1,4 @@
+
 /*
  * PROJECT:     ReactOS Sound System
  * LICENSE:     GPL - See COPYING in the top level directory
@@ -138,7 +139,7 @@ BOOLEAN FoundDevice(
     FuncTable.SetWaveFormat = SetNt4WaveDeviceFormat;
     FuncTable.Open = OpenNt4SoundDevice;
     FuncTable.Close = CloseNt4SoundDevice;
-    FuncTable.CommitWaveBuffer = WriteFileEx_Committer;
+    //FuncTable.CommitWaveBuffer = WriteFileEx_Committer; // FIXME
     //FuncTable.SubmitWaveHeaderToDevice = SubmitWaveHeaderToDevice;
 
     SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
