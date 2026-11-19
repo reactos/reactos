@@ -487,6 +487,12 @@ typedef struct STRUCT(_TEB)
     GUID EffectiveContainerId;
 #endif
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN) && defined(__REACTOS__)
+    PTR(PVOID) PreferredLanguages;
+    PTR(PVOID) UserPrefLanguages;
+    PTR(PVOID) MergedPrefLanguages;
+#endif
+
 } STRUCT(TEB), *STRUCT(PTEB);
 
 #ifdef _STRUCT64
