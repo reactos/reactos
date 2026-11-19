@@ -719,6 +719,9 @@ HalpInitializePICs(
     HalpGsivToVector[APIC_CLOCK_INDEX] = APIC_CLOCK_VECTOR;
     HalpVectorToIndex[CLOCK_IPI_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_SPURIOUS_VECTOR] = APIC_RESERVED_VECTOR;
+#ifndef _M_AMD64
+    HalpVectorToIndex[APIC_IPI_VECTOR] = APIC_RESERVED_VECTOR;
+#endif
 
     /* Local APIC sources, all above the device vector range */
     HalpVectorToIndex[APIC_PROFILE_VECTOR] = APIC_RESERVED_VECTOR;
@@ -732,6 +735,7 @@ HalpInitializePICs(
 #ifndef _M_AMD64
     KeRegisterInterruptHandler(APC_VECTOR, HalpApcInterrupt);
     KeRegisterInterruptHandler(DISPATCH_VECTOR, HalpDispatchInterrupt);
+    KeRegisterInterruptHandler(APIC_IPI_VECTOR, HalpIpiInterrupt);
 #endif
 
     /* Register the vectors for APC and dispatch interrupts */
@@ -829,6 +833,36 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     _enable();
     KiDispatchInterrupt();
     _disable();
+
+    /* Restore the old IRQL */
+    ApicLowerIrql(OldIrql);
+
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+DECLSPEC_NORETURN
+FASTCALL
+HalpIpiInterruptHandler(
+    _In_ PKTRAP_FRAME TrapFrame)
+{
+    KIRQL OldIrql;
+
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Get the current IRQL */
+    OldIrql = ApicGetCurrentIrql();
+
+    /* Raise to IPI_LEVEL */
+    ApicRaiseIrql(IPI_LEVEL);
+
+    /* EOI first, a freeze request may not return for a long time */
+    ApicSendEOI();
+
+    /* Service the requests with interrupts still disabled */
+    KiIpiServiceRoutine(TrapFrame, NULL);
 
     /* Restore the old IRQL */
     ApicLowerIrql(OldIrql);
