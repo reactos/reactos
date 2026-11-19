@@ -156,6 +156,9 @@ typedef union _SYSTEM_CONTROL_PORT_B_REGISTER
 #define PIC_CASCADE_IRQ    2
 #define PIC_RTC_IRQ        8
 
+/* A device set to the cascade IRQ is wired to IRQ 9 */
+#define PIC_CASCADE_REDIRECT_IRQ 9
+
 //
 // Definitions for ICW/OCW Bits
 //

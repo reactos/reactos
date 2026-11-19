@@ -24,7 +24,7 @@ extern HALP_APIC_INFO_TABLE HalpApicInfoTable;
 
 PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
-extern ULONG HalpPicVectorRedirect[HALP_ISA_IRQ_COUNT];
+extern ULONG HalpIsaIrqToGsi[HALP_ISA_IRQ_COUNT];
 
 /* The table is parsed before debug output works, so problems are reported later */
 static ULONG HalpMadtIgnoredEntries;
@@ -131,7 +131,7 @@ HalpMadtAddInterruptOverride(
         return;
     }
 
-    HalpPicVectorRedirect[Irq] = Override->GlobalIrq;
+    HalpIsaIrqToGsi[Irq] = Override->GlobalIrq;
     HalpApicInfoTable.IsaIrqGsi[Irq] = Override->GlobalIrq;
 
     switch (Override->IntiFlags & ACPI_MADT_POLARITY_MASK)

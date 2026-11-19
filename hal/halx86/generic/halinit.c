@@ -19,6 +19,7 @@ BOOLEAN HalpOnlyBootProcessor;
 //#endif
 BOOLEAN HalpPciLockSettings;
 BOOLEAN HalBootViaEfi;
+ULONG HalpInterruptControllerType;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -144,7 +145,6 @@ HalInitSystem(
         HalInitPnpDriver = HaliInitPnpDriver;
         HalGetDmaAdapter = HalpGetDmaAdapter;
 
-        HalGetInterruptTranslator = NULL;  // FIXME: TODO
         HalResetDisplay = HalpBiosDisplayReset;
         HalHaltSystem = HaliHaltSystem;
 

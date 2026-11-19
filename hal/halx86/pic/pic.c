@@ -1262,6 +1262,18 @@ HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
     return SystemVector;
 }
 
+/* Returns the IRQL a device vector runs at */
+KIRQL
+NTAPI
+HalConvertDeviceIdtToIrql(
+    _In_ ULONG IdtEntry)
+{
+    if ((IdtEntry < PRIMARY_VECTOR_BASE) || (IdtEntry >= PRIMARY_VECTOR_BASE + 16))
+        return PASSIVE_LEVEL;
+
+    return HalpVectorToIrql((UCHAR)IdtEntry);
+}
+
 #else /* _MINIHAL_ */
 
 KIRQL
