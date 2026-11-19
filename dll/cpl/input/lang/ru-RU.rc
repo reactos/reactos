@@ -211,6 +211,7 @@ BEGIN
     IDS_LITHUANIAN_IBM_LAYOUT "Литовская IBM"
     IDS_FYRO_MACEDONIAN_LAYOUT "Македонская (FYROM)"
     IDS_MALAYALAM_LAYOUT "Малаялам"
+    IDS_MALTESE_48KEY_LAYOUT "Maltese 48-Key"
     IDS_MAORI_LAYOUT "Maori"
     IDS_MARATHI_LAYOUT "Маратхи"
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Монгольская (кириллица)"
