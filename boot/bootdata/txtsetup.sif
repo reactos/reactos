@@ -676,7 +676,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000437 = kbdgeo.dll
 00000438 = kbdfo.dll
 00000439 = kbdindev.dll
-0000043E = kbdmaori.dll
 0000043F = kbdkaz.dll
 00000843 = kbduzb.dll
 00000440 = kbdkyr.dll
@@ -687,6 +686,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000044D = kbdinasa.dll
 00000455 = kbdbur.dll
 00000463 = kbdpash.dll
+00000481 = kbdmaori.dll
 0000048F = kbdeo.dll
 
 [HiveInfs.Install]
