@@ -1,0 +1,208 @@
+/*
+ * PROJECT:     ReactOS Telnet Service
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Telnet service
+ * COPYRIGHT:   Copyright 2026 Aravinda Samarathunga (I-A-S)
+ */
+
+// [IANOTE]: For this telnet PR, I'll keep the tcp server implementation
+// here in telnetd source tree. When we get to SSH, it will be better
+// to make this a static helper lib in "sdk/lib" instead.
+
+#pragma once
+
+#include <stdint.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <synchapi.h>
+
+#define _INC_WINDOWS
+#include <winsock2.h>
+
+#include <deque>
+#include <vector>
+
+class TCPServer;
+
+class TCPServerSessionHandler
+{
+    static constexpr DWORD CLOSE_DRAIN_TIMEOUT_MS = 5000;
+    static constexpr size_t SEND_QUEUE_MARK_LOW   = 16 * 1024;
+    static constexpr size_t SEND_QUEUE_MARK_HIGH  = 64 * 1024;
+    static constexpr size_t SEND_QUEUE_MARK_LIMIT = 1024 * 1024;
+
+    struct Unit
+    {
+        int remaining;
+        bool started;
+        bool urgent;
+    };
+
+public:
+    TCPServerSessionHandler();
+    virtual ~TCPServerSessionHandler();
+
+    virtual void on_connect() = 0;
+
+    // [IMPORTANT]: Stop and join any threads that might reference `this` before returning from this function.
+    // [IMPORTANT]: Calling `send_data` inside this function will have no effect.
+    virtual void on_disconnect() = 0;
+
+    virtual void on_data(const uint8_t* data, int length) = 0;
+
+    inline bool has_available_send_space();
+
+    inline HANDLE get_send_space_available_event() const;
+
+protected:
+    TCPServer* m_server{};
+    SOCKET m_socket{INVALID_SOCKET};
+
+    void disconnect();
+
+    // Each call to this function constitutes a unit that will be sent as a whole,
+    // even when `clear_pending_*` functions are called.
+    void send_data(const void* data, int length);
+
+    // Clears pending whole units.
+    void clear_pending_queue_then_send(const void* data, int length, bool urgent = false);
+
+    // Clears pending whole units.
+    void clear_pending_send_queue() { clear_pending_queue_then_send(nullptr, 0); }
+
+private:
+    CRITICAL_SECTION m_send_queue_cs{};
+    std::vector<uint8_t> m_send_queue{};
+    size_t m_send_queue_cursor{};
+    WSAEVENT m_event{WSA_INVALID_EVENT};
+    volatile LONG m_disconnect_requested{0};
+    std::deque<Unit> m_units;
+    size_t m_urgent_units{0};
+    bool m_is_send_queue_full{false};
+    HANDLE m_send_space_available_event{nullptr};
+    bool  m_is_closing{false};
+    DWORD m_close_start_time{0};
+
+    void _internal_on_connect(TCPServer* server, SOCKET s, WSAEVENT e);
+    
+    bool _internal_flush_send_queue(bool lock = true);
+
+    inline void on_send_queue_grow();
+    inline void on_send_queue_shrink();
+
+    friend class TCPServer;
+};
+
+class TCPServer
+{
+public:
+    static constexpr DWORD NUM_MAX_CONCURRENT_SESSIONS = 32;
+
+    enum class EStatus
+    {
+        OK,
+        WSA_INIT_ERROR,
+        EVENT_WAIT_ERROR,
+        EVENT_CREATE_ERROR,
+        EVENT_SELECT_ERROR,
+        SOCKET_CREATE_ERROR,
+        SOCKET_BIND_ERROR,
+        SOCKET_LISTEN_ERROR,
+        SOCKET_ACCEPT_ERROR,
+        SOCKET_READ_ERROR,
+        SOCKET_WRITE_ERROR,
+        INTERFACE_ADDR_PARSE_ERROR,
+    };
+
+private:
+    using HandlerFactoryFuncT = TCPServerSessionHandler* (*)();
+
+    struct SessionData
+    {
+        // +2 because we're gonna store the stop event at index 0, and listen socket and event 
+        // at index 1. 
+        // handlers array gets 2 wasted slots and sockets array gets 1, however that is worth it 
+        // as otherwise indexing is going to be unnecessarily confusing.
+        static constexpr DWORD NUM_MAX_ENTRY_COUNT = NUM_MAX_CONCURRENT_SESSIONS + 2;
+
+        // [IANOTE]: For now, NUM_MAX_ENTRY_COUNT should be less than or equal to 
+        // WSA_MAXIMUM_WAIT_EVENTS, which is typically 64. For our current ReactOS purposes,
+        // this is plenty. Later we can perhaps look into thread managers or different architecture.
+        static_assert(NUM_MAX_ENTRY_COUNT <= WSA_MAXIMUM_WAIT_EVENTS,
+            "NUM_MAX_ENTRY_COUNT must be less than or equal to WSA_MAXIMUM_WAIT_EVENTS");
+
+        WSAEVENT events[NUM_MAX_ENTRY_COUNT];
+        SOCKET sockets[NUM_MAX_ENTRY_COUNT];
+        TCPServerSessionHandler* handlers[NUM_MAX_ENTRY_COUNT];
+        
+        DWORD current_index{};
+
+        SessionData() {
+            for(DWORD i = 0; i < NUM_MAX_ENTRY_COUNT; i++)
+            {
+                events[i] = WSA_INVALID_EVENT;
+                sockets[i] = INVALID_SOCKET;
+                handlers[i] = nullptr;
+            }
+
+            current_index = 0;
+        }
+    };
+
+public:
+    template<typename session_handler_type>
+    EStatus initialize(uint16_t port, const char* interface_addr = "0.0.0.0");
+
+    void terminate();
+
+    EStatus run();
+
+    BOOL request_stop();
+
+    void disconnect_session(TCPServerSessionHandler* handler);
+
+private:
+    SessionData m_session_data{};
+    BOOLEAN m_wsa_initialized{false};
+    HandlerFactoryFuncT m_handler_factory{};
+
+    EStatus initialize(uint16_t port, const char* interface_addr, HandlerFactoryFuncT handler_factory);
+
+    bool begin_close(DWORD i);
+    void finish_close(DWORD i);
+};
+
+template<typename session_handler_type>
+TCPServer::EStatus TCPServer::initialize(uint16_t port, const char* interface_addr)
+{
+    return initialize(port, interface_addr, []() -> TCPServerSessionHandler* { return new session_handler_type(); });
+}
+
+bool TCPServerSessionHandler::has_available_send_space()
+{
+    EnterCriticalSection(&m_send_queue_cs);
+    const auto result = !m_is_send_queue_full;
+    LeaveCriticalSection(&m_send_queue_cs);
+    return result;
+}
+
+HANDLE TCPServerSessionHandler::get_send_space_available_event() const
+{
+    return m_send_space_available_event;
+}
+
+void TCPServerSessionHandler::on_send_queue_grow()
+{
+    if (m_send_queue_cursor >= SEND_QUEUE_MARK_HIGH) {
+        m_is_send_queue_full = true;
+    }
+}
+
+void TCPServerSessionHandler::on_send_queue_shrink()
+{
+    if (m_is_send_queue_full && (m_send_queue_cursor <= SEND_QUEUE_MARK_LOW)) {
+        m_is_send_queue_full = false;
+        SetEvent(m_send_space_available_event);
+    }
+}
