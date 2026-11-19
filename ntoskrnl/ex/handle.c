@@ -647,18 +647,19 @@ ULONG
 NTAPI
 ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
 {
-    ULONG LastFree, i;
+    ULONG FirstFree, LastFree, i;
+    PHANDLE_TABLE_ENTRY Entry;
+    EXHANDLE Handle;
 
     /* Clear the last free index */
-    LastFree = InterlockedExchange((PLONG) &HandleTable->LastFree, 0);
+    LastFree = InterlockedExchangeUL(&HandleTable->LastFree, 0);
 
     /* Check if we had no index */
     if (!LastFree) return LastFree;
 
-    /* Acquire the locks we need */
-    for (i = 1; i < 4; i++)
+    /* Wait for all locks to be released */
+    for (i = 1; i < ARRAYSIZE(HandleTable->HandleTableLock); i++)
     {
-        /* Acquire this lock exclusively */
         ExWaitOnPushLock(&HandleTable->HandleTableLock[i]);
     }
 
@@ -666,11 +667,36 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     if (!HandleTable->StrictFIFO)
     {
         /* Update the first free index */
-        if (!InterlockedCompareExchange((PLONG) &HandleTable->FirstFree, LastFree, 0))
+        FirstFree = InterlockedCompareExchangeUL(&HandleTable->FirstFree, LastFree, 0);
+        if (FirstFree == 0)
         {
             /* We're done, exit */
             return LastFree;
         }
+
+        /* Someone else already installed a free list.
+           First follow the list to the last entry, so we can link
+           it up to the existing list in FirstFree. */
+        Handle.Value = LastFree;
+        for (;;)
+        {
+            Entry = ExpLookupHandleTableEntry(HandleTable, Handle);
+            if (Entry->NextFreeTableEntry == 0)
+                break;
+            Handle.Value = Entry->NextFreeTableEntry;
+        }
+
+        /* Now do the exchange in a loop, handling any concurrent
+           change to HandleTable->FirstFree */
+        do
+        {
+            Entry->NextFreeTableEntry = FirstFree;
+            FirstFree = InterlockedCompareExchangeUL(&HandleTable->FirstFree,
+                                                     LastFree,
+                                                     Entry->NextFreeTableEntry);
+        } while (FirstFree != Entry->NextFreeTableEntry);
+
+        return LastFree;
     }
 
     /* We are strict FIFO, we need to reverse the entries */
