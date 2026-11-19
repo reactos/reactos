@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#ifdef __REACTOS__
+#include "dinput.h"
+#endif
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
@@ -60,7 +63,9 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "devguid.h"
+#ifndef __REACTOS__
 #include "dinput.h"
+#endif
 
 #include "dinput_private.h"
 #include "device_private.h"
