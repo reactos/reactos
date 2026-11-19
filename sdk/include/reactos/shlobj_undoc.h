@@ -1081,7 +1081,7 @@ DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown) // {A6B0FB57-7523-4439-94
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IEnumAssociationElements ***/
-    STDMETHOD(Next)(THIS_ ULONG celt, IAssociationElement *pElement, ULONG *pceltFetched) PURE;
+    STDMETHOD(Next)(THIS_ ULONG celt, IAssociationElement **pElements, ULONG *pceltFetched) PURE;
     STDMETHOD(Skip)(THIS_ ULONG celt) PURE;
     STDMETHOD(Reset)(THIS) PURE;
     STDMETHOD(Clone)(THIS_ IEnumAssociationElements **ppNew) PURE;
@@ -1098,6 +1098,32 @@ DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown) // {A6B0FB57-7523-4439-94
 #define IEnumAssociationElements_Clone(T,a) (T)->lpVtbl->Clone(T,a)
 #endif
 
+/* Old version */
+#define INTERFACE IEnumAssociationElementsOld
+DECLARE_INTERFACE_(IEnumAssociationElementsOld, IUnknown) // {A6B0FB57-7523-4439-9425-EBE99823B828}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IEnumAssociationElementsOld ***/
+    STDMETHOD(Next)(THIS_ ULONG celt, IAssociationElementOld **pElements, ULONG *pceltFetched) PURE;
+    STDMETHOD(Skip)(THIS_ ULONG celt) PURE;
+    STDMETHOD(Reset)(THIS) PURE;
+    STDMETHOD(Clone)(THIS_ IEnumAssociationElementsOld **ppNew) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IEnumAssociationElementsOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IEnumAssociationElementsOld_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IEnumAssociationElementsOld_Release(T) (T)->lpVtbl->Release(T)
+#define IEnumAssociationElementsOld_Next(T,a,b,c) (T)->lpVtbl->Next(T,a,b,c)
+#define IEnumAssociationElementsOld_Skip(T,a) (T)->lpVtbl->Skip(T,a)
+#define IEnumAssociationElementsOld_Reset(T) (T)->lpVtbl->Reset(T)
+#define IEnumAssociationElementsOld_Clone(T,a) (T)->lpVtbl->Clone(T,a)
+#endif
+
 /*****************************************************************************
  * IAssociationArrayOld interface
  *
@@ -1112,7 +1138,7 @@ DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown) // {3B877E3C-67DE-4F9A-B29B-1
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IAssociationArrayOld ***/
-    STDMETHOD(EnumElements)(THIS_ ULONG flags, IEnumAssociationElements **ppEnum) PURE;
+    STDMETHOD(EnumElements)(THIS_ ULONG flags, IEnumAssociationElementsOld **ppEnum) PURE;
     STDMETHOD(QueryString)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
     STDMETHOD(QueryDword)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
     STDMETHOD(QueryExists)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key) PURE;
@@ -1182,7 +1208,7 @@ DECLARE_INTERFACE_(IAssociationArrayInitialize, IUnknown) // {EE9165BF-A4D9-474B
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IAssociationArrayInitialize ***/
     STDMETHOD(InitClassElements)(ULONG flags, PCWSTR pszClass) PURE;
-    STDMETHOD(InsertElements)(ULONG flags, IEnumAssociationElements *pEnum) PURE;
+    STDMETHOD(InsertElements)(ULONG flags, IEnumAssociationElementsOld *pEnum) PURE;
     STDMETHOD(FilterElements)(ULONG filter) PURE;
 };
 #undef INTERFACE
