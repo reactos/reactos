@@ -37,7 +37,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
     HRESULT hr;
     HGLOBAL ClipBuffer;
     LPWSTR Buffer;
-    DWORD cchBuffer;
+    SIZE_T cchBuffer;
 
     EmptyClipboard();
     cchBuffer = wcslen(lpszText) + 1;
@@ -119,6 +119,25 @@ ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT 
     {
         DestroyMenu(hMenu);
     }
+}
+
+HTREEITEM
+TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, PVOID Context, BOOL Children, HTREEITEM hRoot)
+{
+    if (!hRoot)
+        hRoot = TreeView_GetRoot(hTree);
+    for (HTREEITEM hItem = hRoot; hItem; hItem = TreeView_GetNextSibling(hTree, hItem))
+    {
+        if (!Callback(hTree, hItem, Context))
+            return hItem;
+        if (Children && (hRoot = TreeView_GetChild(hTree, hItem)) != NULL)
+        {
+            hRoot = TreeView_Walk(hTree, Callback, Context, Children, hRoot);
+            if (hRoot)
+                return hRoot;
+        }
+    }
+    return NULL;
 }
 
 extern BOOL IsZipFile(PCWSTR Path);
@@ -538,6 +557,19 @@ ExpandEnvStrings(CStringW &Str)
         }
     }
     return false;
+}
+
+BOOL
+LoadString(HINSTANCE hInst, UINT ResId, WORD LangId, LPWSTR Buf, SIZE_T cch)
+{
+    const ATLSTRINGRESOURCEIMAGE *pSRI = AtlGetStringResourceImage(hInst, ResId, LangId);
+    BOOL ret = pSRI && cch > pSRI->nLength;
+    if (ret)
+    {
+        StrCpyNW(Buf, pSRI->achString, pSRI->nLength + 1);
+        Buf[pSRI->nLength] = UNICODE_NULL;
+    }
+    return ret;
 }
 
 BOOL
