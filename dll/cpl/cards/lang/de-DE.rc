@@ -1,0 +1,19 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+STRINGTABLE
+BEGIN
+    IDS_NAME "Spielkarten"
+    IDS_DESCRIPTION "Kartenstil für alle Kartenspiele auswählen."
+    IDS_SAVE_ERROR "Die Karteneinstellungen konnten nicht gespeichert werden."
+END
+IDD_CARDS DIALOGEX 0, 0, 240, 130
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Spielkarten"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Kartenstil", -1, 7, 7, 226, 57
+    AUTORADIOBUTTON "&Standard", IDC_DEFAULT, 16, 22, 205, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Bayerisch", IDC_BAVARIAN, 16, 41, 205, 12
+    LTEXT "Gilt für alle Kartenspiele mit cards.dll im aktuellen Benutzerkonto. Starte geöffnete Kartenspiele neu, um den gewählten Stil zu verwenden.", -1, 7, 72, 226, 30
+    DEFPUSHBUTTON "OK", IDOK, 127, 109, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 183, 109, 50, 14
+END

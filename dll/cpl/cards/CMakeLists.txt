@@ -1,0 +1,6 @@
+spec2def(cardgames.cpl cards.spec)
+add_rc_deps(cards.rc ${REACTOS_SOURCE_DIR}/base/applications/games/solitaire/solitaire.ico)
+add_library(cardgames MODULE cards.c cards.rc ${CMAKE_CURRENT_BINARY_DIR}/cardgames.def)
+set_module_type(cardgames cpl UNICODE)
+add_importlibs(cardgames user32 advapi32 msvcrt kernel32)
+add_cd_file(TARGET cardgames DESTINATION reactos/system32 FOR all)

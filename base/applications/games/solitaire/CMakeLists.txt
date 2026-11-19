@@ -1,7 +1,12 @@
 
 list(APPEND SOURCE
     solcreate.cpp
+    solscores.cpp
+    solsave.cpp
+    solhint.cpp
+    solfinish.cpp
     solgame.cpp
+    solwin.cpp
     solundo.cpp
     solitaire.cpp
     solitaire.h)

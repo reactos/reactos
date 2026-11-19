@@ -11,23 +11,53 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "OpSIONE"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Letra", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Barazim &Nje", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Barazim &tRE", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Shfaq Kohen", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX "T&abela e Statusit", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "Letra", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "Barazim &Nje", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Barazim &tRE", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    GROUPBOX "Pikëzimi", -1, 150, 7, 143, 53
+    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "&Asnjë", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "&Shfaq Kohen", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "T&abela e Statusit", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "&Ruaj pikët", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "Hapa për zhbërje (0 = joaktiv):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Animacioni i fitores...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Animacioni i fitores"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Në dritare (klasik)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Në këtë monitor", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "Në të gjithë monitorët", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "Shpejtësia", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "Parazgjedhja: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Pamje paraprake (5 sekonda)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "OK", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -53,15 +83,53 @@ END
 
 /* Strings */
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Rezultatet më të mira"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Pikëzimi", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Lojëra me matje kohe", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Letra", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standard: lojëra të fituara. Vegas: raunde të përfunduara, të vlerësuara veçmas nga bilanci i përgjithshëm. Dhjetë rezultatet më të mira për kategori.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standard"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Barazim Nje"
+    IDS_HOF_THREE "Barazim tRE"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Pikët"
+    IDS_HOF_TIME "Koha"
+    IDS_HOF_DATE "Data"
+    IDS_HOF_RESULT "Rezultati"
+    IDS_HOF_WON "Fituar"
+    IDS_HOF_ENDED "Përfunduar"
+    IDS_HOF_SAVE_ERROR "Rezultati nuk mund të ruhej."
+END
+
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire nga J Brown\nCardLib version 1.0"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_ABOUT "Solitaire nga J Brown\nCardLib versioni 1.0"
     IDS_SOL_QUIT "Largohu Nga Loja?"
     IDS_SOL_WIN "Urime, keni fituar!"
     IDS_SOL_DEAL "Fillo Perseri?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_SCORE "Pikët: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_TIME "Koha: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "Nuk u gjet asnjë lëvizje e drejtpërdrejtë."
 END
 
 /* Menus */
@@ -72,16 +140,25 @@ BEGIN
     BEGIN
         MENUITEM "&Ndaj Letrat\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Zhbëj\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "Këshillë\tF3", IDM_GAME_HINT
         MENUITEM "Pa&ko...", IDM_GAME_DECK
         MENUITEM "&Opsione...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Rezultatet më të mira...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Dil", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "Mblidh letrat", IDM_GAME_FINISH, GRAYED
     POPUP "&Ndihmë"
     BEGIN
-        MENUITEM "&Contents\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&About", IDM_HELP_ABOUT
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Përmbajtja\tF1", IDM_HELP_CONTENTS
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Rreth", IDM_HELP_ABOUT
     END
 END
 
@@ -91,4 +168,25 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
+END
+
+// TRANSLATORS: Please review the player-name dialog and strings.
+IDD_SCORENAME DIALOGEX 0, 0, 350, 104
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Rezultatet më të mira"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_HOF_PLACEMENT, 10, 10, 330, 14
+    LTEXT "Emri:", -1, 10, 33, 60, 12
+    EDITTEXT IDC_HOF_NAME, 75, 30, 265, 14, ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "Ruaj dhe ndaj përsëri", IDOK, 10, 65, 160, 28
+    PUSHBUTTON "Ruaj dhe dil", IDCANCEL, 180, 65, 160, 28
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HOF_NAME "Emri"
+    IDS_HOF_PLACEMENT "#%lu — %ld Pikët"
 END

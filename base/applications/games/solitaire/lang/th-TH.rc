@@ -10,27 +10,65 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Options"
+// TRANSLATORS: Machine translation of previously English text; please review.
+CAPTION "ตัวเลือก"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Cards", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "ตกลง", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "ยกเลิก", IDCANCEL, 101, 97, 50, 14
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    GROUPBOX "ไพ่", -1, 7, 7, 135, 40
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "จั่วหนึ่งใบ(&O)", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "จั่วสามใบ(&T)", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    GROUPBOX "การนับคะแนน", -1, 150, 7, 143, 53
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "มาตรฐาน(&S)", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "ไม่มี(&N)", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "แสดงเวลา(&S)", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "แถบสถานะ(&T)", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "เก็บคะแนนไว้(&K)", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "จำนวนครั้งที่ย้อนกลับได้ (0 = ปิด):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "ภาพเคลื่อนไหวเมื่อชนะ...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "ตกลง", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "ยกเลิก", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "ภาพเคลื่อนไหวเมื่อชนะ"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "ในหน้าต่าง (แบบคลาสสิก)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "บนจอภาพนี้", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "บนจอภาพทั้งหมด", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "ความเร็ว", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "ค่าเริ่มต้น: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "แสดงตัวอย่าง (5 วินาที)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "ตกลง", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "ยกเลิก", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Select Card Back"
+// TRANSLATORS: Machine translation of previously English text; please review.
+CAPTION "เลือกหลังไพ่"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -47,20 +85,62 @@ BEGIN
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
     DEFPUSHBUTTON "OK", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 176, 165, 54, 14
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    PUSHBUTTON "ยกเลิก", IDCANCEL, 176, 165, 54, 14
 END
 
 /* Strings */
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "คะแนนสูงสุด"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "การนับคะแนน", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "เกมที่จับเวลา", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "ไพ่", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "มาตรฐาน: เกมที่ชนะ Vegas: รอบที่จบแล้ว คิดคะแนนแยกจากยอดสะสม แสดงสิบอันดับแรกในแต่ละประเภท", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "ตกลง", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "มาตรฐาน"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "จั่วหนึ่งใบ"
+    IDS_HOF_THREE "จั่วสามใบ"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "คะแนน"
+    IDS_HOF_TIME "เวลา"
+    IDS_HOF_DATE "วันที่"
+    IDS_HOF_RESULT "ผลลัพธ์"
+    IDS_HOF_WON "ชนะ"
+    IDS_HOF_ENDED "จบแล้ว"
+    IDS_HOF_SAVE_ERROR "ไม่สามารถบันทึกคะแนนได้"
+END
+
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire by J Brown\nCardLib version 1.0"
-    IDS_SOL_QUIT "Quit the current game?"
-    IDS_SOL_WIN "Congratulations, you win!"
-    IDS_SOL_DEAL "Deal again?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_ABOUT "โซลิแทร์ โดย J Brown\nCardLib รุ่น 1.0"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_QUIT "ออกจากเกมปัจจุบันหรือไม่?"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_WIN "ยินดีด้วย คุณชนะแล้ว!"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_DEAL "แจกไพ่อีกครั้งหรือไม่?"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_SCORE "คะแนน: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_TIME "เวลา: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "ไม่พบการย้ายไพ่โดยตรง"
 END
 
 /* Menus */
@@ -71,12 +151,19 @@ BEGIN
     BEGIN
         MENUITEM "แ&จกไพ่\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "เลิกทำ(&U)\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "คำใบ้\tF3", IDM_GAME_HINT
         MENUITEM "แ&ต่งไพ่...", IDM_GAME_DECK
         MENUITEM "&ตัวเลือก...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "คะแนนสูงสุด...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&ออก", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "เก็บไพ่", IDM_GAME_FINISH, GRAYED
     POPUP "&ช่วยเหลือ"
     BEGIN
         MENUITEM "เ&นื้อหา\tF1", IDM_HELP_CONTENTS
@@ -90,4 +177,25 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
+END
+
+// TRANSLATORS: Please review the player-name dialog and strings.
+IDD_SCORENAME DIALOGEX 0, 0, 350, 104
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "คะแนนสูงสุด"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_HOF_PLACEMENT, 10, 10, 330, 14
+    LTEXT "ชื่อ:", -1, 10, 33, 60, 12
+    EDITTEXT IDC_HOF_NAME, 75, 30, 265, 14, ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "บันทึกและแจกไพ่ใหม่", IDOK, 10, 65, 160, 28
+    PUSHBUTTON "บันทึกและออก", IDCANCEL, 180, 65, 160, 28
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HOF_NAME "ชื่อ"
+    IDS_HOF_PLACEMENT "#%lu — %ld คะแนน"
 END
