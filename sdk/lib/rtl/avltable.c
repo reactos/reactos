@@ -283,19 +283,19 @@ RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
 PVOID
 NTAPI
 RtlGetElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
-                             IN ULONG I)
+                             IN ULONG Index)
 {
     ULONG ElementCount = Table->NumberGenericTableElements;
-    ULONG NextI = I + 1;
+    ULONG NextIndex = Index + 1;
     PRTL_BALANCED_LINKS Node;
     ULONG CurrentIndex;
 
     /* Out of range or empty table */
-    if (I == MAXULONG || NextI > ElementCount)
+    if (Index == MAXULONG || NextIndex > ElementCount)
         return NULL;
 
     /* Fast path means it's already sitting on the requested element */
-    if (Table->OrderedPointer && Table->WhichOrderedElement == NextI)
+    if (Table->OrderedPointer && Table->WhichOrderedElement == NextIndex)
     {
         return &((PTABLE_ENTRY_HEADER)Table->OrderedPointer)->UserData;
     }
@@ -303,7 +303,7 @@ RtlGetElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
     /* Decide where to start the walk */
     if (Table->OrderedPointer &&
         Table->WhichOrderedElement &&
-        Table->WhichOrderedElement < NextI)
+        Table->WhichOrderedElement < NextIndex)
     {
         /* Continue forward from the cached node */
         Node = Table->OrderedPointer;
@@ -323,7 +323,7 @@ RtlGetElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
     }
 
     /* Walk successors until we reach the desired index */
-    while (CurrentIndex < NextI)
+    while (CurrentIndex < NextIndex)
     {
         Node = RtlRealSuccessorAvl(Node);
         if (!Node)
@@ -334,7 +334,7 @@ RtlGetElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
 
     /* Update cache */
     Table->OrderedPointer = Node;
-    Table->WhichOrderedElement = NextI;
+    Table->WhichOrderedElement = NextIndex;
 
     return &((PTABLE_ENTRY_HEADER)Node)->UserData;
 }
