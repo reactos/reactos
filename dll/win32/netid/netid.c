@@ -360,6 +360,21 @@ IsValidComputerName(
 
 static
 VOID
+FormatFullComputerName(
+    LPWSTR pszFullComputerName,
+    LPCWSTR pszHostName,
+    LPCWSTR pszDomainName)
+{
+    /* Windows shows the bare host name when the primary DNS suffix is empty,
+       the way GetComputerNameEx(ComputerNameDnsFullyQualified) returns it */
+    if (pszDomainName[0] == UNICODE_NULL)
+        wsprintf(pszFullComputerName, L"%s", pszHostName);
+    else
+        wsprintf(pszFullComputerName, L"%s.%s", pszHostName, pszDomainName);
+}
+
+static
+VOID
 SetFullComputerName(
     HWND hDlg,
     UINT uId,
@@ -367,7 +382,7 @@ SetFullComputerName(
 {
     WCHAR szFullComputerName[512];
 
-    wsprintf(szFullComputerName, L"%s.%s", pNetIdData->szHostName, pNetIdData->szDomainName);
+    FormatFullComputerName(szFullComputerName, pNetIdData->szHostName, pNetIdData->szDomainName);
     SetDlgItemText(hDlg, uId, szFullComputerName);
 }
 
@@ -383,7 +398,7 @@ UpdateFullComputerName(
 
     GetWindowText(GetDlgItem(hDlg, 1002), szHostName, ARRAYSIZE(szHostName));
 
-    wsprintf(szFullComputerName, L"%s.%s", szHostName, pNetIdData->szDomainName);
+    FormatFullComputerName(szFullComputerName, szHostName, pNetIdData->szDomainName);
     SetDlgItemText(hDlg, uId, szFullComputerName);
 }
 
