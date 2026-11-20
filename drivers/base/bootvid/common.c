@@ -316,6 +316,28 @@ VidBufferToScreenBlt(
     BitBlt(Left, Top, Width, Height, Buffer, 4, Stride);
 }
 
+//#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN8)
+VOID
+NTAPI
+VidBitBltEx(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_reads_bytes_(Height * ((Width + 1) / 2)) PUCHAR Buffer)
+{
+    /*
+     * Invoke the helper function, expecting a 4bpp format buffer.
+     * Contrary to VidBufferToScreenBlt(), the buffer Stride (in bytes)
+     * is derived from the Width parameter (in pixels).
+     *
+     * Note that Windows 8+ could have just used VidBufferToScreenBlt() with a
+     * suitable Stride parameter, instead of introducing a brand-new export...
+     */
+    BitBlt(Left, Top, Width, Height, Buffer, 4, ((Width + 1) / 2));
+}
+//#endif
+
 VOID
 NTAPI
 VidBitBlt(
