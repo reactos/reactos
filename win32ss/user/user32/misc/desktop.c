@@ -168,6 +168,12 @@ GetSystemMetrics(int nIndex)
    return Ret;
 }
 
+int WINAPI GetSystemMetricsForDpi(_In_ int nIndex, _In_ UINT dpi)
+{
+    /* TODO: DPI support */
+    return GetSystemMetrics(nIndex);
+}
+
 /*
  * @unimplemented
  */
