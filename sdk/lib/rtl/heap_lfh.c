@@ -368,11 +368,19 @@ RtlpLFHSize(
     PLFH_HEAP Lfh = (PLFH_HEAP)Heap->FrontEndHeap;
     PHEAP_ENTRY HeapEntry = (PHEAP_ENTRY)BaseAddress - 1;
     ULONG BucketIndex = HeapEntry->PreviousSize;
+    SIZE_T Usable;
+    UCHAR Padding;
 
     if (BucketIndex >= LFH_BUCKET_COUNT)
         return (SIZE_T)-1;
 
-    return Lfh->Buckets[BucketIndex].BlockSize - sizeof(HEAP_ENTRY);
+    Usable = Lfh->Buckets[BucketIndex].BlockSize - sizeof(HEAP_ENTRY);
+    Padding = HeapEntry->UnusedBytes & 0x7F;
+
+    if (Padding > Usable)
+        return (SIZE_T)-1;
+
+    return Usable - Padding;
 }
 
 PVOID
@@ -447,6 +455,8 @@ RtlpLFHAllocate(
     PLFH_FREE_ENTRY FreeEntry;
     PHEAP_ENTRY HeapEntry;
     SIZE_T AllocationSize;
+    SIZE_T Usable;
+    UCHAR Padding;
     ULONG BucketIndex;
     BOOLEAN HeapLocked = FALSE;
 
@@ -499,13 +509,20 @@ RtlpLFHAllocate(
     if (HeapLocked)
         RtlLeaveHeapLock(Heap->LockVariable);
 
+    Usable = SubSegment->BlockSize - sizeof(HEAP_ENTRY);
+    if (Size > Usable)
+        Size = Usable; /* should never happen, but stay safe */
+    Padding = (UCHAR)(Usable - Size);
+
     HeapEntry = (PHEAP_ENTRY)FreeEntry;
     HeapEntry->Size = (USHORT)(SubSegment->BlockSize >> HEAP_ENTRY_SHIFT);
     HeapEntry->Flags = HEAP_ENTRY_BUSY;
     HeapEntry->SmallTagIndex = (UCHAR)(LOBYTE(HeapEntry->Size) ^ HIBYTE(HeapEntry->Size) ^ HeapEntry->Flags);
     HeapEntry->PreviousSize = (USHORT)BucketIndex;
     HeapEntry->SegmentOffset = 0;
-    HeapEntry->UnusedBytes = HEAP_ENTRY_LFH_FLAG;
+
+    /* high bit = LFH ownership, low 7 bits = padding so SizeHeap can recover the original request */
+    HeapEntry->UnusedBytes = HEAP_ENTRY_LFH_FLAG | (Padding & 0x7F);
 
     if (Flags & HEAP_ZERO_MEMORY)
         RtlZeroMemory(HeapEntry + 1, Size);
