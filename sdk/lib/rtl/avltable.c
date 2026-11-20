@@ -80,6 +80,10 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
 
         /* Copy user buffer */
         RtlCopyMemory(UserData, Buffer, BufferSize);
+
+        /* Invalidate ordered element cache */
+        Table->WhichOrderedElement = 0;
+        Table->OrderedPointer = NULL;
     }
     else
     {
