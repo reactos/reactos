@@ -587,7 +587,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00020409 = "US International"
 00000843 = "Uzbek (Cyrillic)"
 0000085d = "Inuktitut - Latin"
-000042A = "Vietnamese"
+0000042A = "Vietnamese"
 
 [Files.KeyboardLayout]
 00000401 = kbda1.dll
