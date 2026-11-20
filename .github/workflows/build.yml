@@ -214,9 +214,12 @@ jobs:
     - name: Build dll:shellext
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target dll/shellext/all -- -k0
-    - name: Build drivers:base
+    - name: Build drivers:base (and bootvid) (arm)
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target drivers/base/all -- -k0
+    - name: Build drivers:base:bootvid (arm64)
+      if: ${{ matrix.arch == 'arm64' }}
+      run: cmake --build build --target drivers/base/bootvid/all -- -k0
     - name: Build rosapps
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target modules/rosapps/all
