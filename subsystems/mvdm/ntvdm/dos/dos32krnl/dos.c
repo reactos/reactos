@@ -476,7 +476,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             CHAR RootPath[] = "?:\\";
             DWORD SectorsPerCluster;
             DWORD BytesPerSector;
-            DWORD NumberOfFreeClusters;
             DWORD TotalNumberOfClusters;
             BYTE Drive;
             UINT DriveType;
@@ -497,7 +496,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             if (!GetDiskFreeSpaceA(RootPath,
                                   &SectorsPerCluster,
                                   &BytesPerSector,
-                                  &NumberOfFreeClusters,
+                                  NULL,
                                   &TotalNumberOfClusters))
             {
                 setAL(0xFF);
