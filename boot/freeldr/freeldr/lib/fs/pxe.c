@@ -40,6 +40,15 @@ FindPxeStructure(VOID)
     PPXE Ptr;
     UCHAR Checksum;
     UCHAR i;
+    ULONG FreeBaseMemory;
+    REGS Regs;
+
+    /* A resident PXE stack keeps its base memory hidden from the BIOS
+     * (INT 12h). An unloaded one (e.g. iPXE after a failed network boot)
+     * gives it back, but may leave a valid-looking !PXE structure there. */
+    Regs.w.ax = 0;
+    Int386(0x12, &Regs, &Regs);
+    FreeBaseMemory = (ULONG)Regs.w.ax * 1024;
 
     /* Find the '!PXE' structure */
     Ptr = (PPXE)0xA0000;
@@ -61,6 +70,13 @@ FindPxeStructure(VOID)
             Checksum += *((PUCHAR)Ptr + i);
         if (Checksum != 0)
             continue;
+
+        /* Ignore a stale structure lying in free base memory */
+        if ((ULONG_PTR)Ptr < FreeBaseMemory)
+        {
+            WARN("Ignoring stale !PXE structure at %p\n", Ptr);
+            continue;
+        }
 
         TRACE("!PXE structure found at %p\n", Ptr);
         return Ptr;
