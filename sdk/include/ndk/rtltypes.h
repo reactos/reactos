@@ -2056,6 +2056,75 @@ typedef struct _UNWIND_HISTORY_TABLE
     UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
 } UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
 
+#elif defined(_M_ARM64)
+
+typedef struct _KNONVOLATILE_CONTEXT_POINTERS
+{
+    PULONG64 X19;
+    PULONG64 X20;
+    PULONG64 X21;
+    PULONG64 X22;
+    PULONG64 X23;
+    PULONG64 X24;
+    PULONG64 X25;
+    PULONG64 X26;
+    PULONG64 X27;
+    PULONG64 X28;
+    PULONG64 Fp;
+    PULONG64 Lr;
+    PULONG64 D8;
+    PULONG64 D9;
+    PULONG64 D10;
+    PULONG64 D11;
+    PULONG64 D12;
+    PULONG64 D13;
+    PULONG64 D14;
+    PULONG64 D15;
+} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
+
+#define UNW_FLAG_NHANDLER 0x0
+#define UNW_FLAG_EHANDLER 0x1
+#define UNW_FLAG_UHANDLER 0x2
+
+typedef struct _RUNTIME_FUNCTION
+{
+    ULONG BeginAddress;
+    union
+    {
+        ULONG UnwindData;
+        struct
+        {
+            ULONG Flag : 2;
+            ULONG FunctionLength : 11;
+            ULONG RegF : 3;
+            ULONG RegI : 4;
+            ULONG H : 1;
+            ULONG CR : 2;
+            ULONG FrameSize : 9;
+        };
+    };
+} RUNTIME_FUNCTION, *PRUNTIME_FUNCTION;
+
+#define UNWIND_HISTORY_TABLE_SIZE 12
+
+typedef struct _UNWIND_HISTORY_TABLE_ENTRY
+{
+    ULONG64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+} UNWIND_HISTORY_TABLE_ENTRY, *PUNWIND_HISTORY_TABLE_ENTRY;
+
+typedef struct _UNWIND_HISTORY_TABLE
+{
+    ULONG Count;
+    UCHAR LocalHint;
+    UCHAR GlobalHint;
+    UCHAR Search;
+    UCHAR Once;
+    ULONG64 LowAddress;
+    ULONG64 HighAddress;
+    UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
+} UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
+
 #endif /* _M_AMD64 */
 
 #endif /* !NTOS_MODE_USER */

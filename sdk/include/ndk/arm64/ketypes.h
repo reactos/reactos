@@ -87,6 +87,14 @@ typedef union _CPU_INFO
     ULONG dummy;
 } CPU_INFO, *PCPU_INFO;
 
+typedef struct _KARM64_VFP_STATE
+{
+    struct _KARM64_VFP_STATE* Link;
+    ULONG Fpcr;
+    ULONG Fpsr;
+    ARM64_NT_NEON128 V[32];
+} KARM64_VFP_STATE, *PKARM64_VFP_STATE;
+
 typedef struct _KTRAP_FRAME
 {
     UCHAR ExceptionActive;
@@ -94,23 +102,16 @@ typedef struct _KTRAP_FRAME
     UCHAR DebugRegistersValid;
     union
     {
-        struct
-        {
-            CHAR PreviousMode;
-            UCHAR PreviousIrql;
-        };
+        CHAR PreviousMode;
+        UCHAR PreviousIrql;
     };
     ULONG Reserved;
     union
     {
-        struct
-        {
-            ULONG64 FaultAddress;
-            ULONG64 TrapFrame;
-        };
+        ULONG64 FaultAddress;
+        ULONG64 TrapFrame;
     };
-    //struct PKARM64_VFP_STATE VfpState;
-    ULONG VfpState;
+    PKARM64_VFP_STATE VfpState;
     ULONG Bcr[8];
     ULONG64 Bvr[8];
     ULONG Wcr[2];
