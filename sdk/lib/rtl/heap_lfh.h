@@ -12,6 +12,7 @@
 #define LFH_MAX_BLOCK_SIZE 0x1000
 #define LFH_MIN_BLOCKS_PER_SUBSEGMENT 16
 #define LFH_ZONE_SIZE 0x10000 // bump allocated among multiple subsegments
+#define LFH_ACTIVATION_THRESHOLD 16
 #define HEAP_ENTRY_LFH_FLAG 0x80
 
 typedef struct _LFH_FREE_ENTRY
@@ -38,6 +39,8 @@ typedef struct _HEAP_BUCKET
     SIZE_T BlockSize; // rounded allocation size for this bucket
     LIST_ENTRY SubSegmentList;
     PHEAP_SUBSEGMENT ActiveSubSegment;
+    ULONG AllocCount;
+    BOOLEAN Activated;
 } HEAP_BUCKET, *PHEAP_BUCKET;
 
 typedef struct _LFH_BLOCK_ZONE

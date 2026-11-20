@@ -2090,7 +2090,11 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         return RtlDebugAllocateHeap(Heap, Flags, Size);
 
     if ((Heap->FrontEndHeapType == 2) && RtlpLFHSizeFits(Size))
-        return RtlpLFHAllocate(Heap, Flags, Size);
+    {
+        PVOID LfhBlock = RtlpLFHAllocate(Heap, Flags, Size);
+        if (LfhBlock)
+            return LfhBlock;
+    }
 
     /* Check for the maximum size */
     if (Size >= 0x80000000)

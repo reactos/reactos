@@ -52,6 +52,8 @@ RtlpBuildLFHBucketTable(
         Lfh->Buckets[Index].BlockSize = ALIGN_UP_BY(UserSize + sizeof(HEAP_ENTRY), HEAP_ENTRY_SIZE);
         InitializeListHead(&Lfh->Buckets[Index].SubSegmentList);
         Lfh->Buckets[Index].ActiveSubSegment = NULL;
+        Lfh->Buckets[Index].AllocCount = 0;
+        Lfh->Buckets[Index].Activated = FALSE;
     }
 
     /* Largest bucket must stay under the frontend's size maximum */
@@ -461,13 +463,28 @@ RtlpLFHAllocate(
         HeapLocked = TRUE;
     }
 
+    /* Until the threshold is reached, the frontend declines the allocation
+       so the caller falls through to the backend */
+    Bucket->AllocCount++;
+    if (!Bucket->Activated)
+    {
+        if (Bucket->AllocCount < LFH_ACTIVATION_THRESHOLD)
+        {
+            if (HeapLocked)
+                RtlLeaveHeapLock(Heap->LockVariable);
+            return NULL;
+        }
+        Bucket->Activated = TRUE;
+    }
+
     SubSegment = Bucket->ActiveSubSegment;
     if (!SubSegment || !SubSegment->FreeBlockCount)
     {
         SubSegment = RtlpAllocateLFHSubSegment(Heap, Bucket);
         if (!SubSegment)
         {
-            if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
+            if (HeapLocked)
+                RtlLeaveHeapLock(Heap->LockVariable);
             RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
             return NULL;
         }
@@ -479,7 +496,8 @@ RtlpLFHAllocate(
     SubSegment->FreeList = FreeEntry->Next;
     SubSegment->FreeBlockCount--;
 
-    if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
+    if (HeapLocked)
+        RtlLeaveHeapLock(Heap->LockVariable);
 
     HeapEntry = (PHEAP_ENTRY)FreeEntry;
     HeapEntry->Size = (USHORT)(SubSegment->BlockSize >> HEAP_ENTRY_SHIFT);
