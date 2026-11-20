@@ -2,7 +2,6 @@
 #define _KMIXER_PCH_
 
 #include <portcls.h>
-#include <float_cast.h>
 
 typedef struct
 {
