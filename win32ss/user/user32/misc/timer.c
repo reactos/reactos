@@ -27,6 +27,8 @@
 
 #include <user32.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
 /*
  * @implemented
  */
@@ -35,4 +37,17 @@ WINAPI
 KillSystemTimer( HWND hWnd, UINT_PTR IDEvent)
 {
   return NtUserxKillSystemTimer(hWnd, IDEvent);
+}
+
+UINT_PTR
+WINAPI
+SetCoalescableTimer(
+    _In_opt_ HWND hWnd,
+    _In_ UINT_PTR nIDEvent,
+    _In_ UINT uElapse,
+    _In_opt_  TIMERPROC lpTimerFunc,
+    _In_ ULONG uToleranceDelay)
+{
+    UNIMPLEMENTED;
+    return SetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc);
 }

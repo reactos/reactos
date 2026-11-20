@@ -287,6 +287,23 @@ LONG WINAPI SetDisplayConfig(UINT32 path_info_count, DISPLAYCONFIG_PATH_INFO *pa
 }
 
 /**********************************************************************
+ *              GetAutoRotationState [USER32.@]
+ */
+BOOL WINAPI GetAutoRotationState( AR_STATE *state )
+{
+    TRACE("(%p)\n", state);
+
+    if (!state)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    *state = AR_NOSENSOR;
+    return TRUE;
+}
+
+/**********************************************************************
  *              SetDisplayAutoRotationPreferences (USER32.@)
  */
 BOOL WINAPI SetDisplayAutoRotationPreferences( ORIENTATION_PREFERENCE orientation )
