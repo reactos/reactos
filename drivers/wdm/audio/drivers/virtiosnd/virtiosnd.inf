@@ -1,0 +1,49 @@
+[Version]
+Signature="$Windows NT$"
+Class=MEDIA
+ClassGuid={4D36E96C-E325-11CE-BFC1-08002BE10318}
+Provider=%Provider%
+DriverVer=11/17/2026,0.0.13.0
+
+[SourceDisksNames]
+1=%DiskDescription%
+
+[SourceDisksFiles]
+virtiosnd.sys=1
+virtiosnd.inf=1
+
+[Manufacturer]
+%Provider%=DeviceModels,NTx86,NTamd64
+
+[DeviceModels.NTx86]
+%DeviceDescription%=VirtioSnd_Install,PCI\VEN_1AF4&DEV_1059
+
+[DeviceModels.NTamd64]
+%DeviceDescription%=VirtioSnd_Install,PCI\VEN_1AF4&DEV_1059
+
+[DestinationDirs]
+DriverFiles=12
+
+[VirtioSnd_Install.NT]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration,WDMAUDIO.Registration
+CopyFiles=DriverFiles
+
+[DriverFiles]
+virtiosnd.sys
+
+[VirtioSnd_Install.NT.Services]
+AddService=virtiosnd,0x00000002,VirtioSnd_Service
+
+[VirtioSnd_Service]
+DisplayName=%ServiceDescription%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\virtiosnd.sys
+
+[Strings]
+Provider="VirtIO Sound Driver Project"
+DiskDescription="VirtIO Sound Driver Disk"
+DeviceDescription="VirtIO Sound Device"
+ServiceDescription="VirtIO Sound Driver for ReactOS"
