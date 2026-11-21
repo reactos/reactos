@@ -943,10 +943,10 @@ IntLoadRegistryParameters(VOID)
 ULONG
 NTAPI
 VideoPortInitialize(
-    IN PVOID Context1,
-    IN PVOID Context2,
-    IN PVIDEO_HW_INITIALIZATION_DATA HwInitializationData,
-    IN PVOID HwContext)
+    _In_ PVOID Context1,
+    _In_ PVOID Context2,
+    _In_ PVIDEO_HW_INITIALIZATION_DATA HwInitializationData,
+    _In_opt_ PVOID HwContext)
 {
     PDRIVER_OBJECT DriverObject = Context1;
     PUNICODE_STRING RegistryPath = Context2;
@@ -988,31 +988,31 @@ VideoPortInitialize(
         return STATUS_INVALID_PARAMETER;
     }
 
-    switch (HwInitializationData->HwInitDataSize)
+    /* The size tells the structure revision, missing members are zeroed below */
+    if (HwInitializationData->HwInitDataSize < SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
     {
-        /*
-         * NT4 drivers are special case, because we must use legacy method
-         * of detection instead of the Plug & Play one.
-         */
-        case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
-            INFO_(VIDEOPRT, "We were loaded by a Windows NT miniport driver.\n");
-            break;
+        ERR_(VIDEOPRT, "Invalid HwInitializationData size %lu (minimum %lu, maximum %lu)\n",
+             HwInitializationData->HwInitDataSize,
+             SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA,
+             sizeof(VIDEO_HW_INITIALIZATION_DATA));
+        return STATUS_UNSUCCESSFUL;
+    }
 
-        case SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA:
-            INFO_(VIDEOPRT, "We were loaded by a Windows 2000 miniport driver.\n");
-            break;
-
-        case sizeof(VIDEO_HW_INITIALIZATION_DATA):
-            INFO_(VIDEOPRT, "We were loaded by a Windows XP or later miniport driver.\n");
-            break;
-
-        default:
-            ERR_(VIDEOPRT, "Invalid HwInitializationData size %lu (expected %lu, %lu or %lu)\n",
-                 HwInitializationData->HwInitDataSize,
-                 SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA,
-                 SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA,
-                 sizeof(VIDEO_HW_INITIALIZATION_DATA));
-            return STATUS_UNSUCCESSFUL;
+    /*
+     * NT4 drivers are special case, because we must use legacy method
+     * of detection instead of the Plug & Play one.
+     */
+    if (HwInitializationData->HwInitDataSize == SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
+    {
+        INFO_(VIDEOPRT, "We were loaded by a Windows NT 4 miniport driver.\n");
+    }
+    else if (HwInitializationData->HwInitDataSize < sizeof(VIDEO_HW_INITIALIZATION_DATA))
+    {
+        INFO_(VIDEOPRT, "We were loaded by a Windows 2000 or XP miniport driver.\n");
+    }
+    else
+    {
+        INFO_(VIDEOPRT, "We were loaded by a Windows XP or later miniport driver.\n");
     }
 
     /* Set dispatching routines */
