@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS VirtIO Sound Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     main entry point
- * COPYRIGHT:   Copyright 2026 Ralf Lang (ralf.lang@ralf-lang.de)
+ * PURPOSE:     Main entry point
+ * COPYRIGHT:   Copyright 2026 Ralf Lang <ralf.lang@ralf-lang.de>
  */
 
 /* INITGUID: Instantiate the storage for the GUIDs declared by portcls.h */

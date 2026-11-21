@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS VirtIO Sound Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     VirtIO sound protocol definitions
- * COPYRIGHT:   Copyright 2026 Ralf Lang (ralf.lang@ralf-lang.de)
+ * COPYRIGHT:   Copyright 2026 Ralf Lang <ralf.lang@ralf-lang.de>
  */
 
 #ifndef _VIRTIO_SND_PROTOCOL_H_
