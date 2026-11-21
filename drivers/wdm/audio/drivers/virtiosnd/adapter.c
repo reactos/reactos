@@ -2,10 +2,7 @@
 
 NTSTATUS
 NTAPI
-VirtioSndStartDevice(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp,
-    _In_ PRESOURCELIST ResourceList)
+VirtioSndStartDevice(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PRESOURCELIST ResourceList)
 {
     NTSTATUS Status;
 
@@ -18,15 +15,9 @@ VirtioSndStartDevice(
     }
 
     ULONG ResourceCount = ResourceList->lpVtbl->NumberOfEntries(ResourceList);
-    ULONG MemoryCount = ResourceList->lpVtbl->NumberOfEntriesOfType(
-        ResourceList,
-        CmResourceTypeMemory);
-    ULONG PortCount = ResourceList->lpVtbl->NumberOfEntriesOfType(
-        ResourceList,
-        CmResourceTypePort);
-    ULONG InterruptCount = ResourceList->lpVtbl->NumberOfEntriesOfType(
-        ResourceList,
-        CmResourceTypeInterrupt);
+    ULONG MemoryCount = ResourceList->lpVtbl->NumberOfEntriesOfType(ResourceList, CmResourceTypeMemory);
+    ULONG PortCount = ResourceList->lpVtbl->NumberOfEntriesOfType(ResourceList, CmResourceTypePort);
+    ULONG InterruptCount = ResourceList->lpVtbl->NumberOfEntriesOfType(ResourceList, CmResourceTypeInterrupt);
 
     if (ResourceCount == 0)
     {
@@ -35,26 +26,21 @@ VirtioSndStartDevice(
     }
 
     DbgPrint(
-        "virtiosnd: VirtIO Sound PCI device detected (FDO %p, resources %lu: memory %lu, ports %lu, interrupts %lu)\n",
-        DeviceObject,
-        ResourceCount,
-        MemoryCount,
-        PortCount,
-        InterruptCount);
+        "virtiosnd: VirtIO Sound PCI device detected (FDO %p, resources %lu: memory %lu, "
+        "ports %lu, interrupts %lu)\n",
+        DeviceObject, ResourceCount, MemoryCount, PortCount, InterruptCount);
 
     Status = VirtioSndStartTransport(DeviceObject, ResourceList);
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("virtiosnd: StartDevice transport probe failed with status %08lx\n",
-            (ULONG)Status);
+        DbgPrint("virtiosnd: StartDevice transport probe failed with status %08lx\n", (ULONG)Status);
         return Status;
     }
 
     Status = VirtioSndInstallRenderSubdevice(DeviceObject, Irp, ResourceList);
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("virtiosnd: WaveCyclic render subdevice registration failed with status %08lx\n",
-            (ULONG)Status);
+        DbgPrint("virtiosnd: WaveCyclic render subdevice registration failed with status %08lx\n", (ULONG)Status);
         VirtioSndStopTransport(DeviceObject);
     }
 

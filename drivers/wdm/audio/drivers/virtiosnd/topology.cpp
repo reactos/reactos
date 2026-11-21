@@ -8,148 +8,68 @@ __cdecl
 operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag);
 
 extern "C" const GUID CLSID_PortTopology =
-{
-    0xb4c90a32, 0x5791, 0x11d0,
-    {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}
-};
+    {0xb4c90a32, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 
 extern "C" const GUID IID_IMiniportTopology =
-{
-    0xb4c90a31, 0x5791, 0x11d0,
-    {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}
-};
+    {0xb4c90a31, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 
 #define VIRTIO_SND_TOPOLOGY_POOL_TAG 'tSnV'
-#define VIRTIO_SND_VOLUME_ACCESS \
-    (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT)
-#define VIRTIO_SND_MUTE_ACCESS \
-    (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT)
+#define VIRTIO_SND_VOLUME_ACCESS (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT)
+#define VIRTIO_SND_MUTE_ACCESS (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT)
 #define VIRTIO_SND_VOLUME_MINIMUM (-9600)
 #define VIRTIO_SND_VOLUME_MAXIMUM 0
 #define VIRTIO_SND_VOLUME_STEP 100
 
-static
-NTSTATUS
-NTAPI
-VirtioSndVolumeProperty(
-    _In_ PPCPROPERTY_REQUEST PropertyRequest);
+static NTSTATUS NTAPI
+VirtioSndVolumeProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest);
 
-static
-NTSTATUS
-NTAPI
-VirtioSndMuteProperty(
-    _In_ PPCPROPERTY_REQUEST PropertyRequest);
+static NTSTATUS NTAPI
+VirtioSndMuteProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest);
 
-static PCPROPERTY_ITEM g_VirtioSndVolumeProperties[] =
-{
-    {
-        &KSPROPSETID_Audio,
-        KSPROPERTY_AUDIO_VOLUMELEVEL,
-        VIRTIO_SND_VOLUME_ACCESS,
-        VirtioSndVolumeProperty
-    }
-};
+static PCPROPERTY_ITEM g_VirtioSndVolumeProperties[] = {
+    {&KSPROPSETID_Audio, KSPROPERTY_AUDIO_VOLUMELEVEL, VIRTIO_SND_VOLUME_ACCESS, VirtioSndVolumeProperty}};
 
-static PCPROPERTY_ITEM g_VirtioSndMuteProperties[] =
-{
-    {
-        &KSPROPSETID_Audio,
-        KSPROPERTY_AUDIO_MUTE,
-        VIRTIO_SND_MUTE_ACCESS,
-        VirtioSndMuteProperty
-    }
-};
+static PCPROPERTY_ITEM g_VirtioSndMuteProperties[] = {
+    {&KSPROPSETID_Audio, KSPROPERTY_AUDIO_MUTE, VIRTIO_SND_MUTE_ACCESS, VirtioSndMuteProperty}};
 
-DEFINE_PCAUTOMATION_TABLE_PROP(
-    g_VirtioSndVolumeAutomation,
-    g_VirtioSndVolumeProperties);
-DEFINE_PCAUTOMATION_TABLE_PROP(
-    g_VirtioSndMuteAutomation,
-    g_VirtioSndMuteProperties);
+DEFINE_PCAUTOMATION_TABLE_PROP(g_VirtioSndVolumeAutomation, g_VirtioSndVolumeProperties);
+DEFINE_PCAUTOMATION_TABLE_PROP(g_VirtioSndMuteAutomation, g_VirtioSndMuteProperties);
 
-static KSDATARANGE g_VirtioSndAnalogRange =
-{
+static KSDATARANGE g_VirtioSndAnalogRange = {
     sizeof(KSDATARANGE),
     0,
     0,
     0,
     STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
     STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG),
-    STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)
-};
+    STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)};
 
-static PKSDATARANGE g_VirtioSndAnalogRanges[] =
-{
-    &g_VirtioSndAnalogRange
-};
+static PKSDATARANGE g_VirtioSndAnalogRanges[] = {&g_VirtioSndAnalogRange};
 
-static PCPIN_DESCRIPTOR g_VirtioSndTopologyPins[] =
-{
-    {
-        0,
-        0,
-        0,
-        NULL,
-        {
-            0,
-            NULL,
-            0,
-            NULL,
-            SIZEOF_ARRAY(g_VirtioSndAnalogRanges),
-            g_VirtioSndAnalogRanges,
-            KSPIN_DATAFLOW_IN,
-            KSPIN_COMMUNICATION_NONE,
-            (GUID*)&KSCATEGORY_AUDIO,
-            NULL,
-            0
-        }
-    },
-    {
-        0,
-        0,
-        0,
-        NULL,
-        {
-            0,
-            NULL,
-            0,
-            NULL,
-            SIZEOF_ARRAY(g_VirtioSndAnalogRanges),
-            g_VirtioSndAnalogRanges,
-            KSPIN_DATAFLOW_OUT,
-            KSPIN_COMMUNICATION_NONE,
-            (GUID*)&KSNODETYPE_SPEAKER,
-            (GUID*)&KSAUDFNAME_VOLUME_CONTROL,
-            0
-        }
-    }
-};
+static PCPIN_DESCRIPTOR g_VirtioSndTopologyPins[] = {
+    {0,
+     0,
+     0,
+     NULL,
+     {0, NULL, 0, NULL, SIZEOF_ARRAY(g_VirtioSndAnalogRanges), g_VirtioSndAnalogRanges, KSPIN_DATAFLOW_IN,
+      KSPIN_COMMUNICATION_NONE, (GUID *)&KSCATEGORY_AUDIO, NULL, 0}},
+    {0,
+     0,
+     0,
+     NULL,
+     {0, NULL, 0, NULL, SIZEOF_ARRAY(g_VirtioSndAnalogRanges), g_VirtioSndAnalogRanges, KSPIN_DATAFLOW_OUT,
+      KSPIN_COMMUNICATION_NONE, (GUID *)&KSNODETYPE_SPEAKER, (GUID *)&KSAUDFNAME_VOLUME_CONTROL, 0}}};
 
-static PCNODE_DESCRIPTOR g_VirtioSndTopologyNodes[] =
-{
-    {
-        0,
-        &g_VirtioSndVolumeAutomation,
-        &KSNODETYPE_VOLUME,
-        &KSAUDFNAME_MASTER_VOLUME
-    },
-    {
-        0,
-        &g_VirtioSndMuteAutomation,
-        &KSNODETYPE_MUTE,
-        &KSAUDFNAME_MASTER_MUTE
-    }
-};
+static PCNODE_DESCRIPTOR g_VirtioSndTopologyNodes[] = {
+    {0, &g_VirtioSndVolumeAutomation, &KSNODETYPE_VOLUME, &KSAUDFNAME_MASTER_VOLUME},
+    {0, &g_VirtioSndMuteAutomation, &KSNODETYPE_MUTE, &KSAUDFNAME_MASTER_MUTE}};
 
-static PCCONNECTION_DESCRIPTOR g_VirtioSndTopologyConnections[] =
-{
-    { PCFILTER_NODE, 0, 0, 1 },
-    { 0, 0, 1, 1 },
-    { 1, 0, PCFILTER_NODE, 1 }
-};
+static PCCONNECTION_DESCRIPTOR g_VirtioSndTopologyConnections[] = {
+    {PCFILTER_NODE, 0, 0, 1},
+    {0, 0, 1, 1},
+    {1, 0, PCFILTER_NODE, 1}};
 
-static PCFILTER_DESCRIPTOR g_VirtioSndTopologyFilter =
-{
+static PCFILTER_DESCRIPTOR g_VirtioSndTopologyFilter = {
     0,
     NULL,
     sizeof(PCPIN_DESCRIPTOR),
@@ -161,15 +81,10 @@ static PCFILTER_DESCRIPTOR g_VirtioSndTopologyFilter =
     SIZEOF_ARRAY(g_VirtioSndTopologyConnections),
     g_VirtioSndTopologyConnections,
     0,
-    NULL
-};
+    NULL};
 
-static
-NTSTATUS
-VirtioSndBasicSupport(
-    _In_ PPCPROPERTY_REQUEST PropertyRequest,
-    _In_ ULONG AccessFlags,
-    _In_ BOOLEAN HasSteppedRange)
+static NTSTATUS
+VirtioSndBasicSupport(_In_ PPCPROPERTY_REQUEST PropertyRequest, _In_ ULONG AccessFlags, _In_ BOOLEAN HasSteppedRange)
 {
     if (PropertyRequest->Value == NULL)
         return STATUS_BUFFER_TOO_SMALL;
@@ -186,11 +101,8 @@ VirtioSndBasicSupport(
 
     if (PropertyRequest->ValueSize >= sizeof(KSPROPERTY_DESCRIPTION))
     {
-        PKSPROPERTY_DESCRIPTION Description =
-            (PKSPROPERTY_DESCRIPTION)PropertyRequest->Value;
-        ULONG RequiredSize = sizeof(*Description) +
-            sizeof(KSPROPERTY_MEMBERSHEADER) +
-            sizeof(KSPROPERTY_STEPPING_LONG);
+        PKSPROPERTY_DESCRIPTION Description = (PKSPROPERTY_DESCRIPTION)PropertyRequest->Value;
+        ULONG RequiredSize = sizeof(*Description) + sizeof(KSPROPERTY_MEMBERSHEADER) + sizeof(KSPROPERTY_STEPPING_LONG);
 
         RtlZeroMemory(Description, sizeof(*Description));
         Description->AccessFlags = AccessFlags;
@@ -201,10 +113,8 @@ VirtioSndBasicSupport(
 
         if (PropertyRequest->ValueSize >= RequiredSize)
         {
-            PKSPROPERTY_MEMBERSHEADER Members =
-                (PKSPROPERTY_MEMBERSHEADER)(Description + 1);
-            PKSPROPERTY_STEPPING_LONG Range =
-                (PKSPROPERTY_STEPPING_LONG)(Members + 1);
+            PKSPROPERTY_MEMBERSHEADER Members = (PKSPROPERTY_MEMBERSHEADER)(Description + 1);
+            PKSPROPERTY_STEPPING_LONG Range = (PKSPROPERTY_STEPPING_LONG)(Members + 1);
 
             Members->MembersCount = 1;
             Members->MembersFlags = KSPROPERTY_MEMBER_STEPPEDRANGES;
@@ -232,15 +142,12 @@ VirtioSndBasicSupport(
     return STATUS_BUFFER_TOO_SMALL;
 }
 
-static
-BOOLEAN
-VirtioSndValidChannelInstance(
-    _In_ PPCPROPERTY_REQUEST PropertyRequest)
+static BOOLEAN
+VirtioSndValidChannelInstance(_In_ PPCPROPERTY_REQUEST PropertyRequest)
 {
     LONG Channel;
 
-    if (PropertyRequest->Instance == NULL ||
-        PropertyRequest->InstanceSize < sizeof(Channel))
+    if (PropertyRequest->Instance == NULL || PropertyRequest->InstanceSize < sizeof(Channel))
     {
         return FALSE;
     }
@@ -249,11 +156,8 @@ VirtioSndValidChannelInstance(
     return Channel >= -1 && Channel <= 1;
 }
 
-static
-NTSTATUS
-NTAPI
-VirtioSndVolumeProperty(
-    _In_ PPCPROPERTY_REQUEST PropertyRequest)
+static NTSTATUS NTAPI
+VirtioSndVolumeProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
 {
     PAGED_CODE();
 
@@ -262,14 +166,10 @@ VirtioSndVolumeProperty(
 
     if ((PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT) != 0)
     {
-        return VirtioSndBasicSupport(
-            PropertyRequest,
-            VIRTIO_SND_VOLUME_ACCESS,
-            TRUE);
+        return VirtioSndBasicSupport(PropertyRequest, VIRTIO_SND_VOLUME_ACCESS, TRUE);
     }
 
-    if (!VirtioSndValidChannelInstance(PropertyRequest) ||
-        PropertyRequest->Value == NULL ||
+    if (!VirtioSndValidChannelInstance(PropertyRequest) || PropertyRequest->Value == NULL ||
         PropertyRequest->ValueSize < sizeof(LONG))
     {
         return STATUS_INVALID_PARAMETER;
@@ -284,18 +184,14 @@ VirtioSndVolumeProperty(
 
     if ((PropertyRequest->Verb & KSPROPERTY_TYPE_SET) != 0)
     {
-        return VirtioSndSetMasterVolume(
-            *(PLONG)PropertyRequest->Value);
+        return VirtioSndSetMasterVolume(*(PLONG)PropertyRequest->Value);
     }
 
     return STATUS_INVALID_DEVICE_REQUEST;
 }
 
-static
-NTSTATUS
-NTAPI
-VirtioSndMuteProperty(
-    _In_ PPCPROPERTY_REQUEST PropertyRequest)
+static NTSTATUS NTAPI
+VirtioSndMuteProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
 {
     PAGED_CODE();
 
@@ -304,14 +200,10 @@ VirtioSndMuteProperty(
 
     if ((PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT) != 0)
     {
-        return VirtioSndBasicSupport(
-            PropertyRequest,
-            VIRTIO_SND_MUTE_ACCESS,
-            FALSE);
+        return VirtioSndBasicSupport(PropertyRequest, VIRTIO_SND_MUTE_ACCESS, FALSE);
     }
 
-    if (!VirtioSndValidChannelInstance(PropertyRequest) ||
-        PropertyRequest->Value == NULL ||
+    if (!VirtioSndValidChannelInstance(PropertyRequest) || PropertyRequest->Value == NULL ||
         PropertyRequest->ValueSize < sizeof(ULONG))
     {
         return STATUS_INVALID_PARAMETER;
@@ -339,9 +231,8 @@ VirtioSndMuteProperty(
 
 class VirtioSndTopologyMiniport : public IMiniportTopology, public CUnknown
 {
-public:
-    VirtioSndTopologyMiniport(PUNKNOWN OuterUnknown)
-        : CUnknown(OuterUnknown)
+  public:
+    VirtioSndTopologyMiniport(PUNKNOWN OuterUnknown) : CUnknown(OuterUnknown)
     {
     }
 
@@ -350,9 +241,7 @@ public:
 };
 
 STDMETHODIMP_(NTSTATUS)
-VirtioSndTopologyMiniport::NonDelegatingQueryInterface(
-    _In_ REFIID Interface,
-    _Out_ PVOID* Object)
+VirtioSndTopologyMiniport::NonDelegatingQueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object)
 {
     if (Object == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -360,16 +249,15 @@ VirtioSndTopologyMiniport::NonDelegatingQueryInterface(
     *Object = NULL;
     if (IsEqualGUIDAligned(Interface, IID_IUnknown))
     {
-        *Object = static_cast<IUnknown*>(
-            static_cast<IMiniportTopology*>(this));
+        *Object = static_cast<IUnknown *>(static_cast<IMiniportTopology *>(this));
     }
     else if (IsEqualGUIDAligned(Interface, IID_IMiniportTopology))
     {
-        *Object = static_cast<IMiniportTopology*>(this);
+        *Object = static_cast<IMiniportTopology *>(this);
     }
     else if (IsEqualGUIDAligned(Interface, IID_IMiniport))
     {
-        *Object = static_cast<IMiniport*>(this);
+        *Object = static_cast<IMiniport *>(this);
     }
 
     if (*Object == NULL)
@@ -380,8 +268,7 @@ VirtioSndTopologyMiniport::NonDelegatingQueryInterface(
 }
 
 STDMETHODIMP_(NTSTATUS)
-VirtioSndTopologyMiniport::GetDescription(
-    _Out_ PPCFILTER_DESCRIPTOR* Description)
+VirtioSndTopologyMiniport::GetDescription(_Out_ PPCFILTER_DESCRIPTOR *Description)
 {
     if (Description == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -396,8 +283,7 @@ VirtioSndTopologyMiniport::DataRangeIntersection(
     _In_ PKSDATARANGE DataRange,
     _In_ PKSDATARANGE MatchingDataRange,
     _In_ ULONG OutputBufferLength,
-    _Out_writes_bytes_to_opt_(OutputBufferLength, *ResultantFormatLength)
-        PVOID ResultantFormat,
+    _Out_writes_bytes_to_opt_(OutputBufferLength, *ResultantFormatLength) PVOID ResultantFormat,
     _Out_ PULONG ResultantFormatLength)
 {
     UNREFERENCED_PARAMETER(PinId);
@@ -421,10 +307,9 @@ VirtioSndTopologyMiniport::Init(
     return Port != NULL ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER;
 }
 
-static
-NTSTATUS
+static NTSTATUS
 VirtioSndCreateTopologyMiniport(
-    _Out_ PUNKNOWN* Unknown,
+    _Out_ PUNKNOWN *Unknown,
     _In_ REFCLSID ClassId,
     _In_opt_ PUNKNOWN UnknownOuter,
     _In_ POOL_TYPE PoolType)
@@ -433,12 +318,7 @@ VirtioSndCreateTopologyMiniport(
     UNREFERENCED_PARAMETER(ClassId);
 
     STD_CREATE_BODY_WITH_TAG_(
-        VirtioSndTopologyMiniport,
-        Unknown,
-        UnknownOuter,
-        PoolType,
-        VIRTIO_SND_TOPOLOGY_POOL_TAG,
-        PMINIPORTTOPOLOGY);
+        VirtioSndTopologyMiniport, Unknown, UnknownOuter, PoolType, VIRTIO_SND_TOPOLOGY_POOL_TAG, PMINIPORTTOPOLOGY);
 }
 
 NTSTATUS
@@ -446,7 +326,7 @@ VirtioSndInstallTopologySubdevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
     _In_ PRESOURCELIST ResourceList,
-    _Out_ PUNKNOWN* TopologyUnknown)
+    _Out_ PUNKNOWN *TopologyUnknown)
 {
     PPORT Port = NULL;
     PUNKNOWN Miniport = NULL;
@@ -454,8 +334,7 @@ VirtioSndInstallTopologySubdevice(
 
     PAGED_CODE();
 
-    if (DeviceObject == NULL || Irp == NULL || ResourceList == NULL ||
-        TopologyUnknown == NULL)
+    if (DeviceObject == NULL || Irp == NULL || ResourceList == NULL || TopologyUnknown == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -466,27 +345,15 @@ VirtioSndInstallTopologySubdevice(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = VirtioSndCreateTopologyMiniport(
-        &Miniport,
-        CLSID_PortTopology,
-        NULL,
-        NonPagedPool);
+    Status = VirtioSndCreateTopologyMiniport(&Miniport, CLSID_PortTopology, NULL, NonPagedPool);
     if (NT_SUCCESS(Status))
     {
-        Status = Port->Init(
-            DeviceObject,
-            Irp,
-            Miniport,
-            NULL,
-            ResourceList);
+        Status = Port->Init(DeviceObject, Irp, Miniport, NULL, ResourceList);
     }
 
     if (NT_SUCCESS(Status))
     {
-        Status = PcRegisterSubdevice(
-            DeviceObject,
-            TopologySubdeviceName,
-            Port);
+        Status = PcRegisterSubdevice(DeviceObject, TopologySubdeviceName, Port);
     }
 
     if (NT_SUCCESS(Status))
@@ -500,8 +367,7 @@ VirtioSndInstallTopologySubdevice(
     Port->Release();
 
     if (!NT_SUCCESS(Status))
-        DbgPrint("virtiosnd: Topology subdevice registration failed (%08lx)\n",
-            (ULONG)Status);
+        DbgPrint("virtiosnd: Topology subdevice registration failed (%08lx)\n", (ULONG)Status);
 
     return Status;
 }

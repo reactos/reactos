@@ -15,11 +15,9 @@ VirtioSndGetMasterVolume(VOID)
 }
 
 NTSTATUS
-VirtioSndSetMasterVolume(
-    _In_ LONG VolumeLevel)
+VirtioSndSetMasterVolume(_In_ LONG VolumeLevel)
 {
-    if (VolumeLevel < VIRTIO_SND_VOLUME_MINIMUM ||
-        VolumeLevel > VIRTIO_SND_VOLUME_MAXIMUM ||
+    if (VolumeLevel < VIRTIO_SND_VOLUME_MINIMUM || VolumeLevel > VIRTIO_SND_VOLUME_MAXIMUM ||
         VolumeLevel % VIRTIO_SND_VOLUME_STEP != 0)
     {
         return STATUS_INVALID_PARAMETER;
@@ -36,17 +34,13 @@ VirtioSndGetMasterMute(VOID)
 }
 
 VOID
-VirtioSndSetMasterMute(
-    _In_ BOOLEAN Muted)
+VirtioSndSetMasterMute(_In_ BOOLEAN Muted)
 {
     InterlockedExchange(&VirtioSndMasterMute, Muted ? TRUE : FALSE);
 }
 
 VOID
-VirtioSndApplyMasterControls(
-    _Inout_updates_bytes_(Length) PVOID Audio,
-    _In_ ULONG Length,
-    _In_ ULONG BitsPerSample)
+VirtioSndApplyMasterControls(_Inout_updates_bytes_(Length) PVOID Audio, _In_ ULONG Length, _In_ ULONG BitsPerSample)
 {
     LONG VolumeLevel;
     LONG Gain;
@@ -80,8 +74,7 @@ VirtioSndApplyMasterControls(
         SampleCount = Length / sizeof(*Samples);
         for (SampleIndex = 0; SampleIndex < SampleCount; ++SampleIndex)
         {
-            Samples[SampleIndex] =
-                (SHORT)(((LONG)Samples[SampleIndex] * Gain) / (1 << 15));
+            Samples[SampleIndex] = (SHORT)(((LONG)Samples[SampleIndex] * Gain) / (1 << 15));
         }
     }
     else if (BitsPerSample == 32)
@@ -91,8 +84,7 @@ VirtioSndApplyMasterControls(
         SampleCount = Length / sizeof(*Samples);
         for (SampleIndex = 0; SampleIndex < SampleCount; ++SampleIndex)
         {
-            Samples[SampleIndex] = (LONG)(
-                ((LONGLONG)Samples[SampleIndex] * Gain) / (1 << 15));
+            Samples[SampleIndex] = (LONG)(((LONGLONG)Samples[SampleIndex] * Gain) / (1 << 15));
         }
     }
 }

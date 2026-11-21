@@ -1,8 +1,8 @@
 #include "virtiosnd.h"
 
+#include "virtio_snd_protocol.h"
 #include <ksmedia.h>
 #include <stdunk.h>
-#include "virtio_snd_protocol.h"
 
 PVOID
 __cdecl
@@ -12,46 +12,24 @@ operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag);
 #define VIRTIO_SND_DMA_BUFFER_BYTES (VIRTIO_SND_PCM_BUFFER_BYTES * 4)
 
 extern "C" const GUID CLSID_PortWaveCyclic =
-{
-    0xb4c90a2a, 0x5791, 0x11d0,
-    {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}
-};
+    {0xb4c90a2a, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 
 extern "C" const GUID IID_IMiniportWaveCyclic =
-{
-    0xb4c90a27, 0x5791, 0x11d0,
-    {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}
-};
+    {0xb4c90a27, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 
-extern "C" const GUID IID_IMiniport =
-{
-    0xb4c90a24, 0x5791, 0x11d0,
-    {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}
-};
+extern "C" const GUID IID_IMiniport = {0xb4c90a24, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 
 extern "C" const GUID IID_IMiniportWaveCyclicStream =
-{
-    0xb4c90a28, 0x5791, 0x11d0,
-    {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}
-};
+    {0xb4c90a28, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
 
-static KSDATARANGE_AUDIO g_VirtioSndRenderRange =
-{
-    {
-        sizeof(KSDATARANGE_AUDIO),
-        0,
-        0,
-        0,
-        STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-        STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM),
-        STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)
-    },
+static KSDATARANGE_AUDIO g_VirtioSndRenderRange = {
+    {sizeof(KSDATARANGE_AUDIO), 0, 0, 0, STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO), STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM),
+     STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)},
     2,
     16,
     32,
     44100,
-    96000
-};
+    96000};
 
 struct VIRTIO_SND_WAVE_RATE
 {
@@ -59,94 +37,43 @@ struct VIRTIO_SND_WAVE_RATE
     ULONG RateIndex;
 };
 
-static const VIRTIO_SND_WAVE_RATE g_VirtioSndWaveRates[] =
-{
-    { 48000, VIRTIO_SND_PCM_RATE_48000 },
-    { 44100, VIRTIO_SND_PCM_RATE_44100 },
-    { 96000, VIRTIO_SND_PCM_RATE_96000 }
-};
+static const VIRTIO_SND_WAVE_RATE g_VirtioSndWaveRates[] = {
+    {48000, VIRTIO_SND_PCM_RATE_48000},
+    {44100, VIRTIO_SND_PCM_RATE_44100},
+    {96000, VIRTIO_SND_PCM_RATE_96000}};
 
-static PKSDATARANGE g_VirtioSndRenderRanges[] =
-{
-    reinterpret_cast<PKSDATARANGE>(&g_VirtioSndRenderRange)
-};
+static PKSDATARANGE g_VirtioSndRenderRanges[] = {reinterpret_cast<PKSDATARANGE>(&g_VirtioSndRenderRange)};
 
-static KSDATARANGE g_VirtioSndRenderBridgeRange =
-{
+static KSDATARANGE g_VirtioSndRenderBridgeRange = {
     sizeof(KSDATARANGE),
     0,
     0,
     0,
     STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
     STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG),
-    STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)
-};
+    STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)};
 
-static PKSDATARANGE g_VirtioSndRenderBridgeRanges[] =
-{
-    &g_VirtioSndRenderBridgeRange
-};
+static PKSDATARANGE g_VirtioSndRenderBridgeRanges[] = {&g_VirtioSndRenderBridgeRange};
 
-static PCPIN_DESCRIPTOR g_VirtioSndRenderPins[] =
-{
-    {
-        1,
-        1,
-        0,
-        NULL,
-        {
-            0,
-            NULL,
-            0,
-            NULL,
-            SIZEOF_ARRAY(g_VirtioSndRenderRanges),
-            g_VirtioSndRenderRanges,
-            KSPIN_DATAFLOW_IN,
-            KSPIN_COMMUNICATION_SINK,
-            (GUID*)&KSCATEGORY_AUDIO,
-            NULL,
-            0
-        }
-    },
-    {
-        0,
-        0,
-        0,
-        NULL,
-        {
-            0,
-            NULL,
-            0,
-            NULL,
-            SIZEOF_ARRAY(g_VirtioSndRenderBridgeRanges),
-            g_VirtioSndRenderBridgeRanges,
-            KSPIN_DATAFLOW_OUT,
-            KSPIN_COMMUNICATION_NONE,
-            (GUID*)&KSCATEGORY_AUDIO,
-            NULL,
-            0
-        }
-    }
-};
+static PCPIN_DESCRIPTOR g_VirtioSndRenderPins[] = {
+    {1,
+     1,
+     0,
+     NULL,
+     {0, NULL, 0, NULL, SIZEOF_ARRAY(g_VirtioSndRenderRanges), g_VirtioSndRenderRanges, KSPIN_DATAFLOW_IN,
+      KSPIN_COMMUNICATION_SINK, (GUID *)&KSCATEGORY_AUDIO, NULL, 0}},
+    {0,
+     0,
+     0,
+     NULL,
+     {0, NULL, 0, NULL, SIZEOF_ARRAY(g_VirtioSndRenderBridgeRanges), g_VirtioSndRenderBridgeRanges, KSPIN_DATAFLOW_OUT,
+      KSPIN_COMMUNICATION_NONE, (GUID *)&KSCATEGORY_AUDIO, NULL, 0}}};
 
-static PCNODE_DESCRIPTOR g_VirtioSndRenderNodes[] =
-{
-    {
-        0,
-        NULL,
-        &KSNODETYPE_DAC,
-        NULL
-    }
-};
+static PCNODE_DESCRIPTOR g_VirtioSndRenderNodes[] = {{0, NULL, &KSNODETYPE_DAC, NULL}};
 
-static PCCONNECTION_DESCRIPTOR g_VirtioSndRenderConnections[] =
-{
-    { PCFILTER_NODE, 0, 0, 1 },
-    { 0, 0, PCFILTER_NODE, 1 }
-};
+static PCCONNECTION_DESCRIPTOR g_VirtioSndRenderConnections[] = {{PCFILTER_NODE, 0, 0, 1}, {0, 0, PCFILTER_NODE, 1}};
 
-static PCFILTER_DESCRIPTOR g_VirtioSndRenderFilter =
-{
+static PCFILTER_DESCRIPTOR g_VirtioSndRenderFilter = {
     0,
     NULL,
     sizeof(PCPIN_DESCRIPTOR),
@@ -158,42 +85,23 @@ static PCFILTER_DESCRIPTOR g_VirtioSndRenderFilter =
     SIZEOF_ARRAY(g_VirtioSndRenderConnections),
     g_VirtioSndRenderConnections,
     0,
-    NULL
-};
+    NULL};
 
 static WCHAR g_VirtioSndRenderSubdeviceName[] = L"Wave";
 
-static
-NTSTATUS
-VirtioSndValidateFormat(
-    _In_ PKSDATAFORMAT DataFormat);
+static NTSTATUS
+VirtioSndValidateFormat(_In_ PKSDATAFORMAT DataFormat);
 
-static
-NTSTATUS
-VirtioSndGetWaveChannelMask(
-    _In_ ULONG Channels,
-    _Out_ PULONG ChannelMask);
+static NTSTATUS
+VirtioSndGetWaveChannelMask(_In_ ULONG Channels, _Out_ PULONG ChannelMask);
 
 class VirtioSndWaveStream : public IMiniportWaveCyclicStream, public CUnknown
 {
-public:
+  public:
     VirtioSndWaveStream(PUNKNOWN OuterUnknown)
-        : CUnknown(OuterUnknown),
-          m_Port(NULL),
-          m_DmaChannel(NULL),
-          m_ServiceGroup(NULL),
-          m_Playback(NULL),
-          m_Buffer(NULL),
-          m_BufferSize(0),
-          m_BlockAlign(0),
-          m_Channels(0),
-          m_BitsPerSample(0),
-          m_SampleRate(0),
-          m_ThreadCreated(FALSE),
-          m_RequestedState(KSSTATE_STOP),
-          m_Exit(FALSE),
-          m_Error(STATUS_SUCCESS),
-          m_Position(0),
+        : CUnknown(OuterUnknown), m_Port(NULL), m_DmaChannel(NULL), m_ServiceGroup(NULL), m_Playback(NULL),
+          m_Buffer(NULL), m_BufferSize(0), m_BlockAlign(0), m_Channels(0), m_BitsPerSample(0), m_SampleRate(0),
+          m_ThreadCreated(FALSE), m_RequestedState(KSSTATE_STOP), m_Exit(FALSE), m_Error(STATUS_SUCCESS), m_Position(0),
           m_LatencyBytes(0)
     {
         KeInitializeEvent(&m_StateChanged, SynchronizationEvent, FALSE);
@@ -212,17 +120,13 @@ public:
         _In_ PPORTWAVECYCLIC Port,
         _In_ PDMACHANNEL DmaChannel,
         _In_ PKSDATAFORMAT DataFormat,
-        _Out_ PSERVICEGROUP* ServiceGroup);
+        _Out_ PSERVICEGROUP *ServiceGroup);
 
-private:
-    static
-    VOID
-    NTAPI
+  private:
+    static VOID NTAPI
     WorkerThread(_In_ PVOID Context);
 
-    static
-    VOID
-    NTAPI
+    static VOID NTAPI
     NotifyDpc(
         _In_ PKDPC Dpc,
         _In_opt_ PVOID DeferredContext,
@@ -262,12 +166,11 @@ VirtioSndWaveStream::Init(
     _In_ PPORTWAVECYCLIC Port,
     _In_ PDMACHANNEL DmaChannel,
     _In_ PKSDATAFORMAT DataFormat,
-    _Out_ PSERVICEGROUP* ServiceGroup)
+    _Out_ PSERVICEGROUP *ServiceGroup)
 {
     PAGED_CODE();
 
-    if (Port == NULL || DmaChannel == NULL || DataFormat == NULL ||
-        ServiceGroup == NULL)
+    if (Port == NULL || DmaChannel == NULL || DataFormat == NULL || ServiceGroup == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -277,8 +180,7 @@ VirtioSndWaveStream::Init(
     m_Port->AddRef();
     m_DmaChannel = DmaChannel;
     m_DmaChannel->AddRef();
-    PWAVEFORMATEX Format =
-        reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
+    PWAVEFORMATEX Format = reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
     m_BlockAlign = Format->nBlockAlign;
     m_Channels = Format->nChannels;
     m_BitsPerSample = Format->wBitsPerSample;
@@ -306,26 +208,14 @@ VirtioSndWaveStream::Init(
     RtlZeroMemory(m_Buffer, m_BufferSize);
 
     HANDLE ThreadHandle = NULL;
-    Status = PsCreateSystemThread(
-        &ThreadHandle,
-        THREAD_ALL_ACCESS,
-        NULL,
-        NULL,
-        NULL,
-        WorkerThread,
-        this);
+    Status = PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, WorkerThread, this);
     if (!NT_SUCCESS(Status))
         return Status;
 
     m_ThreadCreated = TRUE;
     ZwClose(ThreadHandle);
 
-    Status = VirtioSndOpenPlayback(
-        m_Channels,
-        m_BitsPerSample,
-        Format->nSamplesPerSec,
-        &m_StateChanged,
-        &m_Playback);
+    Status = VirtioSndOpenPlayback(m_Channels, m_BitsPerSample, Format->nSamplesPerSec, &m_StateChanged, &m_Playback);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -342,12 +232,7 @@ VirtioSndWaveStream::~VirtioSndWaveStream()
     {
         InterlockedExchange(&m_Exit, TRUE);
         KeSetEvent(&m_StateChanged, IO_NO_INCREMENT, FALSE);
-        KeWaitForSingleObject(
-            &m_ThreadExited,
-            Executive,
-            KernelMode,
-            FALSE,
-            NULL);
+        KeWaitForSingleObject(&m_ThreadExited, Executive, KernelMode, FALSE, NULL);
         KeFlushQueuedDpcs();
     }
 
@@ -365,27 +250,23 @@ VirtioSndWaveStream::~VirtioSndWaveStream()
         m_Port->Release();
 }
 
-VOID
-NTAPI
+VOID NTAPI
 VirtioSndWaveStream::WorkerThread(_In_ PVOID Context)
 {
-    VirtioSndWaveStream* Stream =
-        static_cast<VirtioSndWaveStream*>(Context);
+    VirtioSndWaveStream *Stream = static_cast<VirtioSndWaveStream *>(Context);
     Stream->RunWorker();
     KeSetEvent(&Stream->m_ThreadExited, IO_NO_INCREMENT, FALSE);
     PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
-VOID
-NTAPI
+VOID NTAPI
 VirtioSndWaveStream::NotifyDpc(
     _In_ PKDPC Dpc,
     _In_opt_ PVOID DeferredContext,
     _In_opt_ PVOID SystemArgument1,
     _In_opt_ PVOID SystemArgument2)
 {
-    VirtioSndWaveStream* Stream =
-        static_cast<VirtioSndWaveStream*>(DeferredContext);
+    VirtioSndWaveStream *Stream = static_cast<VirtioSndWaveStream *>(DeferredContext);
     PPORTWAVECYCLIC Port;
     PSERVICEGROUP ServiceGroup;
     KIRQL OldIrql;
@@ -419,8 +300,7 @@ VirtioSndWaveStream::SetWorkerError(_In_ NTSTATUS Status)
         return Status;
 
     InterlockedCompareExchange(&m_Error, Status, STATUS_SUCCESS);
-    DbgPrint("virtiosnd: Playback worker failed with status %08lx\n",
-        (ULONG)Status);
+    DbgPrint("virtiosnd: Playback worker failed with status %08lx\n", (ULONG)Status);
     return Status;
 }
 
@@ -433,18 +313,14 @@ VirtioSndWaveStream::RunWorker()
 
     for (;;)
     {
-        if (InterlockedCompareExchange(&m_Exit, 0, 0) != FALSE ||
-            VirtioSndTransportStopping())
+        if (InterlockedCompareExchange(&m_Exit, 0, 0) != FALSE || VirtioSndTransportStopping())
             break;
 
         NTSTATUS Error = (NTSTATUS)InterlockedCompareExchange(&m_Error, 0, 0);
         if (!NT_SUCCESS(Error))
             break;
 
-        KSSTATE RequestedState = (KSSTATE)InterlockedCompareExchange(
-            &m_RequestedState,
-            0,
-            0);
+        KSSTATE RequestedState = (KSSTATE)InterlockedCompareExchange(&m_RequestedState, 0, 0);
 
         if (RequestedState != KSSTATE_RUN && Running)
         {
@@ -474,35 +350,24 @@ VirtioSndWaveStream::RunWorker()
             }
 
             DbgPrint("virtiosnd: PCM playback started\n");
-            SubmittedPosition = (ULONG)InterlockedCompareExchange(
-                &m_Position,
-                0,
-                0) % m_BufferSize;
+            SubmittedPosition = (ULONG)InterlockedCompareExchange(&m_Position, 0, 0) % m_BufferSize;
             Running = TRUE;
         }
 
         if (m_Playback != NULL)
         {
             ULONG XrunCount;
-            NTSTATUS Status = VirtioSndProcessPlaybackEvents(
-                m_Playback,
-                &XrunCount);
+            NTSTATUS Status = VirtioSndProcessPlaybackEvents(m_Playback, &XrunCount);
             if (!NT_SUCCESS(Status))
             {
                 SetWorkerError(Status);
                 break;
             }
 
-            if (XrunCount != 0 &&
-                Running &&
-                (KSSTATE)InterlockedCompareExchange(
-                    &m_RequestedState,
-                    0,
-                    0) == KSSTATE_RUN)
+            if (XrunCount != 0 && Running &&
+                (KSSTATE)InterlockedCompareExchange(&m_RequestedState, 0, 0) == KSSTATE_RUN)
             {
-                DbgPrint(
-                    "virtiosnd: Received %lu XRUN event(s) for stream. Restarting PCM playback\n",
-                    XrunCount);
+                DbgPrint("virtiosnd: Received %lu XRUN event(s) for stream. Restarting PCM playback\n", XrunCount);
                 Status = VirtioSndStopPlayback(m_Playback);
                 Running = FALSE;
                 if (!NT_SUCCESS(Status))
@@ -511,10 +376,7 @@ VirtioSndWaveStream::RunWorker()
                     break;
                 }
 
-                SubmittedPosition = (ULONG)InterlockedCompareExchange(
-                    &m_Position,
-                    0,
-                    0) % m_BufferSize;
+                SubmittedPosition = (ULONG)InterlockedCompareExchange(&m_Position, 0, 0) % m_BufferSize;
                 Status = VirtioSndStartPlayback(m_Playback);
                 if (!NT_SUCCESS(Status))
                 {
@@ -531,10 +393,7 @@ VirtioSndWaveStream::RunWorker()
             {
                 ULONG DeviceStatus;
                 ULONG LatencyBytes;
-                NTSTATUS Status = VirtioSndGetPlaybackCompletion(
-                    m_Playback,
-                    &DeviceStatus,
-                    &LatencyBytes);
+                NTSTATUS Status = VirtioSndGetPlaybackCompletion(m_Playback, &DeviceStatus, &LatencyBytes);
                 if (Status == STATUS_NO_MORE_ENTRIES)
                     break;
                 if (!NT_SUCCESS(Status))
@@ -544,18 +403,13 @@ VirtioSndWaveStream::RunWorker()
                 }
                 if (DeviceStatus != VIRTIO_SND_S_OK)
                 {
-                    DbgPrint("virtiosnd: PCM transfer failed with device status %08lx\n",
-                        DeviceStatus);
+                    DbgPrint("virtiosnd: PCM transfer failed with device status %08lx\n", DeviceStatus);
                     SetWorkerError(STATUS_UNSUCCESSFUL);
                     break;
                 }
 
-                InterlockedExchangeAdd(
-                    &m_Position,
-                    VIRTIO_SND_PCM_PERIOD_BYTES);
-                InterlockedExchange(
-                    &m_LatencyBytes,
-                    (LONG)LatencyBytes);
+                InterlockedExchangeAdd(&m_Position, VIRTIO_SND_PCM_PERIOD_BYTES);
+                InterlockedExchange(&m_LatencyBytes, (LONG)LatencyBytes);
                 KeInsertQueueDpc(&m_NotifyDpc, NULL, NULL);
             }
 
@@ -563,34 +417,19 @@ VirtioSndWaveStream::RunWorker()
             if (!NT_SUCCESS(Error))
                 break;
 
-            if ((KSSTATE)InterlockedCompareExchange(&m_RequestedState, 0, 0) ==
-                KSSTATE_RUN)
+            if ((KSSTATE)InterlockedCompareExchange(&m_RequestedState, 0, 0) == KSSTATE_RUN)
             {
                 for (;;)
                 {
-                    ULONG FirstLength = min(
-                        VIRTIO_SND_PCM_PERIOD_BYTES,
-                        m_BufferSize - SubmittedPosition);
-                    RtlCopyMemory(
-                        Audio,
-                        (PUCHAR)m_Buffer + SubmittedPosition,
-                        FirstLength);
+                    ULONG FirstLength = min(VIRTIO_SND_PCM_PERIOD_BYTES, m_BufferSize - SubmittedPosition);
+                    RtlCopyMemory(Audio, (PUCHAR)m_Buffer + SubmittedPosition, FirstLength);
                     if (FirstLength < VIRTIO_SND_PCM_PERIOD_BYTES)
                     {
-                        RtlCopyMemory(
-                            Audio + FirstLength,
-                            m_Buffer,
-                            VIRTIO_SND_PCM_PERIOD_BYTES - FirstLength);
+                        RtlCopyMemory(Audio + FirstLength, m_Buffer, VIRTIO_SND_PCM_PERIOD_BYTES - FirstLength);
                     }
-                    VirtioSndApplyMasterControls(
-                        Audio,
-                        sizeof(Audio),
-                        m_BitsPerSample);
+                    VirtioSndApplyMasterControls(Audio, sizeof(Audio), m_BitsPerSample);
 
-                    NTSTATUS Status = VirtioSndQueuePlayback(
-                        m_Playback,
-                        Audio,
-                        sizeof(Audio));
+                    NTSTATUS Status = VirtioSndQueuePlayback(m_Playback, Audio, sizeof(Audio));
                     if (Status == STATUS_DEVICE_BUSY)
                         break;
                     if (!NT_SUCCESS(Status))
@@ -599,24 +438,17 @@ VirtioSndWaveStream::RunWorker()
                         break;
                     }
 
-                    SubmittedPosition =
-                        (SubmittedPosition + sizeof(Audio)) % m_BufferSize;
+                    SubmittedPosition = (SubmittedPosition + sizeof(Audio)) % m_BufferSize;
                 }
             }
         }
 
-        if (Running &&
-            !VirtioSndArmPlaybackCompletion(m_Playback))
+        if (Running && !VirtioSndArmPlaybackCompletion(m_Playback))
         {
             continue;
         }
 
-        KeWaitForSingleObject(
-            &m_StateChanged,
-            Executive,
-            KernelMode,
-            FALSE,
-            NULL);
+        KeWaitForSingleObject(&m_StateChanged, Executive, KernelMode, FALSE, NULL);
     }
 
     if (Running)
@@ -630,18 +462,15 @@ VirtioSndWaveStream::RunWorker()
 }
 
 STDMETHODIMP_(NTSTATUS)
-VirtioSndWaveStream::NonDelegatingQueryInterface(
-    REFIID Interface,
-    PVOID* Object)
+VirtioSndWaveStream::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
 {
     if (Object == NULL)
         return STATUS_INVALID_PARAMETER;
 
     *Object = NULL;
-    if (IsEqualGUIDAligned(Interface, IID_IUnknown) ||
-        IsEqualGUIDAligned(Interface, IID_IMiniportWaveCyclicStream))
+    if (IsEqualGUIDAligned(Interface, IID_IUnknown) || IsEqualGUIDAligned(Interface, IID_IMiniportWaveCyclicStream))
     {
-        *Object = static_cast<IMiniportWaveCyclicStream*>(this);
+        *Object = static_cast<IMiniportWaveCyclicStream *>(this);
     }
 
     if (*Object == NULL)
@@ -659,27 +488,20 @@ VirtioSndWaveStream::SetFormat(PKSDATAFORMAT DataFormat)
     if (!NT_SUCCESS(Status))
         return Status;
 
-    PWAVEFORMATEX Format =
-        reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
-    return Format->nChannels == m_Channels &&
-        Format->wBitsPerSample == m_BitsPerSample &&
-        Format->nBlockAlign == m_BlockAlign &&
-        Format->nSamplesPerSec == m_SampleRate
-        ? STATUS_SUCCESS
-        : STATUS_NO_MATCH;
+    PWAVEFORMATEX Format = reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
+    return Format->nChannels == m_Channels && Format->wBitsPerSample == m_BitsPerSample &&
+                   Format->nBlockAlign == m_BlockAlign && Format->nSamplesPerSec == m_SampleRate
+               ? STATUS_SUCCESS
+               : STATUS_NO_MATCH;
 }
 
 STDMETHODIMP_(ULONG)
-VirtioSndWaveStream::SetNotificationFreq(
-    ULONG Interval,
-    PULONG FrameSize)
+VirtioSndWaveStream::SetNotificationFreq(ULONG Interval, PULONG FrameSize)
 {
-    if (FrameSize == NULL || Interval == 0 || m_BlockAlign == 0 ||
-        m_SampleRate == 0)
+    if (FrameSize == NULL || Interval == 0 || m_BlockAlign == 0 || m_SampleRate == 0)
         return 0;
 
-    ULONGLONG RequestedFrameSize =
-        (ULONGLONG)m_SampleRate * m_BlockAlign * Interval / 1000;
+    ULONGLONG RequestedFrameSize = (ULONGLONG)m_SampleRate * m_BlockAlign * Interval / 1000;
     if (RequestedFrameSize > MAXULONG)
         return 0;
 
@@ -712,13 +534,8 @@ VirtioSndWaveStream::GetPosition(PULONG Position)
         return STATUS_INVALID_PARAMETER;
 
     ULONG Completed = (ULONG)InterlockedCompareExchange(&m_Position, 0, 0);
-    ULONG Latency = (ULONG)InterlockedCompareExchange(
-        &m_LatencyBytes,
-        0,
-        0);
-    ULONG PlaybackPosition = Latency > Completed
-        ? 0
-        : Completed - Latency;
+    ULONG Latency = (ULONG)InterlockedCompareExchange(&m_LatencyBytes, 0, 0);
+    ULONG PlaybackPosition = Latency > Completed ? 0 : Completed - Latency;
     *Position = PlaybackPosition % m_BufferSize;
     return STATUS_SUCCESS;
 }
@@ -729,8 +546,7 @@ VirtioSndWaveStream::NormalizePhysicalPosition(PLONGLONG PhysicalPosition)
     if (PhysicalPosition == NULL || m_BlockAlign == 0 || m_SampleRate == 0)
         return STATUS_INVALID_PARAMETER;
 
-    *PhysicalPosition =
-        (10000000 / m_BlockAlign * *PhysicalPosition) / m_SampleRate;
+    *PhysicalPosition = (10000000 / m_BlockAlign * *PhysicalPosition) / m_SampleRate;
     return STATUS_SUCCESS;
 }
 
@@ -741,11 +557,8 @@ VirtioSndWaveStream::Silence(PVOID Buffer, ULONG ByteCount)
         RtlZeroMemory(Buffer, ByteCount);
 }
 
-static
-NTSTATUS
-VirtioSndGetWaveChannelMask(
-    _In_ ULONG Channels,
-    _Out_ PULONG ChannelMask)
+static NTSTATUS
+VirtioSndGetWaveChannelMask(_In_ ULONG Channels, _Out_ PULONG ChannelMask)
 {
     UCHAR Positions[2];
     ULONG Mask = 0;
@@ -756,14 +569,10 @@ VirtioSndGetWaveChannelMask(
     if (ChannelMask == NULL || Channels == 0 || Channels > RTL_NUMBER_OF(Positions))
         return STATUS_INVALID_PARAMETER;
 
-    Status = VirtioSndGetPlaybackChannelMap(
-        Channels,
-        Positions);
+    Status = VirtioSndGetPlaybackChannelMap(Channels, Positions);
     if (Status == STATUS_NOT_SUPPORTED)
     {
-        *ChannelMask = Channels == 1
-            ? KSAUDIO_SPEAKER_MONO
-            : KSAUDIO_SPEAKER_STEREO;
+        *ChannelMask = Channels == 1 ? KSAUDIO_SPEAKER_MONO : KSAUDIO_SPEAKER_STEREO;
         return STATUS_SUCCESS;
     }
     if (!NT_SUCCESS(Status))
@@ -848,13 +657,10 @@ VirtioSndGetWaveChannelMask(
     return STATUS_SUCCESS;
 }
 
-static
-NTSTATUS
-VirtioSndValidateFormat(
-    _In_ PKSDATAFORMAT DataFormat)
+static NTSTATUS
+VirtioSndValidateFormat(_In_ PKSDATAFORMAT DataFormat)
 {
-    if (DataFormat == NULL ||
-        !IsEqualGUIDAligned(DataFormat->MajorFormat, KSDATAFORMAT_TYPE_AUDIO) ||
+    if (DataFormat == NULL || !IsEqualGUIDAligned(DataFormat->MajorFormat, KSDATAFORMAT_TYPE_AUDIO) ||
         !IsEqualGUIDAligned(DataFormat->SubFormat, KSDATAFORMAT_SUBTYPE_PCM) ||
         !IsEqualGUIDAligned(DataFormat->Specifier, KSDATAFORMAT_SPECIFIER_WAVEFORMATEX) ||
         DataFormat->FormatSize < sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX))
@@ -865,12 +671,9 @@ VirtioSndValidateFormat(
     PWAVEFORMATEX Format = reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
     ULONG ChannelMask;
     ULONG BytesPerSample;
-    if ((Format->wFormatTag != WAVE_FORMAT_PCM &&
-         Format->wFormatTag != WAVE_FORMAT_EXTENSIBLE) ||
-        Format->nChannels == 0 ||
-        Format->nChannels > 2 ||
-        (Format->wBitsPerSample != 16 &&
-         Format->wBitsPerSample != 32))
+    if ((Format->wFormatTag != WAVE_FORMAT_PCM && Format->wFormatTag != WAVE_FORMAT_EXTENSIBLE) ||
+        Format->nChannels == 0 || Format->nChannels > 2 ||
+        (Format->wBitsPerSample != 16 && Format->wBitsPerSample != 32))
     {
         return STATUS_NO_MATCH;
     }
@@ -891,19 +694,13 @@ VirtioSndValidateFormat(
         return STATUS_NO_MATCH;
 
     ULONGLONG SupportedRates;
-    NTSTATUS Status = VirtioSndGetPlaybackRates(
-        Format->nChannels,
-        Format->wBitsPerSample,
-        &SupportedRates);
-    if (!NT_SUCCESS(Status) ||
-        (SupportedRates & ((ULONGLONG)1 << RateIndex)) == 0)
+    NTSTATUS Status = VirtioSndGetPlaybackRates(Format->nChannels, Format->wBitsPerSample, &SupportedRates);
+    if (!NT_SUCCESS(Status) || (SupportedRates & ((ULONGLONG)1 << RateIndex)) == 0)
     {
         return STATUS_NO_MATCH;
     }
 
-    if (!NT_SUCCESS(VirtioSndGetWaveChannelMask(
-            Format->nChannels,
-            &ChannelMask)))
+    if (!NT_SUCCESS(VirtioSndGetWaveChannelMask(Format->nChannels, &ChannelMask)))
     {
         return STATUS_NO_MATCH;
     }
@@ -916,8 +713,7 @@ VirtioSndValidateFormat(
             return STATUS_NO_MATCH;
         }
 
-        PWAVEFORMATEXTENSIBLE Extensible =
-            reinterpret_cast<PWAVEFORMATEXTENSIBLE>(Format);
+        PWAVEFORMATEXTENSIBLE Extensible = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(Format);
         if (!IsEqualGUIDAligned(Extensible->SubFormat, KSDATAFORMAT_SUBTYPE_PCM) ||
             Extensible->dwChannelMask != ChannelMask ||
             Extensible->Samples.wValidBitsPerSample != Format->wBitsPerSample)
@@ -931,11 +727,8 @@ VirtioSndValidateFormat(
 
 class VirtioSndWaveMiniport : public IMiniportWaveCyclic, public CUnknown
 {
-public:
-    VirtioSndWaveMiniport(PUNKNOWN OuterUnknown)
-        : CUnknown(OuterUnknown),
-          m_Port(NULL),
-          m_DmaChannel(NULL)
+  public:
+    VirtioSndWaveMiniport(PUNKNOWN OuterUnknown) : CUnknown(OuterUnknown), m_Port(NULL), m_DmaChannel(NULL)
     {
     }
 
@@ -944,7 +737,7 @@ public:
 
     ~VirtioSndWaveMiniport();
 
-private:
+  private:
     PPORTWAVECYCLIC m_Port;
     PDMACHANNEL m_DmaChannel;
 };
@@ -962,9 +755,7 @@ VirtioSndWaveMiniport::~VirtioSndWaveMiniport()
 }
 
 NTSTATUS
-VirtioSndWaveMiniport::NonDelegatingQueryInterface(
-    REFIID Interface,
-    PVOID* Object)
+VirtioSndWaveMiniport::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
 {
     if (Object == NULL)
     {
@@ -975,16 +766,15 @@ VirtioSndWaveMiniport::NonDelegatingQueryInterface(
 
     if (IsEqualGUIDAligned(Interface, IID_IUnknown))
     {
-        *Object = static_cast<IUnknown*>(
-            static_cast<IMiniportWaveCyclic*>(this));
+        *Object = static_cast<IUnknown *>(static_cast<IMiniportWaveCyclic *>(this));
     }
     else if (IsEqualGUIDAligned(Interface, IID_IMiniportWaveCyclic))
     {
-        *Object = static_cast<IMiniportWaveCyclic*>(this);
+        *Object = static_cast<IMiniportWaveCyclic *>(this);
     }
     else if (IsEqualGUIDAligned(Interface, IID_IMiniport))
     {
-        *Object = static_cast<IMiniport*>(this);
+        *Object = static_cast<IMiniport *>(this);
     }
 
     if (*Object == NULL)
@@ -997,7 +787,7 @@ VirtioSndWaveMiniport::NonDelegatingQueryInterface(
 }
 
 STDMETHODIMP_(NTSTATUS)
-VirtioSndWaveMiniport::GetDescription(PPCFILTER_DESCRIPTOR* Description)
+VirtioSndWaveMiniport::GetDescription(PPCFILTER_DESCRIPTOR *Description)
 {
     if (Description == NULL)
     {
@@ -1019,44 +809,30 @@ VirtioSndWaveMiniport::DataRangeIntersection(
 {
     PAGED_CODE();
 
-    const ULONG RequiredLength =
-        sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEXTENSIBLE);
-    if (ResultantFormatLength == NULL ||
-        PinId != 0 ||
-        ClientDataRange == NULL ||
-        MyDataRange == NULL)
+    const ULONG RequiredLength = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEXTENSIBLE);
+    if (ResultantFormatLength == NULL || PinId != 0 || ClientDataRange == NULL || MyDataRange == NULL)
     {
-        DbgPrint("virtiosnd: DataRangeIntersection invalid request (pin %lu)\n",
-            PinId);
+        DbgPrint("virtiosnd: DataRangeIntersection invalid request (pin %lu)\n", PinId);
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (ClientDataRange->FormatSize < sizeof(KSDATARANGE_AUDIO) ||
-        MyDataRange->FormatSize < sizeof(KSDATARANGE_AUDIO))
+    if (ClientDataRange->FormatSize < sizeof(KSDATARANGE_AUDIO) || MyDataRange->FormatSize < sizeof(KSDATARANGE_AUDIO))
     {
-        DbgPrint("virtiosnd: DataRangeIntersection short range (client %lu device %lu)\n",
-            ClientDataRange->FormatSize,
+        DbgPrint(
+            "virtiosnd: DataRangeIntersection short range (client %lu device %lu)\n", ClientDataRange->FormatSize,
             MyDataRange->FormatSize);
         return STATUS_NO_MATCH;
     }
 
-    PKSDATARANGE_AUDIO ClientRange =
-        reinterpret_cast<PKSDATARANGE_AUDIO>(ClientDataRange);
-    PKSDATARANGE_AUDIO DeviceRange =
-        reinterpret_cast<PKSDATARANGE_AUDIO>(MyDataRange);
-    DbgPrint("virtiosnd: DataRangeIntersection pin %lu output %lu max-ch %lu bits %lu-%lu rate %lu-%lu device max-ch %lu bits %lu-%lu rate %lu-%lu\n",
-        PinId,
-        OutputBufferLength,
-        ClientRange->MaximumChannels,
-        ClientRange->MinimumBitsPerSample,
-        ClientRange->MaximumBitsPerSample,
-        ClientRange->MinimumSampleFrequency,
-        ClientRange->MaximumSampleFrequency,
-        DeviceRange->MaximumChannels,
-        DeviceRange->MinimumBitsPerSample,
-        DeviceRange->MaximumBitsPerSample,
-        DeviceRange->MinimumSampleFrequency,
-        DeviceRange->MaximumSampleFrequency);
+    PKSDATARANGE_AUDIO ClientRange = reinterpret_cast<PKSDATARANGE_AUDIO>(ClientDataRange);
+    PKSDATARANGE_AUDIO DeviceRange = reinterpret_cast<PKSDATARANGE_AUDIO>(MyDataRange);
+    DbgPrint(
+        "virtiosnd: DataRangeIntersection pin %lu output %lu max-ch %lu bits %lu-%lu rate "
+        "%lu-%lu device max-ch %lu bits %lu-%lu rate %lu-%lu\n",
+        PinId, OutputBufferLength, ClientRange->MaximumChannels, ClientRange->MinimumBitsPerSample,
+        ClientRange->MaximumBitsPerSample, ClientRange->MinimumSampleFrequency, ClientRange->MaximumSampleFrequency,
+        DeviceRange->MaximumChannels, DeviceRange->MinimumBitsPerSample, DeviceRange->MaximumBitsPerSample,
+        DeviceRange->MinimumSampleFrequency, DeviceRange->MaximumSampleFrequency);
 
     if (!IsEqualGUIDAligned(ClientDataRange->MajorFormat, KSDATAFORMAT_TYPE_AUDIO) ||
         !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_PCM) ||
@@ -1075,38 +851,29 @@ VirtioSndWaveMiniport::DataRangeIntersection(
     ULONG SampleRate = 0;
     ULONGLONG SupportedRates;
     NTSTATUS Status;
-    if (ClientRange->MaximumChannels == 0 ||
-        DeviceRange->MaximumChannels == 0 ||
+    if (ClientRange->MaximumChannels == 0 || DeviceRange->MaximumChannels == 0 ||
         ClientRange->MinimumBitsPerSample > ClientRange->MaximumBitsPerSample ||
         DeviceRange->MinimumBitsPerSample > DeviceRange->MaximumBitsPerSample)
     {
-        DbgPrint("virtiosnd: DataRangeIntersection rejected unsupported rate, depth, or channel count\n");
+        DbgPrint("virtiosnd: DataRangeIntersection rejected unsupported rate, depth, or channel "
+                 "count\n");
         return STATUS_NO_MATCH;
     }
 
-    static const ULONG SupportedBitDepths[] = { 32, 16 };
-    for (ULONG BitDepthIndex = 0;
-         BitDepthIndex < RTL_NUMBER_OF(SupportedBitDepths) &&
-             SampleRate == 0;
-         ++BitDepthIndex)
+    static const ULONG SupportedBitDepths[] = {32, 16};
+    for (ULONG BitDepthIndex = 0; BitDepthIndex < RTL_NUMBER_OF(SupportedBitDepths) && SampleRate == 0; ++BitDepthIndex)
     {
         ULONG CandidateBits = SupportedBitDepths[BitDepthIndex];
-        if (CandidateBits < ClientRange->MinimumBitsPerSample ||
-            CandidateBits > ClientRange->MaximumBitsPerSample ||
-            CandidateBits < DeviceRange->MinimumBitsPerSample ||
-            CandidateBits > DeviceRange->MaximumBitsPerSample)
+        if (CandidateBits < ClientRange->MinimumBitsPerSample || CandidateBits > ClientRange->MaximumBitsPerSample ||
+            CandidateBits < DeviceRange->MinimumBitsPerSample || CandidateBits > DeviceRange->MaximumBitsPerSample)
         {
             continue;
         }
 
-        ULONG CandidateChannels = min(
-            min(ClientRange->MaximumChannels, DeviceRange->MaximumChannels),
-            2);
+        ULONG CandidateChannels = min(min(ClientRange->MaximumChannels, DeviceRange->MaximumChannels), 2);
         while (CandidateChannels != 0 && SampleRate == 0)
         {
-            Status = VirtioSndGetWaveChannelMask(
-                CandidateChannels,
-                &ChannelMask);
+            Status = VirtioSndGetWaveChannelMask(CandidateChannels, &ChannelMask);
             if (Status == STATUS_NO_MATCH)
             {
                 --CandidateChannels;
@@ -1114,23 +881,16 @@ VirtioSndWaveMiniport::DataRangeIntersection(
             }
             if (!NT_SUCCESS(Status))
             {
-                DbgPrint("virtiosnd: DataRangeIntersection channel map failed %08lx\n",
-                    (ULONG)Status);
+                DbgPrint("virtiosnd: DataRangeIntersection channel map failed %08lx\n", (ULONG)Status);
                 return Status;
             }
 
-            Status = VirtioSndGetPlaybackRates(
-                CandidateChannels,
-                CandidateBits,
-                &SupportedRates);
+            Status = VirtioSndGetPlaybackRates(CandidateChannels, CandidateBits, &SupportedRates);
             if (NT_SUCCESS(Status))
             {
-                for (ULONG Rate = 0;
-                     Rate < RTL_NUMBER_OF(g_VirtioSndWaveRates);
-                     ++Rate)
+                for (ULONG Rate = 0; Rate < RTL_NUMBER_OF(g_VirtioSndWaveRates); ++Rate)
                 {
-                    ULONG CandidateRate =
-                        g_VirtioSndWaveRates[Rate].SampleRate;
+                    ULONG CandidateRate = g_VirtioSndWaveRates[Rate].SampleRate;
                     ULONG RateIndex = g_VirtioSndWaveRates[Rate].RateIndex;
 
                     if (CandidateRate >= ClientRange->MinimumSampleFrequency &&
@@ -1157,16 +917,13 @@ VirtioSndWaveMiniport::DataRangeIntersection(
     if (OutputBufferLength == 0 || ResultantFormat == NULL)
     {
         *ResultantFormatLength = RequiredLength;
-        DbgPrint("virtiosnd: DataRangeIntersection size query needs %lu bytes\n",
-            RequiredLength);
+        DbgPrint("virtiosnd: DataRangeIntersection size query needs %lu bytes\n", RequiredLength);
         return STATUS_BUFFER_OVERFLOW;
     }
     if (OutputBufferLength < RequiredLength)
     {
         *ResultantFormatLength = RequiredLength;
-        DbgPrint("virtiosnd: DataRangeIntersection buffer too small (%lu < %lu)\n",
-            OutputBufferLength,
-            RequiredLength);
+        DbgPrint("virtiosnd: DataRangeIntersection buffer too small (%lu < %lu)\n", OutputBufferLength, RequiredLength);
         return STATUS_BUFFER_TOO_SMALL;
     }
 
@@ -1174,36 +931,28 @@ VirtioSndWaveMiniport::DataRangeIntersection(
     RtlCopyMemory(Format, MyDataRange, sizeof(KSDATAFORMAT));
     Format->FormatSize = RequiredLength;
 
-    PWAVEFORMATEXTENSIBLE WaveFormat =
-        reinterpret_cast<PWAVEFORMATEXTENSIBLE>(Format + 1);
+    PWAVEFORMATEXTENSIBLE WaveFormat = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(Format + 1);
     RtlZeroMemory(WaveFormat, sizeof(*WaveFormat));
     WaveFormat->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
     WaveFormat->Format.nChannels = (WORD)Channels;
     WaveFormat->Format.nSamplesPerSec = SampleRate;
     WaveFormat->Format.wBitsPerSample = (WORD)BitsPerSample;
-    WaveFormat->Format.nBlockAlign =
-        WaveFormat->Format.nChannels * BitsPerSample / 8;
-    WaveFormat->Format.nAvgBytesPerSec =
-        WaveFormat->Format.nSamplesPerSec * WaveFormat->Format.nBlockAlign;
+    WaveFormat->Format.nBlockAlign = WaveFormat->Format.nChannels * BitsPerSample / 8;
+    WaveFormat->Format.nAvgBytesPerSec = WaveFormat->Format.nSamplesPerSec * WaveFormat->Format.nBlockAlign;
     WaveFormat->Format.cbSize = sizeof(*WaveFormat) - sizeof(WAVEFORMATEX);
     WaveFormat->Samples.wValidBitsPerSample = (WORD)BitsPerSample;
     WaveFormat->dwChannelMask = ChannelMask;
     WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     Format->SampleSize = WaveFormat->Format.nBlockAlign;
     *ResultantFormatLength = RequiredLength;
-    DbgPrint("virtiosnd: DataRangeIntersection accepted %u-channel %lu Hz S%lu, mask %08lx\n",
-        Channels,
-        SampleRate,
-        BitsPerSample,
-        ChannelMask);
+    DbgPrint(
+        "virtiosnd: DataRangeIntersection accepted %u-channel %lu Hz S%lu, mask %08lx\n", Channels, SampleRate,
+        BitsPerSample, ChannelMask);
     return STATUS_SUCCESS;
 }
 
 STDMETHODIMP_(NTSTATUS)
-VirtioSndWaveMiniport::Init(
-    PUNKNOWN UnknownAdapter,
-    PRESOURCELIST ResourceList,
-    PPORTWAVECYCLIC Port)
+VirtioSndWaveMiniport::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceList, PPORTWAVECYCLIC Port)
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(UnknownAdapter);
@@ -1217,26 +966,19 @@ VirtioSndWaveMiniport::Init(
     m_Port = Port;
     m_Port->AddRef();
     return m_Port->NewMasterDmaChannel(
-        &m_DmaChannel,
-        NULL,
-        NULL,
-        VIRTIO_SND_DMA_BUFFER_BYTES,
-        TRUE,
-        FALSE,
-        Width32Bits,
-        MaximumDmaSpeed);
+        &m_DmaChannel, NULL, NULL, VIRTIO_SND_DMA_BUFFER_BYTES, TRUE, FALSE, Width32Bits, MaximumDmaSpeed);
 }
 
 STDMETHODIMP_(NTSTATUS)
 VirtioSndWaveMiniport::NewStream(
-    PMINIPORTWAVECYCLICSTREAM* Stream,
+    PMINIPORTWAVECYCLICSTREAM *Stream,
     PUNKNOWN OuterUnknown,
     POOL_TYPE PoolType,
     ULONG Pin,
     BOOLEAN Capture,
     PKSDATAFORMAT DataFormat,
-    PDMACHANNEL* DmaChannel,
-    PSERVICEGROUP* ServiceGroup)
+    PDMACHANNEL *DmaChannel,
+    PSERVICEGROUP *ServiceGroup)
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(OuterUnknown);
@@ -1252,35 +994,26 @@ VirtioSndWaveMiniport::NewStream(
     *DmaChannel = NULL;
     *ServiceGroup = NULL;
 
-    DbgPrint("virtiosnd: NewStream pin %lu capture %u format %p\n",
-        Pin,
-        (ULONG)Capture,
-        DataFormat);
+    DbgPrint("virtiosnd: NewStream pin %lu capture %u format %p\n", Pin, (ULONG)Capture, DataFormat);
     if (Pin != 0 || Capture)
     {
-        DbgPrint("virtiosnd: NewStream rejected pin %lu capture %u\n",
-            Pin,
-            (ULONG)Capture);
+        DbgPrint("virtiosnd: NewStream rejected pin %lu capture %u\n", Pin, (ULONG)Capture);
         return STATUS_INVALID_PARAMETER;
     }
 
     NTSTATUS Status = VirtioSndValidateFormat(DataFormat);
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("virtiosnd: NewStream rejected format with status %08lx\n",
-            (ULONG)Status);
+        DbgPrint("virtiosnd: NewStream rejected format with status %08lx\n", (ULONG)Status);
         return Status;
     }
 
-    PWAVEFORMATEX Format =
-        reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
-    DbgPrint("virtiosnd: NewStream format %u-channel %lu Hz %u-bit\n",
-        (ULONG)Format->nChannels,
-        Format->nSamplesPerSec,
+    PWAVEFORMATEX Format = reinterpret_cast<PWAVEFORMATEX>(DataFormat + 1);
+    DbgPrint(
+        "virtiosnd: NewStream format %u-channel %lu Hz %u-bit\n", (ULONG)Format->nChannels, Format->nSamplesPerSec,
         (ULONG)Format->wBitsPerSample);
 
-    VirtioSndWaveStream* WaveStream =
-        new (PoolType, VIRTIO_SND_POOL_TAG) VirtioSndWaveStream(OuterUnknown);
+    VirtioSndWaveStream *WaveStream = new (PoolType, VIRTIO_SND_POOL_TAG) VirtioSndWaveStream(OuterUnknown);
     if (WaveStream == NULL)
     {
         DbgPrint("virtiosnd: NewStream allocation failed\n");
@@ -1291,23 +1024,21 @@ VirtioSndWaveMiniport::NewStream(
     Status = WaveStream->Init(m_Port, m_DmaChannel, DataFormat, ServiceGroup);
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("virtiosnd: NewStream initialization failed with status %08lx\n",
-            (ULONG)Status);
+        DbgPrint("virtiosnd: NewStream initialization failed with status %08lx\n", (ULONG)Status);
         WaveStream->Release();
         return Status;
     }
 
     m_DmaChannel->AddRef();
     *DmaChannel = m_DmaChannel;
-    *Stream = static_cast<IMiniportWaveCyclicStream*>(WaveStream);
+    *Stream = static_cast<IMiniportWaveCyclicStream *>(WaveStream);
     DbgPrint("virtiosnd: NewStream created successfully\n");
     return STATUS_SUCCESS;
 }
 
-static
-NTSTATUS
+static NTSTATUS
 VirtioSndCreateWaveMiniport(
-    _Out_ PUNKNOWN* Unknown,
+    _Out_ PUNKNOWN *Unknown,
     _In_ REFCLSID ClassId,
     _In_opt_ PUNKNOWN UnknownOuter,
     _In_ POOL_TYPE PoolType)
@@ -1316,19 +1047,11 @@ VirtioSndCreateWaveMiniport(
     UNREFERENCED_PARAMETER(ClassId);
 
     STD_CREATE_BODY_WITH_TAG_(
-        VirtioSndWaveMiniport,
-        Unknown,
-        UnknownOuter,
-        PoolType,
-        VIRTIO_SND_POOL_TAG,
-        PMINIPORTWAVECYCLIC);
+        VirtioSndWaveMiniport, Unknown, UnknownOuter, PoolType, VIRTIO_SND_POOL_TAG, PMINIPORTWAVECYCLIC);
 }
 
 NTSTATUS
-VirtioSndInstallRenderSubdevice(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PRESOURCELIST ResourceList)
+VirtioSndInstallRenderSubdevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST ResourceList)
 {
     PAGED_CODE();
 
@@ -1342,11 +1065,7 @@ VirtioSndInstallRenderSubdevice(
         return Status;
     }
 
-    Status = VirtioSndCreateWaveMiniport(
-        &Miniport,
-        CLSID_PortWaveCyclic,
-        NULL,
-        NonPagedPool);
+    Status = VirtioSndCreateWaveMiniport(&Miniport, CLSID_PortWaveCyclic, NULL, NonPagedPool);
     if (NT_SUCCESS(Status))
     {
         Status = Port->Init(DeviceObject, Irp, Miniport, NULL, ResourceList);
@@ -1354,10 +1073,7 @@ VirtioSndInstallRenderSubdevice(
 
     if (NT_SUCCESS(Status))
     {
-        Status = PcRegisterSubdevice(
-            DeviceObject,
-            g_VirtioSndRenderSubdeviceName,
-            Port);
+        Status = PcRegisterSubdevice(DeviceObject, g_VirtioSndRenderSubdeviceName, Port);
     }
     if (NT_SUCCESS(Status))
     {
@@ -1373,21 +1089,12 @@ VirtioSndInstallRenderSubdevice(
 
     if (NT_SUCCESS(Status))
     {
-        Status = VirtioSndInstallTopologySubdevice(
-            DeviceObject,
-            Irp,
-            ResourceList,
-            &TopologyUnknown);
+        Status = VirtioSndInstallTopologySubdevice(DeviceObject, Irp, ResourceList, &TopologyUnknown);
     }
 
     if (NT_SUCCESS(Status))
     {
-        Status = PcRegisterPhysicalConnection(
-            DeviceObject,
-            WaveUnknown,
-            1,
-            TopologyUnknown,
-            0);
+        Status = PcRegisterPhysicalConnection(DeviceObject, WaveUnknown, 1, TopologyUnknown, 0);
     }
 
     if (TopologyUnknown != NULL)
