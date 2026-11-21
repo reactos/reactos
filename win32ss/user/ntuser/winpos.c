@@ -3140,6 +3140,8 @@ IntDeferWindowPos( HDWP hdwp,
 {
     PSMWP pDWP;
     int i;
+    PWND pWnd;
+    HWND hwndParent;
     HDWP retvalue = hdwp;
 
     TRACE("hdwp %p, hwnd %p, after %p, %d,%d (%dx%d), flags %08x\n",
@@ -3159,6 +3161,27 @@ IntDeferWindowPos( HDWP hdwp,
     {
        EngSetLastError(ERROR_INVALID_DWP_HANDLE);
        return NULL;
+    }
+
+    pWnd = ValidateHwndNoErr(hwnd);
+    if (!pWnd)
+    {
+        return NULL;
+    }
+
+    /* All windows in a DWP must share the same parent */
+    hwndParent = pWnd->spwndParent ? UserHMGetHandle(pWnd->spwndParent) : NULL;
+    if (pDWP->ccvr == 0)
+    {
+        pDWP->hwndParent = hwndParent;
+    }
+    else if (pDWP->hwndParent != hwndParent)
+    {
+        /* Fail the whole sequence */
+        ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
+        UserDereferenceObject(pDWP);
+        UserDeleteObject(hdwp, TYPE_SETWINDOWPOS);
+        return NULL;
     }
 
     for (i = 0; i < pDWP->ccvr; i++)

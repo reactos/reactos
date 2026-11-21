@@ -22,6 +22,7 @@ typedef struct _SMWP
   HEAD head;
   UINT bShellNotify:1;
   UINT bHandle:1;
+  HWND hwndParent;
   INT  ccvr;
   INT  ccvrAlloc;
   PCVR acvr;
