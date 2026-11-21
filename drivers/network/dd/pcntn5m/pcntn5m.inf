@@ -1,0 +1,86 @@
+; pcntn5m.inf
+;
+; AMD PCnet-PCI / PCnet-FAST family (Am79C970, 970A, 971, 972, 973, 975)
+; and Am79C978 PCnet-Home, NDIS 5.1 miniport. The chip runs in 16-bit
+; LANCE mode (SWSTYLE 0) with 24-bit DMA.
+;
+; The INF declares x86 and amd64 models. Package it with the binary for
+; the target: the fre x86 build for x86, the fre x64 build for amd64.
+; x64 Windows also requires the driver to be signed.
+; Not for Windows 8, 10 or 11: those no longer load NDIS 5.x miniports.
+; All PCnet-PCI/FAST parts share PCI ID 1022:2000; the driver identifies
+; the individual chip at runtime from CSR88/CSR89.
+; VirtualBox differentiates the 79C970A and 79C973 with PCI revisions 0x16 and 0x40.
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = Net
+ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider    = %Provider%
+DriverVer   = 11/18/2026,1.0.0.0
+
+[Manufacturer]
+%AMD% = AMD, NTx86, NTamd64
+
+[AMD.NTx86]
+%PCNTN5M_970A.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000&REV_16
+%PCNTN5M_973.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000&REV_40
+%PCNTN5M_PCI.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000
+%PCNTN5M_HOME.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001
+
+[AMD.NTamd64]
+%PCNTN5M_970A.DeviceDesc% = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000&REV_16
+%PCNTN5M_973.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000&REV_40
+%PCNTN5M_PCI.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2000
+%PCNTN5M_HOME.DeviceDesc%  = PCNTN5M_PCI.ndi, PCI\VEN_1022&DEV_2001
+
+[PCNTN5M_PCI.ndi]
+Characteristics = 0x4   ; NCF_PHYSICAL
+BusType         = 5     ; PCIBus
+AddReg          = PCNTN5M_PCI.ndi.reg
+CopyFiles       = PCNTN5M.CopyFiles
+
+[PCNTN5M_PCI.ndi.Services]
+AddService = PCNTN5M, 2, PCNTN5M.Service, PCNTN5M.EventLog
+
+[PCNTN5M_PCI.ndi.reg]
+HKR, Ndi,            Service,    0, "PCNTN5M"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
+
+[PCNTN5M.Service]
+DisplayName    = %PCNTN5M.Service.DispName%
+ServiceType    = 1      ; SERVICE_KERNEL_DRIVER
+StartType      = 3      ; SERVICE_DEMAND_START
+ErrorControl   = 1      ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\pcntn5m.sys
+LoadOrderGroup = NDIS
+
+[PCNTN5M.EventLog]
+AddReg = PCNTN5M.EventLog.reg
+
+[PCNTN5M.EventLog.reg]
+HKR, , EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR, , TypesSupported,   0x00010001, 7
+
+[PCNTN5M.CopyFiles]
+pcntn5m.sys
+
+[DestinationDirs]
+PCNTN5M.CopyFiles = 12
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+pcntn5m.sys = 1
+
+[Strings]
+Provider                  = "AMD"
+AMD                       = "AMD"
+DiskName                  = "pcntn5m driver disk"
+PCNTN5M.Service.DispName  = "AMD PCnet NDIS 5.1 miniport (pcntn5m)"
+PCNTN5M_PCI.DeviceDesc    = "AMD PCnet-PCI/FAST Ethernet Adapter"
+PCNTN5M_970A.DeviceDesc   = "AMD PCnet-PCI II Ethernet Adapter (Am79C970A)"
+PCNTN5M_973.DeviceDesc    = "AMD PCnet-FAST III Ethernet Adapter (Am79C973)"
+PCNTN5M_HOME.DeviceDesc   = "AMD PCnet-Home Ethernet Adapter (Am79C978)"
