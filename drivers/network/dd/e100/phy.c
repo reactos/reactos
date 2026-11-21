@@ -27,7 +27,7 @@ MiiWrite(
                  (FXP_MDIO_WRITE      << FXP_MDI_OPCODE_SHIFT) |
                  (Adapter->PhyAddress << FXP_MDI_PHY_ADDR_SHIFT) |
                  (RegAddress          << FXP_MDI_REG_ADDR_SHIFT) |
-                 Data);
+                 (Data & 0xFFFF));
 
     for (i = FXP_MIIPHY_DELAYMAX; i > 0; i--)
     {

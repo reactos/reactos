@@ -207,10 +207,7 @@ EeCopyPacket(
         if (!CurrentBuffer)
             break;
 
-        NdisQueryBufferSafe(CurrentBuffer,
-                            &Address,
-                            &CurrentLength,
-                            HighPagePriority);
+        NdisQueryBufferSafe(CurrentBuffer, &Address, &CurrentLength, HighPagePriority);
         if (!Address)
             return FALSE;
     }
@@ -231,8 +228,9 @@ EeSendPacket(
         return NDIS_STATUS_RESOURCES;
 
     TxContext = Adapter->TxLast->Next;
-
     SgList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet, ScatterGatherListPacketInfo);
+
+    /* Highly fragmented packet */
     if (SgList->NumberOfElements > Adapter->MaxTbdCount)
     {
         PE100_COALESCE_BUFFER CoalesceBuffer;

@@ -77,21 +77,21 @@ EeProgramWakeUpEvents(
 {
     PAGED_CODE();
 
-    if ((Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_LINK_CHANGE) ||
-        (Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_MAGIC_PACKET))
+    if ((Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_MAGIC_PACKET) ||
+        (Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_LINK_CHANGE))
     {
         PFXP_CB_CONFIGURE Config = &Adapter->ControlBlock->Configuration;
-
-        if (Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_LINK_CHANGE)
-        {
-            Config->LinkStatusChangeWakeEnable = 1;
-        }
 
         if (Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_MAGIC_PACKET)
         {
             ASSERT(Adapter->Flags & E100_FLAG_HAS_WOL);
 
             Config->MagicPacketWakeDisable = 0;
+        }
+
+        if (Adapter->WakeUpFlags & NDIS_PNP_WAKE_UP_LINK_CHANGE)
+        {
+            Config->LinkStatusChangeWakeEnable = 1;
         }
 
         EeCommandUnitSendCommand(Adapter, FXP_CB_COMMAND_CONFIG, &Config->Header);

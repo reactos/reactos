@@ -753,6 +753,9 @@ MiniportSetInformation(
             *BytesRead = sizeof(ULONG);
             RtlCopyMemory(&GenericUlong, InformationBuffer, sizeof(ULONG));
 
+            GenericUlong &= (NDIS_PNP_WAKE_UP_MAGIC_PACKET |
+                             NDIS_PNP_WAKE_UP_PATTERN_MATCH |
+                             NDIS_PNP_WAKE_UP_LINK_CHANGE);
             Adapter->WakeUpFlags = GenericUlong;
             break;
         }

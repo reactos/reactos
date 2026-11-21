@@ -580,16 +580,13 @@ E100_RELEASE_TX_CONTEXT(
     _In_ PE100_TX_CONTEXT TxContext,
     _In_ PFXP_CB_TRANSMIT Tcb)
 {
-    PE100_COALESCE_BUFFER CoalesceBuffer;
-
     /* Reset the IPCB checksum offload bits (IpScheduleLow, IpSchedule, IpActivationHigh) */
     Tcb->Tbd[0].Address = 0;
 
-    CoalesceBuffer = TxContext->Buffer;
-    if (CoalesceBuffer)
+    if (TxContext->Buffer)
     {
+        PushEntryList(&Adapter->SendBufferList, &TxContext->Buffer->ListEntry);
         TxContext->Buffer = NULL;
-        PushEntryList(&Adapter->SendBufferList, &CoalesceBuffer->ListEntry);
     }
 
     ASSERT(Adapter->TxPending > 0);

@@ -302,7 +302,7 @@
 #define ntohs(x)     betoh16(x)
 #define htons(x)     htobe16(x)
 
-/* Write to unaligned memory */
+/* Store 32-bit value to unaligned little endian memory */
 FORCEINLINE
 VOID
 le32enc(
@@ -321,7 +321,7 @@ le32enc(
 #endif
 }
 
-/* Read from unaligned memory */
+/* Load 16-bit value from unaligned big endian memory */
 FORCEINLINE
 USHORT
 be16dec(

@@ -201,7 +201,7 @@ EeReadConfiguration(
                              4);
         if (!(Adapter->DefaultMedia & E100_MEDIA_AUTO))
         {
-            if (GenericUlong == 1)
+            if (GenericUlong == 4)
             {
                 WARN("Cannot enable auto-negotiation of pause frames for forced link\n");
                 GenericUlong = 0;
