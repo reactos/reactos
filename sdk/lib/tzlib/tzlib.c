@@ -114,7 +114,7 @@ GetTimeZoneListIndex(
     Ptr = Buffer;
     while (*Ptr != 0)
     {
-        Length = wcslen(Ptr);
+        Length = (DWORD)wcslen(Ptr);
         if (wcstoul(Ptr, NULL, 16) == iLanguageID)
             bFound = TRUE;
 
@@ -129,7 +129,7 @@ GetTimeZoneListIndex(
             return TRUE;
         }
 
-        Length = wcslen(Ptr);
+        Length = (DWORD)wcslen(Ptr);
         Ptr = Ptr + Length + 1;
     }
 

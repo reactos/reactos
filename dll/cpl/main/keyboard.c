@@ -59,7 +59,7 @@ UpdateCaretBlinkTimeReg(
     RegSetValueExW(hKey, L"CursorBlinkRate",
                    0, REG_SZ,
                    (CONST BYTE*)szBuffer,
-                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+                   (DWORD)((wcslen(szBuffer) + 1) * sizeof(WCHAR)));
 
     RegCloseKey(hKey);
 }

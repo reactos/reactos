@@ -155,7 +155,7 @@ static enum install_res install_from_unix_file(const char *dir, const char *subd
     enum install_res ret;
     UINT res;
 
-    len = strlen(dir);
+    len = (int)strlen(dir);
     file_path = heap_alloc(len+strlen(subdir)+strlen(file_name)+3);
     if(!file_path)
         return INSTALL_FAILED;
@@ -165,7 +165,7 @@ static enum install_res install_from_unix_file(const char *dir, const char *subd
         file_path[len++] = '/';
     if(*subdir) {
         strcpy(file_path+len, subdir);
-        len += strlen(subdir);
+        len += (int)strlen(subdir);
         file_path[len++] = '/';
     }
     strcpy(file_path+len, file_name);
