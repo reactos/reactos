@@ -5,6 +5,16 @@
  * COPYRIGHT:   Copyright 2026 Ralf Lang <ralf.lang@ralf-lang.de>
  */
 
+/**
+ * @file
+ * @brief Topology miniport implementation for VirtIO Sound Driver
+ *
+ * This file implements the topology miniport for the VirtIO sound driver.
+ * It provides volume and mute controls through the Windows audio subsystem.
+ *
+ * @copyright Copyright 2026 Ralf Lang <ralf.lang@ralf-lang.de>
+ */
+
 #include "virtiosnd.h"
 
 #include <ksmedia.h>
@@ -21,9 +31,25 @@ operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag);
 #define VIRTIO_SND_VOLUME_MAXIMUM 0
 #define VIRTIO_SND_VOLUME_STEP 100
 
+/**
+ * @brief Handles volume property requests
+ *
+ * This function processes property requests for volume controls.
+ *
+ * @param PropertyRequest Pointer to the property request structure
+ * @return NTSTATUS Status of the operation
+ */
 static NTSTATUS NTAPI
 VirtioSndVolumeProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest);
 
+/**
+ * @brief Handles mute property requests
+ *
+ * This function processes property requests for mute controls.
+ *
+ * @param PropertyRequest Pointer to the property request structure
+ * @return NTSTATUS Status of the operation
+ */
 static NTSTATUS NTAPI
 VirtioSndMuteProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest);
 
@@ -84,6 +110,16 @@ static PCFILTER_DESCRIPTOR g_VirtioSndTopologyFilter = {
     0,
     NULL};
 
+/**
+ * @brief Provides basic property support information
+ *
+ * This function fills in the basic support information for properties.
+ *
+ * @param PropertyRequest Pointer to the property request structure
+ * @param AccessFlags Access flags for the property
+ * @param HasSteppedRange Whether the property has a stepped range
+ * @return NTSTATUS Status of the operation
+ */
 static NTSTATUS
 VirtioSndBasicSupport(_In_ PPCPROPERTY_REQUEST PropertyRequest, _In_ ULONG AccessFlags, _In_ BOOLEAN HasSteppedRange)
 {
@@ -143,6 +179,14 @@ VirtioSndBasicSupport(_In_ PPCPROPERTY_REQUEST PropertyRequest, _In_ ULONG Acces
     return STATUS_BUFFER_TOO_SMALL;
 }
 
+/**
+ * @brief Validates channel instance for property requests
+ *
+ * This function validates that the channel instance is valid for property requests.
+ *
+ * @param PropertyRequest Pointer to the property request structure
+ * @return BOOLEAN TRUE if valid or FALSE otherwise
+ */
 static BOOLEAN
 VirtioSndValidChannelInstance(_In_ PPCPROPERTY_REQUEST PropertyRequest)
 {
@@ -157,6 +201,14 @@ VirtioSndValidChannelInstance(_In_ PPCPROPERTY_REQUEST PropertyRequest)
     return Channel >= -1 && Channel <= 1;
 }
 
+/**
+ * @brief Handles volume property requests
+ *
+ * This function processes property requests for volume controls.
+ *
+ * @param PropertyRequest Pointer to the property request structure
+ * @return NTSTATUS Status of the operation
+ */
 static NTSTATUS NTAPI
 VirtioSndVolumeProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
 {
@@ -191,6 +243,14 @@ VirtioSndVolumeProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
     return STATUS_INVALID_DEVICE_REQUEST;
 }
 
+/**
+ * @brief Handles mute property requests
+ *
+ * This function processes property requests for mute controls.
+ *
+ * @param PropertyRequest Pointer to the property request structure
+ * @return NTSTATUS Status of the operation
+ */
 static NTSTATUS NTAPI
 VirtioSndMuteProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
 {
@@ -230,9 +290,19 @@ VirtioSndMuteProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
     return STATUS_INVALID_DEVICE_REQUEST;
 }
 
+/**
+ * @brief VirtIO Sound Topology Miniport class
+ *
+ * This class implements the topology miniport for the VirtIO sound driver.
+ */
 class VirtioSndTopologyMiniport : public IMiniportTopology, public CUnknown
 {
   public:
+    /**
+     * @brief Constructor for VirtioSndTopologyMiniport
+     *
+     * @param OuterUnknown Pointer to the outer unknown object
+     */
     VirtioSndTopologyMiniport(PUNKNOWN OuterUnknown) : CUnknown(OuterUnknown)
     {
     }
@@ -241,6 +311,15 @@ class VirtioSndTopologyMiniport : public IMiniportTopology, public CUnknown
     IMP_IMiniportTopology;
 };
 
+/**
+ * @brief Query interface implementation for topology miniport
+ *
+ * This function implements the IUnknown interface for the topology miniport.
+ *
+ * @param Interface Reference to the interface identifier
+ * @param Object Pointer to the object pointer to be filled
+ * @return NTSTATUS Status of the operation
+ */
 STDMETHODIMP_(NTSTATUS)
 VirtioSndTopologyMiniport::NonDelegatingQueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object)
 {
@@ -268,6 +347,14 @@ VirtioSndTopologyMiniport::NonDelegatingQueryInterface(_In_ REFIID Interface, _O
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Gets the topology filter description
+ *
+ * This function returns the topology filter description for the miniport.
+ *
+ * @param Description Pointer to the filter descriptor pointer to be filled
+ * @return NTSTATUS Status of the operation
+ */
 STDMETHODIMP_(NTSTATUS)
 VirtioSndTopologyMiniport::GetDescription(_Out_ PPCFILTER_DESCRIPTOR *Description)
 {
@@ -278,6 +365,19 @@ VirtioSndTopologyMiniport::GetDescription(_Out_ PPCFILTER_DESCRIPTOR *Descriptio
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Handles data range intersection for topology
+ *
+ * This function handles data range intersection for topology miniports.
+ *
+ * @param PinId Pin identifier
+ * @param DataRange Pointer to the data range
+ * @param MatchingDataRange Pointer to the matching data range
+ * @param OutputBufferLength Length of the output buffer
+ * @param ResultantFormat Pointer to the resultant format buffer
+ * @param ResultantFormatLength Pointer to the resultant format length
+ * @return NTSTATUS Status of the operation
+ */
 STDMETHODIMP_(NTSTATUS)
 VirtioSndTopologyMiniport::DataRangeIntersection(
     _In_ ULONG PinId,
@@ -296,6 +396,16 @@ VirtioSndTopologyMiniport::DataRangeIntersection(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @brief Initializes the topology miniport
+ *
+ * This function initializes the topology miniport with the provided parameters.
+ *
+ * @param UnknownAdapter Pointer to the adapter unknown object
+ * @param ResourceList Pointer to the resource list
+ * @param Port Pointer to the port topology object
+ * @return NTSTATUS Status of the operation
+ */
 STDMETHODIMP_(NTSTATUS)
 VirtioSndTopologyMiniport::Init(
     _In_opt_ PUNKNOWN UnknownAdapter,
@@ -308,6 +418,17 @@ VirtioSndTopologyMiniport::Init(
     return Port != NULL ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER;
 }
 
+/**
+ * @brief Creates a topology miniport instance
+ *
+ * This function creates a new topology miniport instance.
+ *
+ * @param Unknown Pointer to the unknown object pointer to be filled
+ * @param ClassId Reference to the class identifier
+ * @param UnknownOuter Pointer to the outer unknown object
+ * @param PoolType Pool type for allocation
+ * @return NTSTATUS Status of the operation
+ */
 static NTSTATUS
 VirtioSndCreateTopologyMiniport(
     _Out_ PUNKNOWN *Unknown,
@@ -322,6 +443,17 @@ VirtioSndCreateTopologyMiniport(
         VirtioSndTopologyMiniport, Unknown, UnknownOuter, PoolType, VIRTIO_SND_TOPOLOGY_POOL_TAG, PMINIPORTTOPOLOGY);
 }
 
+/**
+ * @brief Installs the topology subdevice
+ *
+ * This function installs the topology subdevice for the VirtIO sound driver.
+ *
+ * @param DeviceObject Pointer to the device object
+ * @param Irp Pointer to the I/O request packet
+ * @param ResourceList Pointer to the resource list
+ * @param TopologyUnknown Pointer to the topology unknown object pointer to be filled
+ * @return NTSTATUS Status of the operation
+ */
 NTSTATUS
 VirtioSndInstallTopologySubdevice(
     _In_ PDEVICE_OBJECT DeviceObject,

@@ -5,8 +5,31 @@
  * COPYRIGHT:   Copyright 2026 Ralf Lang <ralf.lang@ralf-lang.de>
  */
 
+/**
+ * @file
+ * @brief PnP handling for VirtIO Sound Driver
+ *
+ * This file handles the Plug and Play (PnP) initialization of the VirtIO sound device.
+ *
+ * @copyright Copyright 2026 Ralf Lang <ralf.lang@ralf-lang.de>
+ * @license GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ */
+
 #include "virtiosnd.h"
 
+/**
+ * @brief Initializes the VirtIO sound device
+ *
+ * This function is called during PnP initialization.
+ *
+ * It sets up the VirtIO sound device.
+ * It also validates the device resources and initializes the transport layer.
+ *
+ * @param DeviceObject Pointer to the device object
+ * @param Irp Pointer to the I/O request packet
+ * @param ResourceList Pointer to the resource list
+ * @return NTSTATUS Status of the operation
+ */
 NTSTATUS
 NTAPI
 VirtioSndStartDevice(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PRESOURCELIST ResourceList)
