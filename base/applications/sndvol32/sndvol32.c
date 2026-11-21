@@ -554,6 +554,13 @@ DlgPreferencesProc(HWND hwndDlg,
             return TRUE;
         }
 
+        case WM_PAINT:
+        {
+            LRESULT lResult = DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+            RepaintChildControls(hwndDlg);
+            return lResult;
+        }
+
         case WM_CLOSE:
         {
             EndDialog(hwndDlg,
@@ -856,6 +863,84 @@ done:
     return TRUE;
 }
 
+/*
+ * Scrolls the mixer controls horizontally.
+ *
+ * ScrollCode is the scroll bar notification code and TrackPos is the new
+ * position of the scroll bar thumb. TrackPos is only valid for the
+ * SB_THUMBPOSITION and SB_THUMBTRACK notifications.
+ */
+static VOID
+ScrollMixerWindowHorizontally(
+    _In_ PMIXER_WINDOW MixerWindow,
+    _In_ UINT ScrollCode,
+    _In_ INT TrackPos)
+{
+    RECT ClientRect;
+    INT MaxPos, NewPos, Delta;
+
+    if (MixerWindow->ContentWidth <= MixerWindow->ClientWidth)
+    {
+        /* Nothing to scroll */
+        return;
+    }
+
+    /* The last position the mixer controls can be scrolled to */
+    MaxPos = MixerWindow->ContentWidth - MixerWindow->ClientWidth;
+
+    switch (ScrollCode)
+    {
+        case SB_LINELEFT:
+            NewPos = MixerWindow->ScrollPos - MIXER_HSCROLL_LINE_SIZE;
+            break;
+
+        case SB_LINERIGHT:
+            NewPos = MixerWindow->ScrollPos + MIXER_HSCROLL_LINE_SIZE;
+            break;
+
+        case SB_PAGELEFT:
+            NewPos = MixerWindow->ScrollPos - MixerWindow->ClientWidth;
+            break;
+
+        case SB_PAGERIGHT:
+            NewPos = MixerWindow->ScrollPos + MixerWindow->ClientWidth;
+            break;
+
+        case SB_THUMBPOSITION:
+        case SB_THUMBTRACK:
+            NewPos = TrackPos;
+            break;
+
+        default:
+            return;
+    }
+
+    /* Make sure the new position is within the valid range */
+    NewPos = max(0, min(MaxPos, NewPos));
+
+    if (NewPos == MixerWindow->ScrollPos)
+        return;
+
+    Delta = NewPos - MixerWindow->ScrollPos;
+
+    /* Store the new position and move the scroll bar thumb */
+    MixerWindow->ScrollPos = NewPos;
+    SetScrollPos(MixerWindow->hWnd, SB_HORZ, NewPos, TRUE);
+
+    MoveMixerControls(MixerWindow, -Delta);
+
+    /* The mixer controls have been moved, so they have to be repainted.
+     * Otherwise the parts of the controls that have been covered by another
+     * control would remain visible. The area the mixer controls have covered
+     * before is repainted as well. */
+    GetClientRect(MixerWindow->hWnd, &ClientRect);
+    ClientRect.bottom = min(ClientRect.bottom, MixerWindow->rect.bottom - MixerWindow->rect.top);
+    RedrawWindow(MixerWindow->hWnd,
+                 &ClientRect,
+                 NULL,
+                 RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+}
+
 static LRESULT CALLBACK
 MainWindowProc(HWND hwnd,
                UINT uMsg,
@@ -1067,6 +1152,17 @@ MainWindowProc(HWND hwnd,
         }
 
         case WM_HSCROLL:
+            if (lParam == 0)
+            {
+                MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
+                if (MixerWindow != NULL)
+                {
+                    ScrollMixerWindowHorizontally(MixerWindow, LOWORD(wParam), HIWORD(wParam));
+                }
+                break;
+            }
+            /* The message was sent by a track bar control, handle it below */
+            /* fall through */
         case WM_VSCROLL:
             TargetSlider = uMsg == WM_HSCROLL ? IDC_LINE_SLIDER_HORZ : IDC_LINE_SLIDER_VERT;
 
@@ -1133,6 +1229,36 @@ MainWindowProc(HWND hwnd,
             }
             break;
 
+
+        case WM_SIZE:
+        {
+            if (wParam == SIZE_MINIMIZED)
+                break;
+                
+            MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
+            if (MixerWindow != NULL && !MixerWindow->bUpdatingLayout)
+            {
+                 if (UpdateMixerWindowScrollBar(MixerWindow))
+                 {
+                     UpdateMixerWindowLayout(&Preferences);
+                 }
+            }
+            break;
+        }
+
+        case WM_DISPLAYCHANGE:
+        case WM_SETTINGCHANGE:
+        {
+            /* The screen resolution or the work area of the monitor might
+             * have changed, so the window has to be resized and the
+             * horizontal scroll bar has to be updated. */
+            MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
+            if (MixerWindow != NULL)
+            {
+                UpdateMixerWindowLayout(&Preferences);
+            }
+            break;
+        }
 
         case WM_CREATE:
         {
