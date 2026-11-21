@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS VirtIO Sound Driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     WaveCyclic miniport
+ * COPYRIGHT:   Copyright 2026 Ralf Lang (ralf.lang@ralf-lang.de)
+ */
+
 #include "virtiosnd.h"
 
 #include "virtio_snd_protocol.h"
