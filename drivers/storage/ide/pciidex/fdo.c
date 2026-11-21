@@ -624,7 +624,7 @@ PciIdeXPdoCreateDevice(
 {
     NTSTATUS Status;
     UNICODE_STRING DeviceName;
-    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\PciIde99999Channel99-FFF")];
+    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\PciIde4294967295Channel99-FFFFFFFF")];
     PDEVICE_OBJECT Pdo;
     PPDO_DEVICE_EXTENSION PdoExtension;
     ULONG Alignment;

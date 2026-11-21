@@ -691,7 +691,7 @@ AtaPdoCreateDevice(
     UNICODE_STRING DeviceName;
     PATAPORT_DEVICE_EXTENSION DevExt;
     PDEVICE_OBJECT Pdo;
-    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\IdeDeviceP99999T9L9-FFF")];
+    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\IdeDeviceP4294967295T99L255-FFFFFFFF")];
     ULONG i;
     DECLARE_PAGED_WSTRING(PdoFormat, L"\\Device\\Ide\\IdeDeviceP%luT%luL%lu-%lx");
     static ULONG AtapPdoNumber = 0;

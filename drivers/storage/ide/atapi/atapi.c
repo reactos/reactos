@@ -117,13 +117,16 @@ AtaGetRegistryKey(
     _Out_ PULONG KeyValue,
     _In_ ULONG DefaultValue)
 {
-    UCHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(*KeyValue)];
+    union
+    {
+        KEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+        UCHAR Buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(*KeyValue)];
+    } Data;
     HANDLE HwKeyHandle, TargetKeyHandle;
     UNICODE_STRING ValueName, TargetKeyName;
     NTSTATUS Status;
     WCHAR TargetKeyBuffer[sizeof("Target99")];
     ULONG ResultLength;
-    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)Buffer;
 
     PAGED_CODE();
 
@@ -155,13 +158,13 @@ AtaGetRegistryKey(
     Status = ZwQueryValueKey(TargetKeyHandle,
                              &ValueName,
                              KeyValuePartialInformation,
-                             PartialInfo,
-                             sizeof(Buffer),
+                             &Data,
+                             sizeof(Data),
                              &ResultLength);
     ZwClose(TargetKeyHandle);
     if (!NT_SUCCESS(Status) ||
-        (PartialInfo->Type != REG_DWORD) ||
-        (PartialInfo->DataLength != sizeof(*KeyValue)))
+        (Data.PartialInfo.Type != REG_DWORD) ||
+        (Data.PartialInfo.DataLength != sizeof(*KeyValue)))
     {
         TRACE("Failed to read '%wZ' key, status 0x%lx\n", &ValueName, Status);
 
@@ -169,7 +172,7 @@ AtaGetRegistryKey(
         goto Cleanup;
     }
 
-    *KeyValue = *(PULONG)&PartialInfo->Data;
+    RtlCopyMemory(KeyValue, Data.PartialInfo.Data, sizeof(*KeyValue));
 
 Cleanup:
     ZwClose(HwKeyHandle);
@@ -595,7 +598,7 @@ AtaAddChannel(
     PDEVICE_OBJECT Fdo;
     UNICODE_STRING DeviceName;
     PATAPORT_CHANNEL_EXTENSION ChanExt;
-    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\IdePort99999")];
+    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\IdePort4294967295")];
     DECLARE_PAGED_WSTRING(FdoFormat, L"\\Device\\Ide\\IdePort%lu");
     static ULONG AtapFdoNumber = 0;
 
