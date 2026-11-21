@@ -1004,7 +1004,7 @@ VideoPortInitialize(
      */
     if (HwInitializationData->HwInitDataSize == SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
     {
-        INFO_(VIDEOPRT, "We were loaded by a Windows NT miniport driver.\n");
+        INFO_(VIDEOPRT, "We were loaded by a Windows NT 4 miniport driver.\n");
     }
     else if (HwInitializationData->HwInitDataSize < sizeof(VIDEO_HW_INITIALIZATION_DATA))
     {
