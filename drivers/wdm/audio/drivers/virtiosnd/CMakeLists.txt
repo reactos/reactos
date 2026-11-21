@@ -7,10 +7,10 @@ list(APPEND SOURCE
     adapter.c
     audio_controls.c
     driver.c
-    transport.c
     topology.cpp
-    wavecyclic.cpp
-    virtio_debug.c)
+    transport.c
+    virtio_debug.c
+    wavecyclic.cpp)
 
 add_library(virtiosnd MODULE ${SOURCE})
 
