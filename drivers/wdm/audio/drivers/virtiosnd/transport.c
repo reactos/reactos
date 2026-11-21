@@ -17,8 +17,11 @@
 #else
 #define FORCEINLINE
 #endif
-#include <VirtIO.h>
+/* clang-format off */
+/* Cannot let clang alphabetically sort this or we hit a bug: virtio_pci.h defines VirtIODevice and struct virtqueue used by VirtIO.h  */
 #include <virtio_pci.h>
+#include <VirtIO.h>
+/* clang-format on */
 #undef FORCEINLINE
 
 NTKERNELAPI

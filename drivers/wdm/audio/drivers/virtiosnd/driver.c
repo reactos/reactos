@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2026 Ralf Lang (ralf.lang@ralf-lang.de)
  */
 
+/* INITGUID: Instantiate the storage for the GUIDs declared by portcls.h */
+#define INITGUID
 #include "virtiosnd.h"
 
 #define VIRTIO_SND_MAX_MINIPORTS 2

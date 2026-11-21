@@ -14,12 +14,6 @@ PVOID
 __cdecl
 operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag);
 
-extern "C" const GUID CLSID_PortTopology =
-    {0xb4c90a32, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
-
-extern "C" const GUID IID_IMiniportTopology =
-    {0xb4c90a31, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
-
 #define VIRTIO_SND_TOPOLOGY_POOL_TAG 'tSnV'
 #define VIRTIO_SND_VOLUME_ACCESS (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT)
 #define VIRTIO_SND_MUTE_ACCESS (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT)

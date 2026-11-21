@@ -18,17 +18,6 @@ operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag);
 #define VIRTIO_SND_POOL_TAG 'dnSV'
 #define VIRTIO_SND_DMA_BUFFER_BYTES (VIRTIO_SND_PCM_BUFFER_BYTES * 4)
 
-extern "C" const GUID CLSID_PortWaveCyclic =
-    {0xb4c90a2a, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
-
-extern "C" const GUID IID_IMiniportWaveCyclic =
-    {0xb4c90a27, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
-
-extern "C" const GUID IID_IMiniport = {0xb4c90a24, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
-
-extern "C" const GUID IID_IMiniportWaveCyclicStream =
-    {0xb4c90a28, 0x5791, 0x11d0, {0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44}};
-
 static KSDATARANGE_AUDIO g_VirtioSndRenderRange = {
     {sizeof(KSDATARANGE_AUDIO), 0, 0, 0, STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO), STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM),
      STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)},

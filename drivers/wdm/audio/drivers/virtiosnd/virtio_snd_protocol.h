@@ -8,6 +8,8 @@
 #ifndef _VIRTIO_SND_PROTOCOL_H_
 #define _VIRTIO_SND_PROTOCOL_H_
 
+#include <ntddk.h>
+
 #define VIRTIO_SND_DEVICE_ID 25
 
 #define VIRTIO_SND_F_CTLS 0
