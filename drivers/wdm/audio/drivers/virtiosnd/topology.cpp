@@ -17,6 +17,7 @@
 
 #include "virtiosnd.h"
 
+#include "kcom.h"
 #include <ksmedia.h>
 #include <stdunk.h>
 
@@ -295,19 +296,17 @@ VirtioSndMuteProperty(_In_ PPCPROPERTY_REQUEST PropertyRequest)
  *
  * This class implements the topology miniport for the VirtIO sound driver.
  */
-class VirtioSndTopologyMiniport : public IMiniportTopology, public CUnknown
+class VirtioSndTopologyMiniport : public CUnknownImpl<IMiniportTopology>
 {
   public:
     /**
      * @brief Constructor for VirtioSndTopologyMiniport
-     *
-     * @param OuterUnknown Pointer to the outer unknown object
      */
-    VirtioSndTopologyMiniport(PUNKNOWN OuterUnknown) : CUnknown(OuterUnknown)
+    VirtioSndTopologyMiniport()
     {
     }
 
-    DECLARE_STD_UNKNOWN();
+    STDMETHODIMP_(NTSTATUS) QueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object);
     IMP_IMiniportTopology;
 };
 
@@ -321,7 +320,7 @@ class VirtioSndTopologyMiniport : public IMiniportTopology, public CUnknown
  * @return NTSTATUS Status of the operation
  */
 STDMETHODIMP_(NTSTATUS)
-VirtioSndTopologyMiniport::NonDelegatingQueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object)
+VirtioSndTopologyMiniport::QueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object)
 {
     if (Object == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -343,7 +342,7 @@ VirtioSndTopologyMiniport::NonDelegatingQueryInterface(_In_ REFIID Interface, _O
     if (*Object == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    NonDelegatingAddRef();
+    AddRef();
     return STATUS_SUCCESS;
 }
 
@@ -438,9 +437,15 @@ VirtioSndCreateTopologyMiniport(
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(ClassId);
+    UNREFERENCED_PARAMETER(UnknownOuter);
 
-    STD_CREATE_BODY_WITH_TAG_(
-        VirtioSndTopologyMiniport, Unknown, UnknownOuter, PoolType, VIRTIO_SND_TOPOLOGY_POOL_TAG, PMINIPORTTOPOLOGY);
+    VirtioSndTopologyMiniport *Object = new (PoolType, VIRTIO_SND_TOPOLOGY_POOL_TAG) VirtioSndTopologyMiniport();
+    if (Object == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *Unknown = static_cast<PUNKNOWN>(static_cast<PMINIPORTTOPOLOGY>(Object));
+    (*Unknown)->AddRef();
+    return STATUS_SUCCESS;
 }
 
 /**

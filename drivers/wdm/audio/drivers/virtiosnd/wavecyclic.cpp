@@ -7,6 +7,7 @@
 
 #include "virtiosnd.h"
 
+#include "kcom.h"
 #include "virtio_snd_protocol.h"
 #include <ksmedia.h>
 #include <stdunk.h>
@@ -91,14 +92,13 @@ VirtioSndValidateFormat(_In_ PKSDATAFORMAT DataFormat);
 static NTSTATUS
 VirtioSndGetWaveChannelMask(_In_ ULONG Channels, _Out_ PULONG ChannelMask);
 
-class VirtioSndWaveStream : public IMiniportWaveCyclicStream, public CUnknown
+class VirtioSndWaveStream : public CUnknownImpl<IMiniportWaveCyclicStream>
 {
   public:
-    VirtioSndWaveStream(PUNKNOWN OuterUnknown)
-        : CUnknown(OuterUnknown), m_Port(NULL), m_DmaChannel(NULL), m_ServiceGroup(NULL), m_Playback(NULL),
-          m_Buffer(NULL), m_BufferSize(0), m_BlockAlign(0), m_Channels(0), m_BitsPerSample(0), m_SampleRate(0),
-          m_ThreadCreated(FALSE), m_RequestedState(KSSTATE_STOP), m_Exit(FALSE), m_Error(STATUS_SUCCESS), m_Position(0),
-          m_LatencyBytes(0)
+    VirtioSndWaveStream()
+        : m_Port(NULL), m_DmaChannel(NULL), m_ServiceGroup(NULL), m_Playback(NULL), m_Buffer(NULL), m_BufferSize(0),
+          m_BlockAlign(0), m_Channels(0), m_BitsPerSample(0), m_SampleRate(0), m_ThreadCreated(FALSE),
+          m_RequestedState(KSSTATE_STOP), m_Exit(FALSE), m_Error(STATUS_SUCCESS), m_Position(0), m_LatencyBytes(0)
     {
         KeInitializeEvent(&m_StateChanged, SynchronizationEvent, FALSE);
         KeInitializeEvent(&m_ThreadExited, NotificationEvent, FALSE);
@@ -106,7 +106,7 @@ class VirtioSndWaveStream : public IMiniportWaveCyclicStream, public CUnknown
         KeInitializeDpc(&m_NotifyDpc, NotifyDpc, this);
     }
 
-    DECLARE_STD_UNKNOWN();
+    STDMETHODIMP_(NTSTATUS) QueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object);
     IMP_IMiniportWaveCyclicStream;
 
     ~VirtioSndWaveStream();
@@ -458,7 +458,7 @@ VirtioSndWaveStream::RunWorker()
 }
 
 STDMETHODIMP_(NTSTATUS)
-VirtioSndWaveStream::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
+VirtioSndWaveStream::QueryInterface(REFIID Interface, PVOID *Object)
 {
     if (Object == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -472,7 +472,7 @@ VirtioSndWaveStream::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object
     if (*Object == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    NonDelegatingAddRef();
+    AddRef();
     return STATUS_SUCCESS;
 }
 
@@ -721,14 +721,14 @@ VirtioSndValidateFormat(_In_ PKSDATAFORMAT DataFormat)
     return STATUS_SUCCESS;
 }
 
-class VirtioSndWaveMiniport : public IMiniportWaveCyclic, public CUnknown
+class VirtioSndWaveMiniport : public CUnknownImpl<IMiniportWaveCyclic>
 {
   public:
-    VirtioSndWaveMiniport(PUNKNOWN OuterUnknown) : CUnknown(OuterUnknown), m_Port(NULL), m_DmaChannel(NULL)
+    VirtioSndWaveMiniport() : m_Port(NULL), m_DmaChannel(NULL)
     {
     }
 
-    DECLARE_STD_UNKNOWN();
+    STDMETHODIMP_(NTSTATUS) QueryInterface(_In_ REFIID Interface, _Out_ PVOID *Object);
     IMP_IMiniportWaveCyclic;
 
     ~VirtioSndWaveMiniport();
@@ -750,8 +750,8 @@ VirtioSndWaveMiniport::~VirtioSndWaveMiniport()
     }
 }
 
-NTSTATUS
-VirtioSndWaveMiniport::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
+STDMETHODIMP_(NTSTATUS)
+VirtioSndWaveMiniport::QueryInterface(REFIID Interface, PVOID *Object)
 {
     if (Object == NULL)
     {
@@ -778,7 +778,7 @@ VirtioSndWaveMiniport::NonDelegatingQueryInterface(REFIID Interface, PVOID *Obje
         return STATUS_INVALID_PARAMETER;
     }
 
-    NonDelegatingAddRef();
+    AddRef();
     return STATUS_SUCCESS;
 }
 
@@ -1009,7 +1009,7 @@ VirtioSndWaveMiniport::NewStream(
         "virtiosnd: NewStream format %u-channel %lu Hz %u-bit\n", (ULONG)Format->nChannels, Format->nSamplesPerSec,
         (ULONG)Format->wBitsPerSample);
 
-    VirtioSndWaveStream *WaveStream = new (PoolType, VIRTIO_SND_POOL_TAG) VirtioSndWaveStream(OuterUnknown);
+    VirtioSndWaveStream *WaveStream = new (PoolType, VIRTIO_SND_POOL_TAG) VirtioSndWaveStream();
     if (WaveStream == NULL)
     {
         DbgPrint("virtiosnd: NewStream allocation failed\n");
@@ -1041,9 +1041,15 @@ VirtioSndCreateWaveMiniport(
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(ClassId);
+    UNREFERENCED_PARAMETER(UnknownOuter);
 
-    STD_CREATE_BODY_WITH_TAG_(
-        VirtioSndWaveMiniport, Unknown, UnknownOuter, PoolType, VIRTIO_SND_POOL_TAG, PMINIPORTWAVECYCLIC);
+    VirtioSndWaveMiniport *Object = new (PoolType, VIRTIO_SND_POOL_TAG) VirtioSndWaveMiniport();
+    if (Object == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *Unknown = static_cast<PUNKNOWN>(static_cast<PMINIPORTWAVECYCLIC>(Object));
+    (*Unknown)->AddRef();
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
