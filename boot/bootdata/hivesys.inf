@@ -943,6 +943,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Text",0x00000000,%BURMESE%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5140"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout File",0x00000000,"kbdiulat.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout Text",0x00000000,%INUKTITUT_LATIN%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5156"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000481","Layout File",0x00000000,"kbdmaori.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000481","Layout Text",0x00000000,%MAORI%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000481","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5146"
@@ -950,10 +954,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000481","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout File",0x00000000,"kbdeo.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout Text",0x00000000,%ESPERANTO%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5142"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout File",0x00000000,"kbdiulat.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout Text",0x00000000,%INUKTITUT_LATIN%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5156"
 
 ; Keyboard layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout",,0x00000012
