@@ -297,7 +297,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   RTL_NUMBER_OF(scancode_to_vk),     /* 0x7f */
   extcode0_to_vk,
   extcode1_to_vk,
-  MAKELONG(KLLF_ALTGR | KLLF_LRM_RLM, KBD_VERSION), /* fLocaleFlags = 0x00010005 */
+  MAKELONG(KLLF_ALTGR | KLLF_LRM_RLM, KBD_VERSION),
   0,                                 /* nLgMax: no ligatures */
   0,                                 /* cbLgEntry */
   NULL                               /* no ligature table */
