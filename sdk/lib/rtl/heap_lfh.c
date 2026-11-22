@@ -56,7 +56,9 @@ RtlpBuildLFHBucketTable(
         Lfh->Buckets[Index].Activated = FALSE;
     }
 
-    /* Largest bucket must stay under the frontend's size maximum */
+    /* Largest usable size the frontend can serve */
+    Lfh->MaxAllocationSize = Lfh->Buckets[LFH_BUCKET_COUNT - 1].BlockSize - sizeof(HEAP_ENTRY);
+
     ASSERT(Lfh->Buckets[LFH_BUCKET_COUNT - 1].BlockSize < LFH_MAX_BLOCK_SIZE);
 }
 
@@ -354,9 +356,16 @@ RtlpDestroyLFH(
 BOOLEAN
 NTAPI
 RtlpLFHSizeFits(
+    _In_ PHEAP Heap,
     _In_ SIZE_T Size)
 {
-    return Size <= 3840;
+    PLFH_HEAP Lfh;
+
+    if (Heap->FrontEndHeapType != 2 || !Heap->FrontEndHeap)
+        return FALSE;
+
+    Lfh = (PLFH_HEAP)Heap->FrontEndHeap;
+    return Size <= Lfh->MaxAllocationSize;
 }
 
 SIZE_T

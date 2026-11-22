@@ -59,6 +59,7 @@ typedef struct _LFH_HEAP
     LIST_ENTRY BlockZones;
     PLFH_BLOCK_ZONE CurrentZone; // zone we're bump allocating subsegments from
     HEAP_BUCKET Buckets[LFH_BUCKET_COUNT];
+    SIZE_T MaxAllocationSize;
 } LFH_HEAP, *PLFH_HEAP;
 
 NTSTATUS
