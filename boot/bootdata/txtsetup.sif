@@ -640,6 +640,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000813 = kbdbe.dll
 00000414 = kbdno.dll
 0001043B = kbdsmsno.dll
+0002083B = kbdsmsfi.dll
 00000415 = kbdpl1.dll
 00000816 = kbdpo.dll
 00010416 = kbdbr.dll
@@ -687,7 +688,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000044D = kbdinasa.dll
 00000455 = kbdbur.dll
 0000048F = kbdeo.dll
-0002083B = kbdsmsfi.dll
 
 [HiveInfs.Install]
 ; Called "HiveInfs.Fresh" on Windows
