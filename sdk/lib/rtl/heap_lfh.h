@@ -75,6 +75,7 @@ RtlpDestroyLFH(
 BOOLEAN
 NTAPI
 RtlpLFHSizeFits(
+    _In_ PHEAP Heap,
     _In_ SIZE_T Size);
 
 PVOID
