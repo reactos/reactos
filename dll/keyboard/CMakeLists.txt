@@ -48,6 +48,7 @@ list(APPEND _keyboard_layouts
     kbdgrist
     kbdhe
     kbdhe220
+    kbdhe319
     kbdheb
     kbdhela2
     kbdhela3
