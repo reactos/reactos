@@ -565,11 +565,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050429","Layout Id",  
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050429","Layout Text",0x00000000,%PERSIAN_STANDARD%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050429","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5213"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout File",0x00000000,"kbdgae.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout Id",  0x00000000,"0026"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout Text",0x00000000,%GAELIC%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5125"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout File",0x00000000,"kbdgerg.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout Text",0x00000000,%GERMAN_ERGO%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5139"
@@ -639,6 +634,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000809","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout File",0x00000000,"kbdir.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout Text",0x00000000,%IRISH%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5014"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout File",0x00000000,"kbdgae.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout Id",  0x00000000,"0026"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout Text",0x00000000,%GAELIC%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00011809","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5125"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010409","Layout File",0x00000000,"kbddv.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010409","Layout Id",  0x00000000,"0002"
