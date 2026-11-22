@@ -974,9 +974,13 @@ VideoPortInitialize(
     }
 
     /* As a first thing do parameter checks */
-    if (HwInitializationData->HwInitDataSize > sizeof(VIDEO_HW_INITIALIZATION_DATA))
+    if ((HwInitializationData->HwInitDataSize < SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA) ||
+        (HwInitializationData->HwInitDataSize > sizeof(VIDEO_HW_INITIALIZATION_DATA)))
     {
-        ERR_(VIDEOPRT, "Invalid HwInitializationData\n");
+        ERR_(VIDEOPRT, "Invalid HwInitializationData size %lu (minimum %lu, maximum %lu)\n",
+             HwInitializationData->HwInitDataSize,
+             SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA,
+             sizeof(VIDEO_HW_INITIALIZATION_DATA));
         return STATUS_REVISION_MISMATCH;
     }
 
@@ -988,20 +992,7 @@ VideoPortInitialize(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* The size tells the structure revision, missing members are zeroed below */
-    if (HwInitializationData->HwInitDataSize < SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
-    {
-        ERR_(VIDEOPRT, "Invalid HwInitializationData size %lu (minimum %lu, maximum %lu)\n",
-             HwInitializationData->HwInitDataSize,
-             SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA,
-             sizeof(VIDEO_HW_INITIALIZATION_DATA));
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /*
-     * NT4 drivers are special case, because we must use legacy method
-     * of detection instead of the Plug & Play one.
-     */
+    /* The size tells the structure revision */
     if (HwInitializationData->HwInitDataSize == SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
     {
         INFO_(VIDEOPRT, "We were loaded by a Windows NT 4 miniport driver.\n");
@@ -1024,7 +1015,10 @@ VideoPortInitialize(
         IntVideoPortDispatchDeviceControl;
     DriverObject->DriverUnload = IntVideoPortUnload;
 
-    /* Determine type of the miniport driver */
+    /*
+     * Determine type of the miniport driver. NT4 drivers are special case,
+     * because we must use legacy method of detection instead of the PnP one.
+     */
     if ((HwInitializationData->HwInitDataSize >=
             FIELD_OFFSET(VIDEO_HW_INITIALIZATION_DATA, HwQueryInterface)) &&
         (HwInitializationData->HwSetPowerState != NULL) &&
