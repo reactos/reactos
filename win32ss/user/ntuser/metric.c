@@ -149,15 +149,9 @@ InitMetrics(VOID)
     piSysMet[SM_CYMENUSIZE] = gspv.ncm.iMenuHeight;     // 18;
 
     /* Mouse */
-    piSysMet[SM_MOUSEPRESENT] = 0;
-    piSysMet[SM_MOUSEWHEELPRESENT] = 0;
-    piSysMet[SM_CMOUSEBUTTONS] = 0;
     piSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap ? 1 : 0;
     piSysMet[SM_CXDOUBLECLK] = gspv.iDblClickWidth;
     piSysMet[SM_CYDOUBLECLK] = gspv.iDblClickHeight;
-#if (_WIN32_WINNT >= 0x0600)
-    piSysMet[SM_MOUSEHORIZONTALWHEELPRESENT] = 0;
-#endif
 
     /* Version info */
     piSysMet[SM_TABLETPC] = 0;

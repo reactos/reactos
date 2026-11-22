@@ -13,7 +13,7 @@ DBG_DEFAULT_CHANNEL(UserKbd);
 BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
 static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
-static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
+KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
 static INT gLanguageToggleKeyState = 0;
 DWORD gdwLanguageToggleKey = 1;
@@ -35,7 +35,55 @@ static enum _ALTNUM_STATE
 static ULONG gAltNumPadValue = 0;
 BOOL gbEnableHexNumpad = FALSE;
 
+typedef struct _KEYBOARD_INFO
+{
+    CM_KEYBOARD_DEVICE_DATA Data;
+    BOOL Found;
+} KEYBOARD_INFO, *PKEYBOARD_INFO;
+
 /* FUNCTIONS *****************************************************************/
+
+static NTSTATUS NTAPI
+KeyboardDeviceCallout(
+    _In_ PVOID Context,
+    _In_ PUNICODE_STRING PathName,
+    _In_ INTERFACE_TYPE BusType,
+    _In_ ULONG BusNumber,
+    _In_ PKEY_VALUE_FULL_INFORMATION *BusInformation,
+    _In_ CONFIGURATION_TYPE ControllerType,
+    _In_ ULONG ControllerNumber,
+    _In_ PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
+    _In_ CONFIGURATION_TYPE PeripheralType,
+    _In_ ULONG PeripheralNumber,
+    _In_ PKEY_VALUE_FULL_INFORMATION *PeripheralInformation)
+{
+    PKEYBOARD_INFO KeyboardInfo = Context;
+    PCM_PARTIAL_RESOURCE_LIST ResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+    PCM_KEYBOARD_DEVICE_DATA KeyboardDeviceData;
+    ULONG i;
+
+    if (KeyboardInfo->Found)
+        return STATUS_SUCCESS;
+    if (PeripheralInformation[IoQueryDeviceConfigurationData]->DataLength == 0)
+        return STATUS_SUCCESS;
+    ResourceList = (PCM_PARTIAL_RESOURCE_LIST)((ULONG_PTR)PeripheralInformation[IoQueryDeviceConfigurationData]
+                                               + PeripheralInformation[IoQueryDeviceConfigurationData]->DataOffset
+                                               + FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList));
+
+    for (i = 0; i < ResourceList->Count; i++)
+    {
+        ResourceDescriptor = ResourceList->PartialDescriptors + i;
+        if (ResourceDescriptor->Type == CmResourceTypeDeviceSpecific)
+        {
+            KeyboardDeviceData = (PCM_KEYBOARD_DEVICE_DATA)(ResourceDescriptor + 1);
+            KeyboardInfo->Data = *KeyboardDeviceData;
+            KeyboardInfo->Found = TRUE;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
 
 /*
  * InitKeyboardImpl
@@ -47,12 +95,41 @@ NTSTATUS
 NTAPI
 InitKeyboardImpl(VOID)
 {
+    KEYBOARD_INFO KeyboardInfo;
+    INTERFACE_TYPE BusType;
+    CONFIGURATION_TYPE ControllerType = KeyboardController;
+    CONFIGURATION_TYPE PeripheralType = KeyboardPeripheral;
+
     RtlZeroMemory(&gafAsyncKeyState, sizeof(gafAsyncKeyState));
     RtlZeroMemory(&gafAsyncKeyStateRecentDown, sizeof(gafAsyncKeyStateRecentDown));
+
+    RtlZeroMemory(&KeyboardInfo, sizeof(KeyboardInfo));
+    for (BusType = 0; BusType < MaximumInterfaceType && !KeyboardInfo.Found; BusType++)
+    {
+        IoQueryDeviceDescription(&BusType,
+                                 NULL,
+                                 &ControllerType,
+                                 NULL,
+                                 &PeripheralType,
+                                 NULL,
+                                 KeyboardDeviceCallout,
+                                 (PVOID)&KeyboardInfo);
+    }
+
     // Clear and set default information.
     RtlZeroMemory(&gKeyboardInfo, sizeof(gKeyboardInfo));
-    gKeyboardInfo.KeyboardIdentifier.Type = 4; /* AT-101 */
-    gKeyboardInfo.NumberOfFunctionKeys = 12; /* We're doing an 101 for now, so return 12 F-keys */
+    if (KeyboardInfo.Found)
+    {
+        if (KeyboardInfo.Data.KeyboardFlags & 0x10)
+            gIndicators.LedFlags |= KEYBOARD_SCROLL_LOCK_ON;
+        if (KeyboardInfo.Data.KeyboardFlags & 0x20)
+            gIndicators.LedFlags |= KEYBOARD_NUM_LOCK_ON;
+        if (KeyboardInfo.Data.KeyboardFlags & 0x40)
+            gIndicators.LedFlags |= KEYBOARD_CAPS_LOCK_ON;
+        gKeyboardInfo.KeyboardIdentifier.Type = KeyboardInfo.Data.Type;
+        gKeyboardInfo.KeyboardIdentifier.Subtype = KeyboardInfo.Data.Subtype;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -117,18 +194,16 @@ IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
 /*
  * IntKeyboardUpdateLeds
  *
- * Sends the keyboard commands to turn on/off the lights
+ * Update lights internal state, and request update
  */
 static
 NTSTATUS APIENTRY
-IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
-                      WORD wVk,
-                      WORD wScanCode)
+IntKeyboardUpdateLeds(
+    _In_ WORD wVk,
+    _In_ WORD wScanCode)
 {
-    NTSTATUS Status;
     UINT i;
     USHORT LedFlag = 0;
-    IO_STATUS_BLOCK Block;
 
     if (!gpKeyboardIndicatorTrans)
         return STATUS_NOT_SUPPORTED;
@@ -152,18 +227,8 @@ IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
     if (LedFlag)
     {
         gIndicators.LedFlags ^= LedFlag;
-
-        /* Update the lights on the hardware */
-        Status = ZwDeviceIoControlFile(hKeyboardDevice,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &Block,
-                                       IOCTL_KEYBOARD_SET_INDICATORS,
-                                       &gIndicators, sizeof(gIndicators),
-                                       NULL, 0);
-
-        return Status;
+        InterlockedOr(&gKeyboardFlags, KBD_UPDATE_LEDS);
+        KeSetEvent(gKeyboardUpdatesEvent, IO_NO_INCREMENT, FALSE);
     }
 
     return STATUS_SUCCESS;
@@ -177,27 +242,7 @@ IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
 VOID NTAPI
 UserInitKeyboard(HANDLE hKeyboardDevice)
 {
-    NTSTATUS Status;
-    IO_STATUS_BLOCK Block;
-
     IntKeyboardGetIndicatorTrans(hKeyboardDevice, &gpKeyboardIndicatorTrans);
-
-    Status = ZwDeviceIoControlFile(hKeyboardDevice,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Block,
-                                   IOCTL_KEYBOARD_QUERY_INDICATORS,
-                                   NULL, 0,
-                                   &gIndicators,
-                                   sizeof(gIndicators));
-
-    if (!NT_SUCCESS(Status))
-    {
-        WARN("NtDeviceIoControlFile() failed, ignored\n");
-        gIndicators.LedFlags = 0;
-        gIndicators.UnitId = 0;
-    }
 
     SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
                    gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
@@ -1127,8 +1172,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     if (bIsDown)
     {
         /* Update keyboard LEDs */
-        IntKeyboardUpdateLeds(ghKeyboardDevice,
-                              wSimpleVk,
+        IntKeyboardUpdateLeds(wSimpleVk,
                               wScanCode);
     }
 

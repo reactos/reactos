@@ -3,6 +3,7 @@ list(APPEND _keyboard_layouts
     kbd101
     kbd101a
     kbd101b
+    kbd101c
     kbd103
     kbd106
     kbd106n
@@ -12,6 +13,7 @@ list(APPEND _keyboard_layouts
     kbdal
     kbdarme
     kbdarmw
+    kbdax2
     kbdaze
     kbdazel
     kbdbe
@@ -39,29 +41,43 @@ list(APPEND _keyboard_layouts
     kbdfr
     kbdgeo
     kbdgerg
+    kbdgkl
     kbdgneo
     kbdgr
     kbdgr1
     kbdgre1
     kbdgrist
     kbdhe
+    kbdhe220
+    kbdhe319
     kbdheb
+    kbdhela2
+    kbdhela3
     kbdhu
+    kbdibm02
     kbdic
     kbdinasa
+    kbdinbe2
     kbdinben
     kbdindev
     kbdinguj
     kbdinmal
     kbdir
     kbdit
+    kbdit142
     kbdjpn
     kbdkaz
     kbdkor
+    kbdkyr
     kbdla
+    kbdlk41a
+    kbdlk41j
+    kbdlt
     kbdlt1
     kbdlv
+    kbdlv1
     kbdmac
+    kbdmaori
     kbdne
     kbdnec
     kbdnec95
@@ -79,6 +95,7 @@ list(APPEND _keyboard_layouts
     kbdsg
     kbdsl
     kbdsl1
+    kbdsmsno
     kbdsp
     kbdsw
     kbdtat
