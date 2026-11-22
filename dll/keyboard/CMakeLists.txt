@@ -51,6 +51,7 @@ list(APPEND _keyboard_layouts
     kbdhela2
     kbdhela3
     kbdhu
+    kbdibm02
     kbdic
     kbdinasa
     kbdinben
