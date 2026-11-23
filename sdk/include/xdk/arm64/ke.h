@@ -20,6 +20,7 @@ $if (_WDMDDK_)
 #define PAGE_SIZE               0x1000
 #define PAGE_SHIFT              12L
 
+#define YieldProcessor __yield
 #define PAUSE_PROCESSOR YieldProcessor();
 
 /* FIXME: Based on AMD64 but needed to compile apps */
@@ -45,6 +46,36 @@ KeMemoryBarrier(
 }
 
 #define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
+
+/* The kernel keeps the FP and SIMD state of every thread, nothing to save */
+typedef struct _KFLOATING_SAVE
+{
+    ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Kernel_float_saved_
+_At_(*FloatSave, _Kernel_requires_resource_not_held_(FloatState) _Kernel_acquires_resource_(FloatState))
+FORCEINLINE
+NTSTATUS
+KeSaveFloatingPointState(
+    _Out_ PKFLOATING_SAVE FloatSave)
+{
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
+}
+
+_Success_(1)
+_Kernel_float_restored_
+_At_(*FloatSave, _Kernel_requires_resource_held_(FloatState) _Kernel_releases_resource_(FloatState))
+FORCEINLINE
+NTSTATUS
+KeRestoreFloatingPointState(
+    _In_ PKFLOATING_SAVE FloatSave)
+{
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
+}
 
 _IRQL_requires_max_(HIGH_LEVEL)
 _IRQL_saves_
@@ -94,10 +125,13 @@ KeRaiseIrqlToSynchLevel(VOID)
 #endif
 }
 
-NTSYSAPI
-PKTHREAD
-NTAPI
-KeGetCurrentThread(VOID);
+/* KPRCB::CurrentThread */
+FORCEINLINE
+struct _KTHREAD *
+KeGetCurrentThread(VOID)
+{
+    return (struct _KTHREAD *)__readx18qword(0x988);
+}
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 /* KPRCB::Number, the PRCB starts at PCR offset 0x980 */
@@ -132,6 +166,7 @@ $if (_NTDDK_)
 #define CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM64 | 0x00000008L)
 #define CONTEXT_X18             (CONTEXT_ARM64 | 0x00000010L)
 #define CONTEXT_FULL            (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
+#define CONTEXT_ALL             (CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS | CONTEXT_X18)
 
 typedef union NEON128 {
     struct {
@@ -145,7 +180,7 @@ typedef union NEON128 {
 } NEON128, *PNEON128;
 typedef NEON128 NEON128, *PNEON128;
 
-typedef struct _CONTEXT {
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 
     //
     // Control flags.

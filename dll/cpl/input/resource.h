@@ -204,6 +204,8 @@
 #define IDS_GERMAN_EXTENDED1_LAYOUT                    5143
 #define IDS_SWEDISH_WITH_SAMI_LAYOUT                   5144
 #define IDS_COLEMAK_LAYOUT                             5145
+#define IDS_MAORI_LAYOUT                               5146
+#define IDS_PASHTO_AFGHANISTAN_LAYOUT                  5159
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
-#define IDS_PERSIAN_STANRDARD_LAYOUT                   5213
+#define IDS_PERSIAN_STANDARD_LAYOUT                    5213
 #define IDS_GERMAN_EXTENDED2_LAYOUT                    5998 /* FIXME: See also boot/bootdata/hivesys.inf */
