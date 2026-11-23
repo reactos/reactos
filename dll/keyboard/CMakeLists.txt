@@ -19,6 +19,7 @@ list(APPEND _keyboard_layouts
     kbdbe
     kbdbga
     kbdbgt
+    kbdbhc
     kbdblr
     kbdbr
     kbdbu

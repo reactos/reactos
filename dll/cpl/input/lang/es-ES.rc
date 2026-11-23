@@ -138,6 +138,7 @@ BEGIN
     IDS_BELGIAN_FRENCH_LAYOUT "Francés (Bélgica)"
     IDS_BELGIAN_LAYOUT "Belga (periodo)"
     IDS_BENGALI_LAYOUT "Bengalí"
+    IDS_BOSNIAN_CYRILLIC_LAYOUT "Bosnian (Cyrillic)"
     IDS_BULGARIAN_LAYOUT "Búlgaro"
     IDS_BULGARIAN_BDS_LAYOUT "Búlgaro BDS 5237-1978"
     IDS_BULGARIAN_LATIN_LAYOUT "Búlgaro (latino)"
