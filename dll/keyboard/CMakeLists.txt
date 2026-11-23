@@ -72,6 +72,7 @@ list(APPEND _keyboard_layouts
     kbdir
     kbdit
     kbdit142
+    kbdiulat
     kbdjpn
     kbdkaz
     kbdkor
@@ -86,6 +87,7 @@ list(APPEND _keyboard_layouts
     kbdmac
     kbdmaori
     kbdmlt47
+    kbdmlt48
     kbdne
     kbdnec
     kbdnec95
