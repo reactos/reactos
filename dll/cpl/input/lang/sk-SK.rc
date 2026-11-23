@@ -200,6 +200,7 @@ BEGIN
     IDS_HUNGARIAN_LAYOUT "Maďarské"
     IDS_HUNGARIAN_101_KEY_LAYOUT "Maďarské 101-key"
     IDS_ICELANDIC_LAYOUT "Islandské"
+    IDS_INUKTITUT_LATIN_LAYOUT "Inuktitut - Latin"
     IDS_IRISH_LAYOUT "Írske"
     IDS_ITALIAN_LAYOUT "Talianske"
     IDS_ITALIAN_142_LAYOUT "Talianske (142)"

@@ -206,6 +206,7 @@ BEGIN
     IDS_HUNGARIAN_LAYOUT "Ungarisch"
     IDS_HUNGARIAN_101_KEY_LAYOUT "Ungarisch (101-Tastatur)"
     IDS_ICELANDIC_LAYOUT "Isländisch"
+    IDS_INUKTITUT_LATIN_LAYOUT "Inuktitut - Latin"
     IDS_IRISH_LAYOUT "Irisch"
     IDS_ITALIAN_LAYOUT "Italienisch"
     IDS_ITALIAN_142_LAYOUT "Italienisch (142)"

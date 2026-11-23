@@ -195,6 +195,7 @@ BEGIN
     IDS_HUNGARIAN_LAYOUT "Húngaro"
     IDS_HUNGARIAN_101_KEY_LAYOUT "Húngaro 101-teclas"
     IDS_ICELANDIC_LAYOUT "Islandês"
+    IDS_INUKTITUT_LATIN_LAYOUT "Inuktitut - Latin"
     IDS_IRISH_LAYOUT "Irlandês"
     IDS_ITALIAN_LAYOUT "Italiano"
     IDS_ITALIAN_142_LAYOUT "Italiano (142)"
