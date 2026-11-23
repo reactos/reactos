@@ -23,6 +23,7 @@ list(APPEND _keyboard_layouts
     kbdbr
     kbdbu
     kbdbur
+    kbdca
     kbdcan
     kbdcmk
     kbdcr
@@ -38,6 +39,7 @@ list(APPEND _keyboard_layouts
     kbdfar
     kbdfc
     kbdfi
+    kbdfi1
     kbdfo
     kbdfr
     kbdgae
@@ -100,6 +102,7 @@ list(APPEND _keyboard_layouts
     kbdsg
     kbdsl
     kbdsl1
+    kbdsmsfi
     kbdsmsno
     kbdsp
     kbdsw
