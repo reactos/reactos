@@ -773,14 +773,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000414","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000414","Layout Text",0x00000000,%NORWEGIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000414","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5018"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043b","Layout File",0x00000000,"kbdno1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043b","Layout Text",0x00000000,%NORWEGIAN_WITH_SAMI%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5138"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001043b","Layout File",0x00000000,"kbdsmsno.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001043b","Layout Id",  0x00000000,"002c"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001043b","Layout Text",0x00000000,%SAMI_EXTENDED_NORWAY%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001043b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5143"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043b","Layout File",0x00000000,"kbdno1.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043b","Layout Text",0x00000000,%NORWEGIAN_WITH_SAMI%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5138"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002083b","Layout File",0x00000000,"kbdsmsfi.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002083b","Layout Id",  0x00000000,"002e"
