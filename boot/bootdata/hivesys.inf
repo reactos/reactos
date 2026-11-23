@@ -970,10 +970,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Text",0x00000000,%ASSAMESE%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5177"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000809","Layout File",0x00000000,"kbdbuk.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000809","Layout Text",0x00000000,%UK%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000809","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5025"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000450","Layout File",0x00000000,"kbdmon.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000450","Layout Text",0x00000000,%MONGOLIAN_CYRILLIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000450","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5127"
