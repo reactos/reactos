@@ -229,6 +229,7 @@ BEGIN
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Moğolca (Kiril)"
     IDS_NEPALI_LAYOUT "Nepali"
     IDS_NORWEGIAN_LAYOUT "Norveççe"
+    IDS_NORWEGIAN_WITH_SAMI_LAYOUT "Norwegian with Sami"
     IDS_ORIYA_LAYOUT "Oriya Dili"
     IDS_PASHTO_AFGHANISTAN_LAYOUT "Pashto (Afghanistan)"
     IDS_PERSIAN_STANDARD_LAYOUT "Persian (Standard)"

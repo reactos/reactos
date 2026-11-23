@@ -220,6 +220,7 @@ BEGIN
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Cyrillic Mongolia"
     IDS_NEPALI_LAYOUT "Nepali"
     IDS_NORWEGIAN_LAYOUT "Norwegia"
+    IDS_NORWEGIAN_WITH_SAMI_LAYOUT "Norwegian with Sami"
     IDS_ORIYA_LAYOUT "Oriya"
     IDS_PASHTO_AFGHANISTAN_LAYOUT "Pashto (Afghanistan)"
     IDS_PERSIAN_STANDARD_LAYOUT "Persian (Standard)"

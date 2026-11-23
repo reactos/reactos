@@ -95,6 +95,7 @@ list(APPEND _keyboard_layouts
     kbdnecnt
     kbdnepr
     kbdno
+    kbdno1
     kbdpash
     kbdpl
     kbdpl1
