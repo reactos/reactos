@@ -196,15 +196,21 @@
 #define IDS_BULGARIAN_PHONETIC_BDS_LAYOUT              5135
 #define IDS_BULGARIAN_BDS_LAYOUT                       5136
 #define IDS_GERMAN_RISTOME_LAYOUT                      5137
+#define IDS_NORWEGIAN_WITH_SAMI_LAYOUT                 5138
 #define IDS_GERMAN_DE_ERGO_LAYOUT                      5139
-#define IDS_BURMESE_LAYOUT                             5140
+#define IDS_MALTESE_47KEY_LAYOUT                       5140
 #define IDS_UKRAINIAN_STUDENT_LAYOUT                   5141
 #define IDS_ESPERANTO_LAYOUT                           5142
 #define IDS_GERMAN_EXTENDED1_LAYOUT                    5143
-#define IDS_GERMAN_EXTENDED2_LAYOUT                    5144
-#define IDS_COLEMAK_LAYOUT                             5145
+#define IDS_SWEDISH_WITH_SAMI_LAYOUT                   5144
+#define IDS_UNITED_KINGDOM_EXTENDED_LAYOUT             5145
 #define IDS_MAORI_LAYOUT                               5146
+#define IDS_BOSNIAN_CYRILLIC_LAYOUT                    5155
+#define IDS_PASHTO_AFGHANISTAN_LAYOUT                  5159
+#define IDS_NEPALI_LAYOUT                              5169
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
-#define IDS_PERSIAN_STANRDARD_LAYOUT                   5213
-#define IDS_GERMAN_NEO_11_LAYOUT                       5997 /* FIXME */
-#define IDS_NORWEGIAN_WITH_SAMI_LAYOUT                 5138
+#define IDS_BURMESE_LAYOUT                             5202
+#define IDS_PERSIAN_STANDARD_LAYOUT                    5213
+#define IDS_GERMAN_NEO_11_LAYOUT                       5997 /* FIXME: See also boot/bootdata/hivesys.inf */
+#define IDS_GERMAN_EXTENDED2_LAYOUT                    5998 /* FIXME: See also boot/bootdata/hivesys.inf */
+#define IDS_COLEMAK_LAYOUT                             5999 /* FIXME: See also boot/bootdata/hivesys.inf */
