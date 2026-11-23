@@ -40,6 +40,7 @@ list(APPEND _keyboard_layouts
     kbdfi
     kbdfo
     kbdfr
+    kbdgae
     kbdgeo
     kbdgerg
     kbdgkl
@@ -87,6 +88,7 @@ list(APPEND _keyboard_layouts
     kbdnecat
     kbdnecnt
     kbdno
+    kbdpash
     kbdpl
     kbdpl1
     kbdpo
