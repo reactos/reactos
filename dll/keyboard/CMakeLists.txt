@@ -17,6 +17,7 @@ list(APPEND _keyboard_layouts
     kbdaze
     kbdazel
     kbdbe
+    kbdbene
     kbdbga
     kbdbgt
     kbdbhc
