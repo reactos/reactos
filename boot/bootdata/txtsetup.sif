@@ -561,6 +561,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000042F = "Macedonian (FYRO)"
 0000044C = "Malayalam"
 00000414 = "Norwegian"
+00000463 = "Pashto (Afghanistan)"
 00000415 = "Polish (programmer's)"
 00010415 = "Polish (214)"
 00010416 = "Portuguese (Brazilian ABNT2)"
@@ -697,6 +698,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000044D = kbdinasa.dll
 00000450 = kbdmon.dll
 00000455 = kbdbur.dll
+00000463 = kbdpash.dll
 00000481 = kbdmaori.dll
 0000048F = kbdeo.dll
 
