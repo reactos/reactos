@@ -702,10 +702,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040b","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040b","Layout Text",0x00000000,%FINNISH%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5009"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000083b","Layout File",0x00000000,"kbdfi1.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000083b","Layout Text",0x00000000,%SWEDISH_WITH_SAMI%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000083b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5144"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040c","Layout File",0x00000000,"kbdfr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040c","Layout Text",0x00000000,%FRENCH%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5010"
@@ -945,6 +941,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout File",0x00000000,"kbdindev.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Text",0x00000000,%DEVANAGARI%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5096"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000083b","Layout File",0x00000000,"kbdfi1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000083b","Layout Text",0x00000000,%SWEDISH_WITH_SAMI%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000083b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5144"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout File",0x00000000,"kbdkaz.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout Text",0x00000000,%KAZAKH%
