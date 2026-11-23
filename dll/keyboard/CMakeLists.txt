@@ -88,6 +88,7 @@ list(APPEND _keyboard_layouts
     kbdnecat
     kbdnecnt
     kbdno
+    kbdpash
     kbdpl
     kbdpl1
     kbdpo
