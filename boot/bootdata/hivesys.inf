@@ -816,6 +816,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000c1a","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000c1a","Layout Text",0x00000000,%SERBIAN_CYRILLIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000c1a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5057"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000201a","Layout File",0x00000000,"kbdbhc.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000201a","Layout Text",0x00000000,%BOSNIAN_CYRILLIC%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000201a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5155"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout File",0x00000000,"kbdsl.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout Text",0x00000000,%SLOVAK%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5039"
@@ -948,10 +952,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000843","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout File",0x00000000,"kbdtat.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout Text",0x00000000,%TATAR%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000444","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5116"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000201a","Layout File",0x00000000,"kbdbhc.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000201a","Layout Text",0x00000000,%BOSNIAN_CYRILLIC%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000201a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5155"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout File",0x00000000,"kbdinben.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Text",0x00000000,%BENGALI%
