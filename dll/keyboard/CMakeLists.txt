@@ -86,6 +86,7 @@ list(APPEND _keyboard_layouts
     kbdmac
     kbdmaori
     kbdmlt47
+    kbdmlt48
     kbdne
     kbdnec
     kbdnec95
