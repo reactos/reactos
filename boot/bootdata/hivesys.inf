@@ -576,7 +576,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout Displa
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout File",0x00000000,"kbdgneo.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout Text",0x00000000,%GERMAN_NEO%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5138"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5997"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040407","Layout File",0x00000000,"kbdgrist.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040407","Layout Id",  0x00000000,"0012"
