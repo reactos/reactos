@@ -117,6 +117,7 @@ list(APPEND _keyboard_layouts
     kbdtuf
     kbdtuq
     kbduk
+    kbdukx
     kbdur
     kbdurs
     kbdus
