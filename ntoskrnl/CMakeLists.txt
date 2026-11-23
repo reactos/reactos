@@ -28,7 +28,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(libntoskrnl INTERFACE memcmp)
 endif()
 
-if((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
+if(((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU")) AND
+   (ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64"))
     # Enable xsave feature
     add_compile_options(-mxsave)
 endif()

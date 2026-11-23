@@ -567,7 +567,7 @@ RtlEqualUnicodeString(
   _In_ CONST UNICODE_STRING *String2,
   _In_ BOOLEAN CaseInSensitive);
 
-#if !defined(_AMD64_) && !defined(_IA64_)
+#if !defined(_AMD64_) && !defined(_IA64_) && !defined(_ARM64_)
 NTSYSAPI
 LARGE_INTEGER
 NTAPI
@@ -3006,7 +3006,7 @@ RtlInitEmptyUnicodeString(
 }
 $endif (_WDMDDK_)
 
-#if defined(_AMD64_) || defined(_IA64_)
+#if defined(_AMD64_) || defined(_IA64_) || defined(_ARM64_)
 
 $if (_WDMDDK_)
 
