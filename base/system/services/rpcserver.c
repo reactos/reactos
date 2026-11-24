@@ -3231,7 +3231,6 @@ RQueryServiceLockStatusW(
 {
     LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus = (LPQUERY_SERVICE_LOCK_STATUSW)lpBuf;
     PMANAGER_HANDLE hMgr;
-    DWORD dwRequiredSize;
 
     if (!lpLockStatus || !pcbBytesNeeded)
         return ERROR_INVALID_PARAMETER;
@@ -3250,16 +3249,7 @@ RQueryServiceLockStatusW(
         return ERROR_ACCESS_DENIED;
     }
 
-    /* FIXME: we need to compute instead the real length of the owner name */
-    dwRequiredSize = sizeof(QUERY_SERVICE_LOCK_STATUSW) + sizeof(WCHAR);
-    *pcbBytesNeeded = dwRequiredSize;
-
-    if (cbBufSize < dwRequiredSize)
-        return ERROR_INSUFFICIENT_BUFFER;
-
-    ScmQueryServiceLockStatusW(lpLockStatus);
-
-    return ERROR_SUCCESS;
+    return ScmQueryServiceLockStatusW(lpLockStatus, cbBufSize, pcbBytesNeeded);
 }
 
 
@@ -4335,7 +4325,6 @@ RQueryServiceLockStatusA(
 {
     LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus = (LPQUERY_SERVICE_LOCK_STATUSA)lpBuf;
     PMANAGER_HANDLE hMgr;
-    DWORD dwRequiredSize;
 
     if (!lpLockStatus || !pcbBytesNeeded)
         return ERROR_INVALID_PARAMETER;
@@ -4354,16 +4343,7 @@ RQueryServiceLockStatusA(
         return ERROR_ACCESS_DENIED;
     }
 
-    /* FIXME: we need to compute instead the real length of the owner name */
-    dwRequiredSize = sizeof(QUERY_SERVICE_LOCK_STATUSA) + sizeof(CHAR);
-    *pcbBytesNeeded = dwRequiredSize;
-
-    if (cbBufSize < dwRequiredSize)
-        return ERROR_INSUFFICIENT_BUFFER;
-
-    ScmQueryServiceLockStatusA(lpLockStatus);
-
-    return ERROR_SUCCESS;
+    return ScmQueryServiceLockStatusA(lpLockStatus, cbBufSize, pcbBytesNeeded);
 }
 
 
