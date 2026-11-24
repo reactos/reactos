@@ -110,6 +110,12 @@ VOID LoadSettings(VOID)
         type == REG_DWORD && dwSize == sizeof(value) && value <= UNDO_LIMIT_MAX)
         dwUndoLimit = value;
 
+    dwSize = sizeof(value);
+    if (RegQueryValueEx(hKey, _T("RightClickAnimation"), NULL, &type,
+                        (LPBYTE)&value, &dwSize) == ERROR_SUCCESS &&
+        type == REG_DWORD && dwSize == sizeof(value) && value <= 1)
+        dwRightClickAnimation = value;
+
     RegCloseKey(hKey);
 }
 
@@ -149,6 +155,9 @@ VOID SaveSettings(VOID)
                   (const BYTE *)&dwWinAnimationMode, sizeof(dwWinAnimationMode));
     RegSetValueEx(hKey, _T("WinAnimationSpeed"), 0, REG_DWORD,
                   (const BYTE *)&dwWinAnimationSpeed, sizeof(dwWinAnimationSpeed));
+
+    RegSetValueEx(hKey, _T("RightClickAnimation"), 0, REG_DWORD,
+                  (const BYTE *)&dwRightClickAnimation, sizeof(dwRightClickAnimation));
 
     RegSetValueEx(hKey, _T("UndoLimit"), 0, REG_DWORD,
                   (const BYTE *)&dwUndoLimit, sizeof(dwUndoLimit));
@@ -481,6 +490,8 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         {
             CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_VEGAS);
         }
+        CheckDlgButton(hDlg, IDC_OPT_RIGHTCLICK_ANIMATION,
+                       dwRightClickAnimation ? BST_CHECKED : BST_UNCHECKED);
         UpdateStatusOptions(hDlg);
         return TRUE;
 
@@ -511,6 +522,7 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 SetFocus(GetDlgItem(hDlg, IDC_OPT_UNDO_LIMIT));
                 return TRUE;
             }
+            dwRightClickAnimation = IsDlgButtonChecked(hDlg, IDC_OPT_RIGHTCLICK_ANIMATION) == BST_CHECKED;
             SetUndoLimit(undoLimit);
             dwWinAnimationMode = animation->mode;
             dwWinAnimationSpeed = animation->speed;

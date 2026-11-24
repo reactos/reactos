@@ -1,4 +1,5 @@
 #include "solitaire.h"
+#include <commctrl.h>
 
 CardRegion *pDeck;
 CardRegion *pPile;
@@ -9,8 +10,22 @@ HBITMAP hbmBitmap;
 HDC     hdcBitmap;
 int     yRowStackCardOffset;
 
+static LRESULT CALLBACK SolitaireCardProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
+                                          UINT_PTR id, DWORD_PTR)
+{
+    if (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONDBLCLK)
+    {
+        StartQuickCollect();
+        return 0;
+    }
+    if (msg == WM_NCDESTROY)
+        RemoveWindowSubclass(hwnd, SolitaireCardProc, id);
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
 void CreateSol()
 {
+    SetWindowSubclass(SolWnd, SolitaireCardProc, 1, 0);
     int i;
 
 //    hbmBitmap = (HBITMAP)LoadImage(0,"test.bmp",IMAGE_BITMAP,0,0,LR_LOADFROMFILE);

@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 300, 160
+IDD_OPTIONS DIALOGEX 0, 0, 300, 184
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
@@ -35,8 +35,10 @@ BEGIN
     CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
     // TRANSLATORS: Machine translation; please review this new text.
     PUSHBUTTON "Анімація перемоги...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 82, 139, 60, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 158, 139, 60, 14
+    // TRANSLATORS: Please review the right-click animation option.
+    AUTOCHECKBOX "Анімація збирання карт правою кнопкою миші", IDC_OPT_RIGHTCLICK_ANIMATION, 7, 134, 286, 20, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 82, 163, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 158, 163, 60, 14
 END
 
 // TRANSLATORS: The following dialog is machine-translated; please review all new text.

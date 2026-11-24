@@ -38,6 +38,8 @@ extern UINT_PTR PlayTimer;
 bool IsAutoFinishActive(void);
 void UpdateAutoFinishMenu(void);
 void StartAutoFinish(void);
+void StartQuickCollect(void);
+extern DWORD dwRightClickAnimation;
 void StopAutoFinish(void);
 void AutoFinishStep(void);
 

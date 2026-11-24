@@ -2,7 +2,8 @@
 #include "solitaire.h"
 #include "resource.h"
 
-static bool collecting;
+static bool collecting, quickCollect;
+DWORD dwRightClickAnimation = 1;
 
 bool IsAutoFinishActive(void)
 {
@@ -71,6 +72,49 @@ static bool PlanAutoFinish(int *firstSource, int *firstDestination)
     return true;
 }
 
+// Collect only exposed cards. Never draw from the stock or turn hidden cards.
+static bool FindQuickMove(int *source, int *destination)
+{
+    for (int i = 0; i <= NUM_ROW_STACKS; ++i)
+    {
+        CardRegion *from = i == NUM_ROW_STACKS ? pPile : pRowStack[i];
+        if (!from->NumCards()) continue;
+        int down;
+        from->GetFaceDirection(&down);
+        Card card = from->GetCardStack()[0];
+        if (card.FaceDown() || down >= from->NumCards()) continue;
+        for (int j = 0; j < 4; ++j)
+        {
+            const CardStack &target = pSuitStack[j]->GetCardStack();
+            if (target.NumCards()
+                ? card.Suit() == target[0].Suit() && card.LoVal() == target[0].LoVal() + 1
+                : card.LoVal() == 1)
+            {
+                *source = i;
+                *destination = j;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void StartQuickCollect(void)
+{
+    int source, destination;
+    if (collecting || GetCapture() || !FindQuickMove(&source, &destination)) return;
+    quickCollect = true;
+    if (dwRightClickAnimation)
+        collecting = SetTimer(hwndMain, IDT_AUTOFINISH, 60, NULL) != 0;
+    else
+    {
+        collecting = true;
+        // Each successful step removes one exposed card; no message-pump loop.
+        while (collecting) AutoFinishStep();
+    }
+    UpdateAutoFinishMenu();
+}
+
 void UpdateAutoFinishMenu(void)
 {
     EnableMenuItem(GetMenu(hwndMain), IDM_GAME_FINISH,
@@ -92,6 +136,7 @@ void StartAutoFinish(void)
 {
     if (collecting || !PlanAutoFinish(NULL, NULL))
         return;
+    quickCollect = false;
     collecting = SetTimer(hwndMain, IDT_AUTOFINISH, 60, NULL) != 0;
     UpdateAutoFinishMenu();
 }
@@ -101,7 +146,7 @@ void AutoFinishStep(void)
     int source, destination;
     if (!collecting)
         return;
-    if (!PlanAutoFinish(&source, &destination))
+    if (!(quickCollect ? FindQuickMove(&source, &destination) : PlanAutoFinish(&source, &destination)))
     {
         StopAutoFinish();
         return;
@@ -115,7 +160,7 @@ void AutoFinishStep(void)
     // Use the same callbacks as a double-click for scoring, waste and undo.
     // The short timer interval adds no long pause between animated flights.
     int before = pSuitStack[destination]->NumCards();
-    from->SimulateDrag(pSuitStack[destination], 1, true);
+    from->SimulateDrag(pSuitStack[destination], 1, !quickCollect || dwRightClickAnimation != 0);
     bAutoroute = false;
     if (pSuitStack[destination]->NumCards() != before + 1)
         StopAutoFinish();
