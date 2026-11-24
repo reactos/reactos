@@ -537,10 +537,6 @@
     AF_LoaderRec *loader = malloc(sizeof(*loader));
     if (!hints || !loader)
     {
-        /* The pointers are released only at the Exit label below; freeing
-         * them here too was a double free when one allocation succeeded
-         * and the other failed (CORE-20861).
-         */
         error = FT_Err_Out_Of_Memory;
         goto Exit;
     }
