@@ -18,16 +18,8 @@
 
 /* GLOBALS ******************************************************************/
 
-typedef struct _IMAGE_SYMBOL_INFO_CACHE
-{
-    LIST_ENTRY ListEntry;
-    ULONG RefCount;
-    UNICODE_STRING FileName;
-    PROSSYM_INFO RosSymInfo;
-}
-IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
-
 static BOOLEAN LoadSymbols = FALSE;
+static BOOLEAN LoadSymbolsRequested;
 static LIST_ENTRY SymbolsToLoad;
 static KSPIN_LOCK SymbolsToLoadLock;
 static KEVENT SymbolsToLoadEvent;
@@ -60,17 +52,95 @@ KdbpSymSearchModuleList(
     return FALSE;
 }
 
-/*! \brief Find a module...
+/*! \brief Acquire the module list spin lock.
+ *
+ * \param OldIrql Receives the original IRQL.
+ *
+ * \retval TRUE The lock was acquired.
+ * \retval FALSE The lock was busy and the original IRQL was restored.
+ */
+static
+BOOLEAN
+KdbpSymTryLockModuleList(
+    _Out_ PKIRQL OldIrql)
+{
+    *OldIrql = KeGetCurrentIrql();
+
+    if (*OldIrql < DISPATCH_LEVEL)
+        KeRaiseIrqlToDpcLevel();
+
+    /*
+     * The debugger may have entered with the module list lock held by
+     * the current processor. KeTryToAcquireSpinLockAtDpcLevel asserts
+     * on recursive acquire, so test the spin lock first.
+     */
+    if (KeTestSpinLock(&PsLoadedModuleSpinLock) &&
+        KeTryToAcquireSpinLockAtDpcLevel(&PsLoadedModuleSpinLock))
+    {
+        return TRUE;
+    }
+
+    if (*OldIrql < DISPATCH_LEVEL)
+        KeLowerIrql(*OldIrql);
+
+    return FALSE;
+}
+
+/*! \brief Release the loaded module list spin lock and restore IRQL.
+ *
+ * \param OldIrql The IRQL returned by KdbpSymTryLockModuleList.
+ */
+static
+VOID
+KdbpSymUnlockModuleList(
+    _In_ KIRQL OldIrql)
+{
+    KeReleaseSpinLockFromDpcLevel(&PsLoadedModuleSpinLock);
+    if (OldIrql < DISPATCH_LEVEL)
+        KeLowerIrql(OldIrql);
+}
+
+/*! \brief Search the current process's user mode module list.
+ *
+ * \param Address Optional address to look up within a module.
+ * \param Index Module index or a negative value to skip index matching.
+ * \param Count Module count for index matching.
+ * \param LdrEntry Receives the matching loader entry on success.
+ *
+ * \retval TRUE if a matching module was found.
+ */
+static
+BOOLEAN
+KdbpSymFindUserModule(
+    _In_opt_ PVOID Address,
+    _In_ INT Index,
+    _Inout_ PLONG Count,
+    _Out_ PLDR_DATA_TABLE_ENTRY* LdrEntry)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+
+    if (!Process || !Process->Peb || !Process->Peb->Ldr)
+        return FALSE;
+
+    return KdbpSymSearchModuleList(Process->Peb->Ldr->InLoadOrderModuleList.Flink,
+                                   &Process->Peb->Ldr->InLoadOrderModuleList,
+                                   Count,
+                                   Address,
+                                   Index,
+                                   LdrEntry);
+}
+
+/*! \brief Find a module for the debugger's module command.
  *
  * \param Address      If \a Address is not NULL the module containing \a Address
  *                     is searched.
- * \param Name         If \a Name is not NULL the module named \a Name will be
- *                     searched.
  * \param Index        If \a Index is >= 0 the Index'th module will be returned.
  * \param pLdrEntry    Pointer to a PLDR_DATA_TABLE_ENTRY which is filled.
  *
  * \retval TRUE    Module was found, \a pLdrEntry was filled.
- * \retval FALSE   No module was found.
+ * \retval FALSE   The list was busy or no module was found.
+ *
+ * \remark Other processors must be frozen while the caller accesses the returned entry.
  */
 BOOLEAN
 KdbpSymFindModule(
@@ -79,34 +149,22 @@ KdbpSymFindModule(
     OUT PLDR_DATA_TABLE_ENTRY* pLdrEntry)
 {
     LONG Count = 0;
-    PEPROCESS CurrentProcess;
+    KIRQL OldIrql;
+    BOOLEAN Found;
 
-    /* First try to look up the module in the kernel module list. */
-    KeAcquireSpinLockAtDpcLevel(&PsLoadedModuleSpinLock);
-    if(KdbpSymSearchModuleList(PsLoadedModuleList.Flink,
-                               &PsLoadedModuleList,
-                               &Count,
-                               Address,
-                               Index,
-                               pLdrEntry))
-    {
-        KeReleaseSpinLockFromDpcLevel(&PsLoadedModuleSpinLock);
-        return TRUE;
-    }
-    KeReleaseSpinLockFromDpcLevel(&PsLoadedModuleSpinLock);
-
-    /* That didn't succeed. Try the module list of the current process now. */
-    CurrentProcess = PsGetCurrentProcess();
-
-    if(!CurrentProcess || !CurrentProcess->Peb || !CurrentProcess->Peb->Ldr)
+    if (!KdbpSymTryLockModuleList(&OldIrql))
         return FALSE;
 
-    return KdbpSymSearchModuleList(CurrentProcess->Peb->Ldr->InLoadOrderModuleList.Flink,
-                                   &CurrentProcess->Peb->Ldr->InLoadOrderModuleList,
-                                   &Count,
-                                   Address,
-                                   Index,
-                                   pLdrEntry);
+    Found = KdbpSymSearchModuleList(PsLoadedModuleList.Flink,
+                                    &PsLoadedModuleList,
+                                    &Count,
+                                    Address,
+                                    Index,
+                                    pLdrEntry);
+
+    KdbpSymUnlockModuleList(OldIrql);
+
+    return Found || KdbpSymFindUserModule(Address, Index, &Count, pLdrEntry);
 }
 
 static
@@ -151,39 +209,66 @@ KdbSymPrintAddress(
     IN PCONTEXT Context)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+    LONG Count = 0;
     ULONG_PTR RelativeAddress;
-    BOOLEAN Printed = FALSE;
+    BOOLEAN HaveSymbols = FALSE;
     CHAR ModuleNameAnsi[64];
+    ULONG LineNumber;
+    CHAR FileName[256];
+    CHAR FunctionName[256];
 
-    if (!KdbpSymFindModule(Address, -1, &LdrEntry))
-        return FALSE;
+    UNREFERENCED_PARAMETER(Context);
 
-    RelativeAddress = (ULONG_PTR)Address - (ULONG_PTR)LdrEntry->DllBase;
-
-    KdbpSymUnicodeToAnsi(&LdrEntry->BaseDllName,
-                        ModuleNameAnsi,
-                        sizeof(ModuleNameAnsi));
-
-    if (LdrEntry->PatchInformation)
+    if (Address > MmHighestUserAddress)
     {
-        ULONG LineNumber;
-        CHAR FileName[256];
-        CHAR FunctionName[256];
+        KIRQL OldIrql;
 
-        if (RosSymGetAddressInformation(LdrEntry->PatchInformation,
-                                        RelativeAddress,
-                                        &LineNumber,
-                                        FileName,
-                                        FunctionName))
+        if (!KdbpSymTryLockModuleList(&OldIrql))
+            return FALSE;
+
+        if (!KdbpSymSearchModuleList(PsLoadedModuleList.Flink,
+                                     &PsLoadedModuleList,
+                                     &Count,
+                                     Address,
+                                     -1,
+                                     &LdrEntry))
         {
-            KdbPrintf("<%s:%x (%s:%d (%s))>",
-                      ModuleNameAnsi, RelativeAddress,
-                      FileName, LineNumber, FunctionName);
-            Printed = TRUE;
+            KdbpSymUnlockModuleList(OldIrql);
+            return FALSE;
         }
+
+        /* Resolve the address and copy the module name before releasing the lock */
+        RelativeAddress = (ULONG_PTR)Address - (ULONG_PTR)LdrEntry->DllBase;
+        KdbpSymUnicodeToAnsi(&LdrEntry->BaseDllName, ModuleNameAnsi, sizeof(ModuleNameAnsi));
+
+        if (LdrEntry->PatchInformation)
+        {
+            HaveSymbols = RosSymGetAddressInformation(LdrEntry->PatchInformation,
+                                                      RelativeAddress,
+                                                      &LineNumber,
+                                                      FileName,
+                                                      FunctionName);
+        }
+
+        KdbpSymUnlockModuleList(OldIrql);
+    }
+    else
+    {
+        if (!KdbpSymFindUserModule(Address, -1, &Count, &LdrEntry))
+            return FALSE;
+
+        RelativeAddress = (ULONG_PTR)Address - (ULONG_PTR)LdrEntry->DllBase;
+        KdbpSymUnicodeToAnsi(&LdrEntry->BaseDllName, ModuleNameAnsi, sizeof(ModuleNameAnsi));
     }
 
-    if (!Printed)
+    /* Print the copied information without holding the module list lock */
+    if (HaveSymbols)
+    {
+        KdbPrintf("<%s:%x (%s:%d (%s))>",
+                  ModuleNameAnsi, RelativeAddress,
+                  FileName, LineNumber, FunctionName);
+    }
+    else
     {
         /* Just print module & address */
         KdbPrintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
@@ -192,13 +277,27 @@ KdbSymPrintAddress(
     return TRUE;
 }
 
+/*! \brief Associate initialized symbol information with a loaded image.
+ *
+ * \param LdrEntry Loader entry that will own the symbol information.
+ * \param SymbolInfo Initialized symbol information.
+ */
+static
+VOID
+KdbpSymPublish(
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _In_ PROSSYM_INFO SymbolInfo)
+{
+    KIRQL OldIrql = KeAcquireSpinLockRaiseToSynch(&PsLoadedModuleSpinLock);
+    ASSERT(LdrEntry->PatchInformation == NULL);
+    LdrEntry->PatchInformation = SymbolInfo;
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+}
+
 static KSTART_ROUTINE LoadSymbolsRoutine;
 /*! \brief          The symbol loader thread routine.
  *                  This opens the image file for reading and loads the symbols
  *                  section from there.
- *
- * \note            We must do this because KdbSymProcessSymbols is
- *                  called at high IRQL and we can't set the event from here
  *
  * \param Context   Unused
  */
@@ -213,13 +312,7 @@ LoadSymbolsRoutine(
     while (TRUE)
     {
         PLIST_ENTRY ListEntry;
-        NTSTATUS Status = KeWaitForSingleObject(&SymbolsToLoadEvent, WrKernel, KernelMode, FALSE, NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("KeWaitForSingleObject failed?! 0x%08x\n", Status);
-            LoadSymbols = FALSE;
-            return;
-        }
+        KeWaitForSingleObject(&SymbolsToLoadEvent, WrKernel, KernelMode, FALSE, NULL);
 
         while ((ListEntry = ExInterlockedRemoveHeadList(&SymbolsToLoad, &SymbolsToLoadLock)))
         {
@@ -227,6 +320,9 @@ LoadSymbolsRoutine(
             HANDLE FileHandle;
             OBJECT_ATTRIBUTES Attrib;
             IO_STATUS_BLOCK Iosb;
+            PROSSYM_INFO SymbolInfo;
+            NTSTATUS Status;
+
             InitializeObjectAttributes(&Attrib, &LdrEntry->FullDllName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
             DPRINT1("Trying %wZ\n", &LdrEntry->FullDllName);
             Status = ZwOpenFile(&FileHandle,
@@ -270,63 +366,77 @@ LoadSymbolsRoutine(
                 }
             }
 
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
+            {
+                if (RosSymCreateFromFile(&FileHandle, &SymbolInfo))
+                    KdbpSymPublish(LdrEntry, SymbolInfo);
+
+                NtClose(FileHandle);
+            }
+            else
             {
                 DPRINT1("Failed opening file %wZ (%wZ) for reading symbols (0x%08x)\n", &LdrEntry->FullDllName, &LdrEntry->BaseDllName, Status);
-                /* We took a ref previously */
-                MmUnloadSystemImage(LdrEntry);
-                continue;
             }
 
-            /* Hand it to Rossym */
-            if (!RosSymCreateFromFile(&FileHandle, (PROSSYM_INFO*)&LdrEntry->PatchInformation))
-                LdrEntry->PatchInformation = NULL;
-
-            /* We're done for this one. */
-            NtClose(FileHandle);
+            /* Release the reference taken when the request was queued */
             MmUnloadSystemImage(LdrEntry);
         }
     }
 }
 
-/*! \brief          Load symbols from image mapping. If this fails,
+/*! \brief Load symbols from a mapped image or queue a file read.
  *
- * \param LdrEntry  The entry to load symbols from
+ * \param LdrEntry  Loader entry for the mapped image.
+ *
+ * \remark The caller must hold MmSystemLoadLock at APC_LEVEL or below.
  */
 VOID
-KdbSymProcessSymbols(
-    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry,
-    _In_ BOOLEAN Load)
+KdbSymLoadModule(
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
+    PROSSYM_INFO SymbolInfo;
+
     if (!LoadSymbols)
         return;
 
-    /* Check if this is unload */
-    if (!Load)
+    PAGED_CODE();
+
+    if (RosSymCreateFromMem(LdrEntry->DllBase, LdrEntry->SizeOfImage, &SymbolInfo))
     {
-        /* Did we process it */
-        if (LdrEntry->PatchInformation)
-        {
-            RosSymDelete(LdrEntry->PatchInformation);
-            LdrEntry->PatchInformation = NULL;
-        }
+        KdbpSymPublish(LdrEntry, SymbolInfo);
         return;
     }
 
-    if (RosSymCreateFromMem(LdrEntry->DllBase, LdrEntry->SizeOfImage, (PROSSYM_INFO*)&LdrEntry->PatchInformation))
-    {
-        return;
-    }
-
-    /* Add a ref until we really process it */
-    LdrEntry->LoadCount++;
-
-    /* Tell our worker thread to read from it */
-    KeAcquireSpinLockAtDpcLevel(&SymbolsToLoadLock);
-    InsertTailList(&SymbolsToLoad, &LdrEntry->InInitializationOrderLinks);
-    KeReleaseSpinLockFromDpcLevel(&SymbolsToLoadLock);
-
+    /* The worker must be able to access the loader entry after MmSystemLoadLock release */
+    MmReferenceSystemImage(LdrEntry);
+    ExInterlockedInsertTailList(&SymbolsToLoad, &LdrEntry->InInitializationOrderLinks, &SymbolsToLoadLock);
     KeSetEvent(&SymbolsToLoadEvent, IO_NO_INCREMENT, FALSE);
+}
+
+/*! \brief Detach and free local symbols on final image unload.
+ *
+ * \param LdrEntry Loader entry for the image being unloaded.
+ *
+ * \remarks Call before unmapping the image with MmSystemLoadLock held.
+ *          Call at <= APC_LEVEL.
+ */
+VOID
+KdbSymUnloadModule(
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PROSSYM_INFO SymbolInfo;
+    KIRQL OldIrql;
+
+    PAGED_CODE();
+
+    /* Ensure no readers are accessing the symbol data before clearing the pointer */
+    OldIrql = KeAcquireSpinLockRaiseToSynch(&PsLoadedModuleSpinLock);
+    SymbolInfo = LdrEntry->PatchInformation;
+    LdrEntry->PatchInformation = NULL;
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+
+    if (SymbolInfo)
+        RosSymDelete(SymbolInfo);
 }
 
 
@@ -343,10 +453,6 @@ BOOLEAN
 KdbSymInit(
     _In_ ULONG BootPhase)
 {
-#if 1 // FIXME: This is a workaround HACK!!
-    static BOOLEAN OrigLoadSymbols = FALSE;
-#endif
-
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
     if (BootPhase == 0)
@@ -359,9 +465,9 @@ KdbSymInit(
            or anything other than x86, because they only work on x86
            and can cause the system to hang on x64. */
 #if DBG && defined(_M_IX86)
-        LoadSymbols = TRUE;
+        LoadSymbolsRequested = TRUE;
 #else
-        LoadSymbols = FALSE;
+        LoadSymbolsRequested = FALSE;
 #endif
 
         /* Check the command line for LOADSYMBOLS, NOLOADSYMBOLS,
@@ -396,7 +502,7 @@ KdbSymInit(
                         Found = -1 * Found;
                     }
                 }
-                LoadSymbols = (0 < Found);
+                LoadSymbolsRequested = (0 < Found);
             }
 
             /* Move on to the next option */
@@ -404,32 +510,16 @@ KdbSymInit(
                 ++CommandLine;
         }
 
-#if 1 // FIXME: This is a workaround HACK!!
-// Save the actual value of LoadSymbols but disable it for BootPhase 0.
-        OrigLoadSymbols = LoadSymbols;
-        LoadSymbols = FALSE;
-        return OrigLoadSymbols;
-#endif
+        return LoadSymbolsRequested;
     }
     else if (BootPhase == 1)
     {
         HANDLE Thread;
         NTSTATUS Status;
-        KIRQL OldIrql;
         PLIST_ENTRY ListEntry;
 
-#if 1 // FIXME: This is a workaround HACK!!
-// Now, restore the actual value of LoadSymbols.
-        LoadSymbols = OrigLoadSymbols;
-#endif
-
-        /* Do not continue loading symbols if we have less than 96MB of RAM */
-        if (MmNumberOfPhysicalPages < (96 * 1024 * 1024 / PAGE_SIZE))
-            LoadSymbols = FALSE;
-
-        /* Continue this phase only if we need to load symbols */
-        if (!LoadSymbols)
-            return LoadSymbols;
+        if (!LoadSymbolsRequested || MmNumberOfPhysicalPages < (96 * 1024 * 1024 / PAGE_SIZE))
+            return FALSE;
 
         /* Launch our worker thread */
         InitializeListHead(&SymbolsToLoad);
@@ -444,23 +534,30 @@ KdbSymInit(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed starting symbols loader thread: 0x%08x\n", Status);
-            LoadSymbols = FALSE;
-            return LoadSymbols;
+            return FALSE;
         }
+        NtClose(Thread);
 
         RosSymInitKernelMode();
 
-        KeAcquireSpinLock(&PsLoadedModuleSpinLock, &OldIrql);
+        /*
+         * Serialize with image loading and unloading here without raising IRQL (because
+         * symbol extraction may fault or allocate).
+         */
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(&MmSystemLoadLock, Executive, KernelMode, FALSE, NULL);
+        LoadSymbols = TRUE;
 
         for (ListEntry = PsLoadedModuleList.Flink;
              ListEntry != &PsLoadedModuleList;
              ListEntry = ListEntry->Flink)
         {
             PLDR_DATA_TABLE_ENTRY LdrEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-            KdbSymProcessSymbols(LdrEntry, TRUE);
+            KdbSymLoadModule(LdrEntry);
         }
 
-        KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
+        KeLeaveCriticalRegion();
     }
 
     return LoadSymbols;
