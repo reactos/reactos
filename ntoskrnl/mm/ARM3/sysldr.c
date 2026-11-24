@@ -975,17 +975,6 @@ MiSnapThunk(IN PVOID DllBase,
     return Status;
 }
 
-#ifdef KDBG
-VOID
-MmReferenceSystemImage(
-    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry)
-{
-    /* MmUnloadSystemImage doesn't dereference boot loaded images */
-    if (LdrEntry->LoadedImports != MM_SYSLDR_BOOT_LOADED)
-        LdrEntry->LoadCount++;
-}
-#endif
-
 NTSTATUS
 NTAPI
 MmUnloadSystemImage(IN PVOID ImageHandle)
@@ -3518,7 +3507,7 @@ LoaderScan:
     }
 
 #ifdef KDBG
-    /* Load local symbols before entering the debugger or paging the image. */
+    /* Load local symbols before entering the debugger or paging the image */
     KdbSymLoadModule(LdrEntry);
 #endif
 

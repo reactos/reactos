@@ -18,10 +18,18 @@
 
 /* GLOBALS ******************************************************************/
 
+typedef struct KDB_SYMBOL_LOAD_REQUEST
+{
+    LIST_ENTRY ListEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    UNICODE_STRING FileName;
+    UNICODE_STRING BaseName;
+} KDB_SYMBOL_LOAD_REQUEST, *PKDB_SYMBOL_LOAD_REQUEST;
+
 static BOOLEAN LoadSymbols = FALSE;
 static BOOLEAN LoadSymbolsRequested;
 static LIST_ENTRY SymbolsToLoad;
-static KSPIN_LOCK SymbolsToLoadLock;
+static PKDB_SYMBOL_LOAD_REQUEST ActiveSymbolLoad;
 static KEVENT SymbolsToLoadEvent;
 
 /* FUNCTIONS ****************************************************************/
@@ -138,9 +146,7 @@ KdbpSymFindUserModule(
  * \param pLdrEntry    Pointer to a PLDR_DATA_TABLE_ENTRY which is filled.
  *
  * \retval TRUE    Module was found, \a pLdrEntry was filled.
- * \retval FALSE   The list was busy or no module was found.
- *
- * \remark Other processors must be frozen while the caller accesses the returned entry.
+ * \retval FALSE   No module was found.
  */
 BOOLEAN
 KdbpSymFindModule(
@@ -281,6 +287,8 @@ KdbSymPrintAddress(
  *
  * \param LdrEntry Loader entry that will own the symbol information.
  * \param SymbolInfo Initialized symbol information.
+ *
+ * \remarks The caller holds MmSystemLoadLock.
  */
 static
 VOID
@@ -292,6 +300,68 @@ KdbpSymPublish(
     ASSERT(LdrEntry->PatchInformation == NULL);
     LdrEntry->PatchInformation = SymbolInfo;
     KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+}
+
+/*! \brief Read symbols using the file names copied into a load request.
+ *
+ * \return The symbol information on success, NULL otherwise.
+ */
+static
+PROSSYM_INFO
+KdbpReadSymbolFile(
+    _In_ const KDB_SYMBOL_LOAD_REQUEST *Request)
+{
+    static const UNICODE_STRING FallbackDirs[] =
+    {
+        RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\"),
+        RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\drivers\\")
+    };
+    UNICODE_STRING ImagePath = Request->FileName;
+    WCHAR ImagePathBuffer[256];
+    OBJECT_ATTRIBUTES Attrib;
+    IO_STATUS_BLOCK Iosb;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+    PROSSYM_INFO SymbolInfo;
+    ULONG Index;
+
+    for (Index = 0;; Index++)
+    {
+        InitializeObjectAttributes(&Attrib,
+                                   &ImagePath,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+        DPRINT1("Trying %wZ\n", &ImagePath);
+        Status = ZwOpenFile(&FileHandle,
+                            FILE_READ_ACCESS | SYNCHRONIZE,
+                            &Attrib,
+                            &Iosb,
+                            FILE_SHARE_READ,
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+        if (NT_SUCCESS(Status))
+            break;
+
+        if (Index == RTL_NUMBER_OF(FallbackDirs))
+        {
+            DPRINT1("Failed opening file %wZ (%wZ) for reading symbols (0x%08x)\n",
+                    &Request->FileName,
+                    &Request->BaseName,
+                    Status);
+            return NULL;
+        }
+
+        RtlInitEmptyUnicodeString(&ImagePath, ImagePathBuffer, sizeof(ImagePathBuffer));
+        RtlCopyUnicodeString(&ImagePath, &FallbackDirs[Index]);
+        RtlAppendUnicodeStringToString(&ImagePath, &Request->BaseName);
+    }
+
+    if (!RosSymCreateFromFile(&FileHandle, &SymbolInfo))
+        SymbolInfo = NULL;
+
+    NtClose(FileHandle);
+
+    return SymbolInfo;
 }
 
 static KSTART_ROUTINE LoadSymbolsRoutine;
@@ -311,76 +381,40 @@ LoadSymbolsRoutine(
 
     while (TRUE)
     {
-        PLIST_ENTRY ListEntry;
         KeWaitForSingleObject(&SymbolsToLoadEvent, WrKernel, KernelMode, FALSE, NULL);
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(&MmSystemLoadLock, Executive, KernelMode, FALSE, NULL);
 
-        while ((ListEntry = ExInterlockedRemoveHeadList(&SymbolsToLoad, &SymbolsToLoadLock)))
+        while (!IsListEmpty(&SymbolsToLoad))
         {
-            PLDR_DATA_TABLE_ENTRY LdrEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
-            HANDLE FileHandle;
-            OBJECT_ATTRIBUTES Attrib;
-            IO_STATUS_BLOCK Iosb;
+            PLIST_ENTRY ListEntry = RemoveHeadList(&SymbolsToLoad);
+            PKDB_SYMBOL_LOAD_REQUEST Request = CONTAINING_RECORD(ListEntry, KDB_SYMBOL_LOAD_REQUEST, ListEntry);
             PROSSYM_INFO SymbolInfo;
-            NTSTATUS Status;
 
-            InitializeObjectAttributes(&Attrib, &LdrEntry->FullDllName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-            DPRINT1("Trying %wZ\n", &LdrEntry->FullDllName);
-            Status = ZwOpenFile(&FileHandle,
-                                FILE_READ_ACCESS | SYNCHRONIZE,
-                                &Attrib,
-                                &Iosb,
-                                FILE_SHARE_READ,
-                                FILE_SYNCHRONOUS_IO_NONALERT);
-            if (!NT_SUCCESS(Status))
+            ActiveSymbolLoad = Request;
+            KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
+            KeLeaveCriticalRegion();
+
+            SymbolInfo = KdbpReadSymbolFile(Request);
+
+            KeEnterCriticalRegion();
+            KeWaitForSingleObject(&MmSystemLoadLock, Executive, KernelMode, FALSE, NULL);
+            ActiveSymbolLoad = NULL;
+
+            if (SymbolInfo)
             {
-                /* Try system paths */
-                static const UNICODE_STRING System32Dir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\");
-                UNICODE_STRING ImagePath;
-                WCHAR ImagePathBuffer[256];
-                RtlInitEmptyUnicodeString(&ImagePath, ImagePathBuffer, sizeof(ImagePathBuffer));
-                RtlCopyUnicodeString(&ImagePath, &System32Dir);
-                RtlAppendUnicodeStringToString(&ImagePath, &LdrEntry->BaseDllName);
-                InitializeObjectAttributes(&Attrib, &ImagePath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-                DPRINT1("Trying %wZ\n", &ImagePath);
-                Status = ZwOpenFile(&FileHandle,
-                                    FILE_READ_ACCESS | SYNCHRONIZE,
-                                    &Attrib,
-                                    &Iosb,
-                                    FILE_SHARE_READ,
-                                    FILE_SYNCHRONOUS_IO_NONALERT);
-                if (!NT_SUCCESS(Status))
-                {
-                    static const UNICODE_STRING DriversDir= RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\drivers\\");
-
-                    RtlInitEmptyUnicodeString(&ImagePath, ImagePathBuffer, sizeof(ImagePathBuffer));
-                    RtlCopyUnicodeString(&ImagePath, &DriversDir);
-                    RtlAppendUnicodeStringToString(&ImagePath, &LdrEntry->BaseDllName);
-                    InitializeObjectAttributes(&Attrib, &ImagePath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-                    DPRINT1("Trying %wZ\n", &ImagePath);
-                    Status = ZwOpenFile(&FileHandle,
-                                        FILE_READ_ACCESS | SYNCHRONIZE,
-                                        &Attrib,
-                                        &Iosb,
-                                        FILE_SHARE_READ,
-                                        FILE_SYNCHRONOUS_IO_NONALERT);
-                }
+                /* Discard the symbols if the image was unloaded during the read */
+                if (Request->LdrEntry)
+                    KdbpSymPublish(Request->LdrEntry, SymbolInfo);
+                else
+                    RosSymDelete(SymbolInfo);
             }
 
-            if (NT_SUCCESS(Status))
-            {
-                if (RosSymCreateFromFile(&FileHandle, &SymbolInfo))
-                    KdbpSymPublish(LdrEntry, SymbolInfo);
-
-                NtClose(FileHandle);
-            }
-            else
-            {
-                DPRINT1("Failed opening file %wZ (%wZ) for reading symbols (0x%08x)\n", &LdrEntry->FullDllName, &LdrEntry->BaseDllName, Status);
-            }
-
-            /* Release the reference taken when the request was queued */
-            MmUnloadSystemImage(LdrEntry);
+            ExFreePoolWithTag(Request, TAG_KDBG);
         }
+
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
+        KeLeaveCriticalRegion();
     }
 }
 
@@ -395,6 +429,9 @@ KdbSymLoadModule(
     _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PROSSYM_INFO SymbolInfo;
+    PKDB_SYMBOL_LOAD_REQUEST Request;
+    USHORT FileNameLength, BaseNameLength;
+    PWSTR Names;
 
     if (!LoadSymbols)
         return;
@@ -407,13 +444,30 @@ KdbSymLoadModule(
         return;
     }
 
-    /* The worker must be able to access the loader entry after MmSystemLoadLock release */
-    MmReferenceSystemImage(LdrEntry);
-    ExInterlockedInsertTailList(&SymbolsToLoad, &LdrEntry->InInitializationOrderLinks, &SymbolsToLoadLock);
+    FileNameLength = LdrEntry->FullDllName.Length;
+    BaseNameLength = LdrEntry->BaseDllName.Length;
+    Request = ExAllocatePoolWithTag(PagedPool,
+                                    sizeof(*Request) + FileNameLength + BaseNameLength,
+                                    TAG_KDBG);
+    if (!Request)
+        return;
+
+    /* Copy the image names so the worker can read them after image unload */
+    Names = (PWSTR)(Request + 1);
+    RtlInitEmptyUnicodeString(&Request->FileName, Names, FileNameLength);
+    if (FileNameLength)
+        RtlCopyUnicodeString(&Request->FileName, &LdrEntry->FullDllName);
+
+    RtlInitEmptyUnicodeString(&Request->BaseName, Names + FileNameLength / sizeof(WCHAR), BaseNameLength);
+    if (BaseNameLength)
+        RtlCopyUnicodeString(&Request->BaseName, &LdrEntry->BaseDllName);
+
+    Request->LdrEntry = LdrEntry;
+    InsertTailList(&SymbolsToLoad, &Request->ListEntry);
     KeSetEvent(&SymbolsToLoadEvent, IO_NO_INCREMENT, FALSE);
 }
 
-/*! \brief Detach and free local symbols on final image unload.
+/*! \brief Cancel pending symbol loading and free the image's symbols.
  *
  * \param LdrEntry Loader entry for the image being unloaded.
  *
@@ -424,10 +478,37 @@ VOID
 KdbSymUnloadModule(
     _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
+    PLIST_ENTRY ListEntry;
     PROSSYM_INFO SymbolInfo;
     KIRQL OldIrql;
 
     PAGED_CODE();
+
+    if (!LoadSymbols)
+        return;
+
+    if (ActiveSymbolLoad && ActiveSymbolLoad->LdrEntry == LdrEntry)
+    {
+        /* Prevent symbol publication if a file read is in progress */
+        ActiveSymbolLoad->LdrEntry = NULL;
+    }
+    else
+    {
+        for (ListEntry = SymbolsToLoad.Flink;
+             ListEntry != &SymbolsToLoad;
+             ListEntry = ListEntry->Flink)
+        {
+            PKDB_SYMBOL_LOAD_REQUEST Request = CONTAINING_RECORD(ListEntry,
+                                                                 KDB_SYMBOL_LOAD_REQUEST,
+                                                                 ListEntry);
+            if (Request->LdrEntry == LdrEntry)
+            {
+                RemoveEntryList(ListEntry);
+                ExFreePoolWithTag(Request, TAG_KDBG);
+                break;
+            }
+        }
+    }
 
     /* Ensure no readers are accessing the symbol data before clearing the pointer */
     OldIrql = KeAcquireSpinLockRaiseToSynch(&PsLoadedModuleSpinLock);
@@ -523,7 +604,6 @@ KdbSymInit(
 
         /* Launch our worker thread */
         InitializeListHead(&SymbolsToLoad);
-        KeInitializeSpinLock(&SymbolsToLoadLock);
         KeInitializeEvent(&SymbolsToLoadEvent, SynchronizationEvent, FALSE);
 
         Status = PsCreateSystemThread(&Thread,

@@ -1623,12 +1623,6 @@ MmUnloadSystemImage(
     IN PVOID ImageHandle
 );
 
-#ifdef KDBG
-VOID
-MmReferenceSystemImage(
-    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry);
-#endif
-
 #ifdef CONFIG_SMP
 BOOLEAN
 NTAPI
