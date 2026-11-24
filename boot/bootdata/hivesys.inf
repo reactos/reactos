@@ -1021,7 +1021,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout Text",0x00000000,%INUKTITUT_LATIN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000085d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5156"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000461","Layout File",0x00000000,"kbdbnepr.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000461","Layout File",0x00000000,"kbdnepr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000461","Layout Text",0x00000000,%NEPALI%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000461","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5169"
 
