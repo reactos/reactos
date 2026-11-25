@@ -4,7 +4,7 @@
  * FILE:            dll/win32/shell32/extracticon.c
  * PURPOSE:         Icon extraction
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -218,7 +218,7 @@ HRESULT STDMETHODCALLTYPE CExtractIcon::Extract(
 
     /* Callers that do not extract the icon themselves expect us to do it here.
        On failure we still return S_FALSE so they fall back to GetIconLocation. */
-    return SHDefExtractIconW(pszFile, (INT)nIconIndex, 0, phiconLarge, phiconSmall, nIconSize);
+    return SHDefExtractIconW(pszFile, nIconIndex, 0, phiconLarge, phiconSmall, nIconSize);
 }
 
 HRESULT STDMETHODCALLTYPE CExtractIcon::GetIconLocation(
