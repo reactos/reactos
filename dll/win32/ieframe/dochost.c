@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
 #include "ieframe.h"
 
 #include "exdispid.h"
@@ -441,7 +443,7 @@ static void update_travellog(DocHost *This)
             return;
 
         This->travellog.size = 4;
-    }else if(This->travellog.size < This->travellog.position+1) {
+    }else if(This->travellog.size < This->travellog.position+2) {
         travellog_entry_t *new_travellog;
 
         new_travellog = realloc(This->travellog.log, This->travellog.size * 2 * sizeof(*This->travellog.log));
@@ -469,6 +471,7 @@ static void update_travellog(DocHost *This)
 
     if(This->travellog.loading_pos == -1) {
         This->travellog.position++;
+        assert(This->travellog.position < This->travellog.size);
         This->travellog.log[This->travellog.position].stream = NULL;
         This->travellog.log[This->travellog.position].url = NULL;
     }else {
