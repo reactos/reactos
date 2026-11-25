@@ -1418,6 +1418,9 @@ IntReorderKeyboardLayouts(
 {
     PKL pOldKL = gspklBaseLayout;
 
+    if (!pWinSta)
+        return;
+
     if ((pWinSta->Flags & WSS_NOIO) || pNewKL == pOldKL)
         return;
 
@@ -1535,6 +1538,9 @@ co_UserActivateKeyboardLayout(
     USER_REFERENCE_ENTRY Ref1, Ref2;
     PCLIENTINFO ClientInfo;
     BOOL bSetForProcess = !!(uFlags & KLF_SETFORPROCESS);
+
+    if (!pKL)
+        return NULL;
 
     IntReferenceThreadInfo(pti);
     ClientInfo = pti->pClientInfo;
@@ -1751,7 +1757,7 @@ co_IntLoadKeyboardLayoutEx(
 {
     PKL pOldKL, pNewKL;
 
-    if (hNewKL == NULL || (pWinSta->Flags & WSS_NOIO))
+    if (!pWinSta || hNewKL == NULL || (pWinSta->Flags & WSS_NOIO))
         return NULL;
 
     /* If hOldKL is specified, unload it and load new layput as default */
