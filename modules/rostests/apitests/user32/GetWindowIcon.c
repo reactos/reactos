@@ -69,6 +69,7 @@ static void
 TestResourceWindowIcons(HWND hWnd, HICON hIconBig, HICON hIconSmall)
 {
     HICON hIconSm2, hIconSm2Again;
+    DWORD dwUsersBefore, dwUsersAfter;
     INT cx = 0, cy = 0, i;
 
     ok(SendMessageW(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig) == 0,
@@ -97,7 +98,15 @@ TestResourceWindowIcons(HWND hWnd, HICON hIconBig, HICON hIconSmall)
     ok((HICON)SendMessageW(hWnd, WM_GETICON, ICON_SMALL2, 0) == hIconSmall,
        "ICON_SMALL2 must return ICON_SMALL\n");
 
-    /* Each ICON_BIG invalidates the derived icon, window destruction releases it */
+    /* Each ICON_BIG invalidates the derived icon, window destruction releases it.
+       The first one is set up separately so that the loop below starts and ends
+       with exactly one derived icon */
+    SendMessageW(hWnd, WM_SETICON, ICON_SMALL, 0);
+    SendMessageW(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig);
+    hIconSm2 = (HICON)SendMessageW(hWnd, WM_GETICON, ICON_SMALL2, 0);
+    ok(hIconSm2 != NULL, "Expected an ICON_SMALL2 before the loop\n");
+
+    dwUsersBefore = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
     for (i = 0; i < 5; i++)
     {
         SendMessageW(hWnd, WM_SETICON, ICON_SMALL, 0);
@@ -105,6 +114,10 @@ TestResourceWindowIcons(HWND hWnd, HICON hIconBig, HICON hIconSmall)
         hIconSm2 = (HICON)SendMessageW(hWnd, WM_GETICON, ICON_SMALL2, 0);
         ok(hIconSm2 != NULL, "Expected an ICON_SMALL2 in iteration %d\n", i);
     }
+    dwUsersAfter = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
+    ok(dwUsersAfter == dwUsersBefore,
+       "ICON_SMALL2 leaks user objects: %lu -> %lu\n",
+       dwUsersBefore, dwUsersAfter);
 }
 
 /* An icon that does not come from a resource still yields a copy to own */
@@ -128,6 +141,7 @@ START_TEST(GetWindowIcon)
     HINSTANCE hInstance;
     HWND hWnd;
     HICON hIconBig, hIconSmall, hIconPlain;
+    DWORD dwUsersBefore, dwUsersAfter;
 
     hInstance = GetModuleHandleW(NULL);
     hIconBig = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_TEST), IMAGE_ICON, 32, 32, LR_SHARED);
@@ -167,6 +181,21 @@ START_TEST(GetWindowIcon)
         TestPlainWindowIcon(hWnd, hIconPlain);
         ok(DestroyWindow(hWnd) != 0, "DestroyWindow failed\n");
     }
+
+    /* Recreating the window must not accumulate user objects: the derived icon
+       is released along with the window */
+    dwUsersBefore = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
+    hWnd = CreateTestWindow(TEST_CLASS_NAME, hInstance);
+    ok(hWnd != NULL, "CreateWindowExW failed\n");
+    if (hWnd)
+    {
+        TestPlainWindowIcon(hWnd, hIconPlain);
+        ok(DestroyWindow(hWnd) != 0, "DestroyWindow failed\n");
+    }
+    dwUsersAfter = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
+    ok(dwUsersAfter == dwUsersBefore,
+       "Window with a derived icon leaks user objects: %lu -> %lu\n",
+       dwUsersBefore, dwUsersAfter);
 
     /* A class with both a large and a small icon */
     wc.hIconSm = hIconSmall;

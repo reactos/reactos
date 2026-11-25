@@ -356,7 +356,8 @@ IntCreateSmallIconCopy(HICON hIcon)
 
     if (!hIconSmall)
     {
-        /* Retry with a scaled copy */
+        /* Fall back to a plain copy: CopyImage does not scale, so this keeps
+           the original frame size for icons that do not come from a resource */
         hIconSmall = co_IntCopyImage(hIcon,
                                      IMAGE_ICON,
                                      UserGetSystemMetrics(SM_CXSMICON),
