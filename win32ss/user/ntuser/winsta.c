@@ -421,7 +421,7 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
 PWINSTATION_OBJECT FASTCALL
 IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
 {
-    PWINSTATION_OBJECT pWinSta;
+    PWINSTATION_OBJECT pWinSta = NULL;
     PPROCESSINFO ppi = GetW32ProcessInfo();
     HWINSTA hWinSta = ppi->hwinsta;
     if (phWinSta)
