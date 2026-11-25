@@ -710,6 +710,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000444 = kbdtat.dll
 00000445 = kbdinben.dll
 00020445 = kbdinbe2.dll
+00000845 = kbdinben.dll
 00000447 = kbdinguj.dll
 0000044C = kbdinmal.dll
 0000044D = kbdinasa.dll
