@@ -332,6 +332,59 @@ IntDestroyCurIconObject(
     return TRUE;
 }
 
+HICON FASTCALL
+IntCreateSmallIconCopy(HICON hIcon)
+{
+    PCURICON_OBJECT pIcon;
+    HICON hIconSmall;
+
+    pIcon = UserGetObjectNoErr(gHandleTable, hIcon, TYPE_CURSOR);
+    if (!pIcon)
+        return NULL;
+
+    hIconSmall = NULL;
+    if ((pIcon->CURSORF_flags & (CURSORF_LRSHARED | CURSORF_FROMRESOURCE)) ==
+            (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+    {
+        /* Use the small frame of the icon resource, if there is one */
+        hIconSmall = co_IntCopyImage(hIcon,
+                                     IMAGE_ICON,
+                                     UserGetSystemMetrics(SM_CXSMICON),
+                                     UserGetSystemMetrics(SM_CYSMICON),
+                                     LR_COPYFROMRESOURCE);
+    }
+
+    if (!hIconSmall)
+    {
+        /* Retry with a scaled copy */
+        hIconSmall = co_IntCopyImage(hIcon,
+                                     IMAGE_ICON,
+                                     UserGetSystemMetrics(SM_CXSMICON),
+                                     UserGetSystemMetrics(SM_CYSMICON),
+                                     0);
+    }
+
+    return hIconSmall;
+}
+
+VOID FASTCALL
+IntDestroyWindowIconSm2(PWND pWnd)
+{
+    HICON hIcon;
+    PCURICON_OBJECT pIcon;
+
+    hIcon = UserRemoveProp(pWnd, gpsi->atomIconSm2Prop, TRUE);
+    if (!hIcon)
+        return;
+
+    pIcon = UserGetCurIconObject(hIcon);
+    if (!pIcon)
+        return;
+
+    IntDestroyCurIconObject(pIcon);
+    UserDereferenceObject(pIcon);
+}
+
 VOID
 FreeCurIconObject(
     _In_ PVOID Object)
