@@ -997,9 +997,9 @@ VideoPortInitialize(
     {
         INFO_(VIDEOPRT, "We were loaded by a Windows NT 4 miniport driver.\n");
     }
-    else if (HwInitializationData->HwInitDataSize < sizeof(VIDEO_HW_INITIALIZATION_DATA))
+    else if (HwInitializationData->HwInitDataSize < SIZE_OF_WXP_VIDEO_HW_INITIALIZATION_DATA)
     {
-        INFO_(VIDEOPRT, "We were loaded by a Windows 2000 or XP miniport driver.\n");
+        INFO_(VIDEOPRT, "We were loaded by a Windows 2000 or early XP miniport driver.\n");
     }
     else
     {
