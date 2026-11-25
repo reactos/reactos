@@ -167,6 +167,38 @@ VBESortModes(PVBE_DEVICE_EXTENSION DeviceExtension)
 }
 
 /*
+ * VBEHasMode16bpp
+ *
+ * Tells whether the mode list holds a 16bpp mode with the same resolution as
+ * the one passed in. VBEQueryMode reports a 15bpp mode as 16bpp, so such a
+ * mode makes the 15bpp one a duplicate in the display properties list.
+ */
+
+static BOOLEAN
+VBEHasMode16bpp(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   ULONG ModeCount,
+   PVBE_MODEINFO VbeModeInfo)
+{
+   ULONG ModeIndex;
+   PVBE_MODEINFO VbeModeTwin;
+
+   for (ModeIndex = 0; ModeIndex < ModeCount; ModeIndex++)
+   {
+      VbeModeTwin = DeviceExtension->ModeInfo + ModeIndex;
+      if (VbeModeTwin->BitsPerPixel == 16 &&
+          VbeModeTwin->NumberOfPlanes == 1 &&
+          VbeModeTwin->XResolution == VbeModeInfo->XResolution &&
+          VbeModeTwin->YResolution == VbeModeInfo->YResolution)
+      {
+         return TRUE;
+      }
+   }
+
+   return FALSE;
+}
+
+/*
  * VBEInitialize
  *
  * Performs the first initialization of the adapter, after the HAL has given
@@ -191,9 +223,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    ULONG KeptModeCount;
    USHORT ModeTemp;
    ULONG CurrentMode;
-   ULONG ModeIndex;
    PVBE_MODEINFO VbeModeInfo;
-   PVBE_MODEINFO VbeModeTwin;
 
    if (VideoPortIsNoVesa())
    {
@@ -405,29 +435,17 @@ VBEInitialize(PVOID HwDeviceExtension)
     * because VBEQueryMode still reports it as 16bpp, and that is the only
     * 16bpp mode such BIOS provides.
     */
-   for (CurrentMode = 0, KeptModeCount = 0;
-        CurrentMode < SuitableModeCount;
-        CurrentMode++)
+   KeptModeCount = 0;
+   for (CurrentMode = 0; CurrentMode < SuitableModeCount; CurrentMode++)
    {
       VbeModeInfo = VBEDeviceExtension->ModeInfo + CurrentMode;
 
-      if (VbeModeInfo->BitsPerPixel == 15 && VbeModeInfo->NumberOfPlanes == 1)
+      /* The 15bpp mode duplicates a 16bpp mode, skip it. */
+      if (VbeModeInfo->BitsPerPixel == 15 &&
+          VbeModeInfo->NumberOfPlanes == 1 &&
+          VBEHasMode16bpp(VBEDeviceExtension, SuitableModeCount, VbeModeInfo))
       {
-         for (ModeIndex = 0; ModeIndex < SuitableModeCount; ModeIndex++)
-         {
-            VbeModeTwin = VBEDeviceExtension->ModeInfo + ModeIndex;
-            if (VbeModeTwin->BitsPerPixel == 16 &&
-                VbeModeTwin->NumberOfPlanes == 1 &&
-                VbeModeTwin->XResolution == VbeModeInfo->XResolution &&
-                VbeModeTwin->YResolution == VbeModeInfo->YResolution)
-            {
-               break;
-            }
-         }
-
-         /* The 15bpp mode duplicates a 16bpp mode, skip it. */
-         if (ModeIndex < SuitableModeCount)
-            continue;
+         continue;
       }
 
       /* Move the mode to the end of the compacted list. */
