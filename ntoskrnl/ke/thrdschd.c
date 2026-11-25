@@ -111,38 +111,155 @@ KiFindIdealProcessor(
     return Processor;
 }
 
+/**
+ * Selects the target processor for a deferred ready thread.
+ *
+ * @param Thread
+ *     The thread to be scheduled.
+ *
+ * @param SearchOtherProcessors
+ *     Specifies whether to search other processors for immediate execution.
+ *
+ * @return The PRCB of the selected processor.
+ *
+ * @pre The caller holds the thread lock.
+ *
+ * @post The returned PRCB lock is held.
+ */
 static
-ULONG
+PKPRCB
 KiSelectNextProcessor(
-    _In_ PKTHREAD Thread)
+    _In_ PKTHREAD Thread,
+    _In_ BOOLEAN SearchOtherProcessors)
 {
-    KAFFINITY PreferredSet, IdleSet;
+    KAFFINITY Candidates;
+    KAFFINITY IdleSet;
+    KAFFINITY ProcessorSet;
     ULONG Processor;
+    ULONG IdealProcessor;
+    PKPRCB Prcb;
+    PKPRCB PreferredPrcb;
+    PKTHREAD ScheduledThread;
+    KPRIORITY Priority;
 
-    /* Start with the affinity */
-    PreferredSet = Thread->Affinity;
+    Priority = Thread->Priority;
+    IdealProcessor = Thread->IdealProcessor;
 
-    /* If we have matching idle processors, use them */
-    IdleSet = PreferredSet & KiIdleSummary;
-    if (IdleSet != 0)
+    /* Limit the search to active processors within the thread's affinity */
+    Candidates = Thread->Affinity & KeActiveProcessors;
+    ASSERT(Candidates != 0);
+
+    IdleSet = Candidates & KiIdleSummary;
+
+    /* Skip the search if no alternative processor can be considered */
+    if (!SearchOtherProcessors || ((Candidates & (Candidates - 1)) == 0))
     {
-        PreferredSet = IdleSet;
+        KAFFINITY PreferredSet = IdleSet ? IdleSet : Candidates;
+
+        /* Try idle processors first and prefer the ideal processor within that set */
+        if (PreferredSet & AFFINITY_MASK(IdealProcessor))
+        {
+            Processor = IdealProcessor;
+        }
+        else
+        {
+            NT_VERIFY(BitScanForwardAffinity(&Processor, PreferredSet));
+        }
+
+        Prcb = KiProcessorBlock[Processor];
+
+        KiAcquirePrcbLock(Prcb);
+        return Prcb;
     }
 
-    /* Check if we can use the ideal processor */
-    if (PreferredSet & AFFINITY_MASK(Thread->IdealProcessor))
+    /* Search the idle set, starting with the ideal processor if present */
+    while (IdleSet)
     {
-        return Thread->IdealProcessor;
+        if (IdleSet & AFFINITY_MASK(IdealProcessor))
+        {
+            Processor = IdealProcessor;
+        }
+        else
+        {
+            NT_VERIFY(BitScanForwardAffinity(&Processor, IdleSet));
+        }
+
+        IdleSet &= ~AFFINITY_MASK(Processor);
+
+        Prcb = KiProcessorBlock[Processor];
+        KiAcquirePrcbLock(Prcb);
+
+        /*
+         * A processor may still be marked idle after a thread has been selected to
+         * run on it. Verify that it's idle and has no standby thread.
+         */
+        if ((Prcb->CurrentThread == Prcb->IdleThread) &&
+            (Prcb->NextThread == NULL) &&
+            (Priority > Prcb->IdleThread->Priority))
+        {
+            return Prcb;
+        }
+
+        KiReleasePrcbLock(Prcb);
     }
 
-    /* Return the first set bit */
-    NT_VERIFY(BitScanForwardAffinity(&Processor, PreferredSet) != FALSE);
-    ASSERT(Processor < KeNumberProcessors);
+    /*
+     * No available idle processor was found. Try the ideal processor
+     * before searching the remaining processors for a preemption candidate.
+     */
+    if (Candidates & AFFINITY_MASK(IdealProcessor))
+    {
+        Processor = IdealProcessor;
+    }
+    else
+    {
+        NT_VERIFY(BitScanForwardAffinity(&Processor, Candidates));
+    }
 
-    return Processor;
+    PreferredPrcb = KiProcessorBlock[Processor];
+    KiAcquirePrcbLock(PreferredPrcb);
+
+    /*
+     * Compare against the standby thread if one has already been selected,
+     * otherwise use the running thread
+     */
+    ScheduledThread = PreferredPrcb->NextThread ?
+                      PreferredPrcb->NextThread : PreferredPrcb->CurrentThread;
+    if (Priority > ScheduledThread->Priority)
+    {
+        return PreferredPrcb;
+    }
+
+    KiReleasePrcbLock(PreferredPrcb);
+
+    /* Look for a preemption candidate on the remaining eligible processors */
+    ProcessorSet = Candidates & ~PreferredPrcb->SetMember;
+    while (ProcessorSet)
+    {
+        NT_VERIFY(BitScanForwardAffinity(&Processor, ProcessorSet));
+        ProcessorSet &= ~AFFINITY_MASK(Processor);
+
+        Prcb = KiProcessorBlock[Processor];
+        KiAcquirePrcbLock(Prcb);
+
+        ScheduledThread = Prcb->NextThread ?
+                          Prcb->NextThread : Prcb->CurrentThread;
+        if (Priority > ScheduledThread->Priority)
+        {
+            return Prcb;
+        }
+
+        KiReleasePrcbLock(Prcb);
+    }
+
+    /*
+     * No suitable preemption candidate was found. Return the preferred
+     * processor and let the caller make the scheduling decision under
+     * the PRCB lock.
+     */
+    KiAcquirePrcbLock(PreferredPrcb);
+    return PreferredPrcb;
 }
-#else
-#define KiSelectNextProcessor(Thread) 0
 #endif
 
 VOID
@@ -154,17 +271,25 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     ULONG Processor;
     KPRIORITY OldPriority;
     PKTHREAD NextThread;
+#ifdef CONFIG_SMP
+    BOOLEAN SearchOtherProcessors;
+#endif
 
     /* Sanity checks */
     ASSERT(Thread->State == DeferredReady);
     ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
 
+    /* Keep priority and affinity fixed until NextProcessor and State are set */
+    KiAcquireThreadLock(Thread);
+
+#ifdef CONFIG_SMP
+    /* Only look for another processor when a waiting thread becomes ready */
+    SearchOtherProcessors = Thread->AdjustReason != AdjustNone;
+#endif
+
     /* Check if we have any adjusts to do */
     if (Thread->AdjustReason == AdjustBoost)
     {
-        /* Lock the thread */
-        KiAcquireThreadLock(Thread);
-
         /* Check if the priority is low enough to qualify for boosting */
         if ((Thread->Priority <= Thread->AdjustIncrement) &&
             (Thread->Priority < (LOW_REALTIME_PRIORITY - 3)) &&
@@ -196,14 +321,11 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         /* Make sure the priority is still valid */
         ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
 
-        /* Release the lock and clear the adjust reason */
-        KiReleaseThreadLock(Thread);
         Thread->AdjustReason = AdjustNone;
     }
     else if (Thread->AdjustReason == AdjustUnwait)
     {
-        /* Acquire the thread lock and check if this is a real-time thread */
-        KiAcquireThreadLock(Thread);
+        /* Check if this is a real-time thread */
         if (Thread->Priority < LOW_REALTIME_PRIORITY)
         {
             /* It's not real time, but is it time critical? */
@@ -289,8 +411,6 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         /* Make sure the priority makes sense */
         ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
 
-        /* Release the thread lock and reset the adjust reason */
-        KiReleaseThreadLock(Thread);
         Thread->AdjustReason = AdjustNone;
     }
 
@@ -299,13 +419,16 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     OldPriority = Thread->Priority;
     Thread->Preempted = FALSE;
 
-    /* Select a processor to run on */
-    Processor = KiSelectNextProcessor(Thread);
-    Thread->NextProcessor = Processor;
-
-    /* Get the PRCB and lock it */
-    Prcb = KiProcessorBlock[Processor];
+    /* Select and lock the target processor */
+#ifdef CONFIG_SMP
+    Prcb = KiSelectNextProcessor(Thread, SearchOtherProcessors);
+#else
+    Prcb = KiProcessorBlock[0];
     KiAcquirePrcbLock(Prcb);
+#endif
+
+    Processor = Prcb->Number;
+    Thread->NextProcessor = Processor;
 
 #ifndef CONFIG_SMP
     /* Check if we have an idle summary */
@@ -316,7 +439,8 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         Thread->State = Standby;
         Prcb->NextThread = Thread;
 
-        /* Unlock the PRCB and return */
+        /* Release the locks before the thread can run */
+        KiReleaseThreadLock(Thread);
         KiReleasePrcbLock(Prcb);
         return;
     }
@@ -342,6 +466,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             /* Set it in deferred ready mode */
             NextThread->State = DeferredReady;
             NextThread->DeferredProcessor = Prcb->Number;
+            KiReleaseThreadLock(Thread);
             KiReleasePrcbLock(Prcb);
             KiDeferredReadyThread(NextThread);
             return;
@@ -360,14 +485,15 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             Thread->State = Standby;
             Prcb->NextThread = Thread;
 
-            /* Release the lock */
+            /* Release the locks before the thread can run */
+            KiReleaseThreadLock(Thread);
             KiReleasePrcbLock(Prcb);
 
             /* Check if we're running on another CPU */
-            if (KeGetCurrentProcessorNumber() != Thread->NextProcessor)
+            if (KeGetCurrentProcessorNumber() != Processor)
             {
                 /* We are, send an IPI */
-                KiIpiSend(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
+                KiIpiSend(AFFINITY_MASK(Processor), IPI_DPC);
             }
             return;
         }
@@ -392,7 +518,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     /* Sanity check */
     ASSERT(OldPriority == Thread->Priority);
 
-    /* Release the lock */
+    KiReleaseThreadLock(Thread);
     KiReleasePrcbLock(Prcb);
 }
 
