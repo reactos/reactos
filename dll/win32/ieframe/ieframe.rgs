@@ -44,7 +44,7 @@ HKCR
     }
     'InternetShortcut'
     {
-        val 'EditFlags' = s '2'
+        val 'EditFlags' = d 2
         val 'IsShortcut' = s ''
         val 'NeverShowExt' = s ''
         DefaultIcon = s 'url.dll,0'
@@ -52,7 +52,7 @@ HKCR
         {
             open
             {
-                command = s 'rundll32.exe ieframe.dll,OpenURL %%l'
+                command = s 'rundll32.exe ieframe.dll,OpenURL "%%1"'
             }
         }
     }
