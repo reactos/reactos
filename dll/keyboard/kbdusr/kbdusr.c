@@ -27,8 +27,8 @@
 
 #define VK_EMPTY  0xff   /* The non-existent VK */
 
-#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
-#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
+#define KNUMS  (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
+#define KMEXT  (KBDEXT | KBDMULTIVK)    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
