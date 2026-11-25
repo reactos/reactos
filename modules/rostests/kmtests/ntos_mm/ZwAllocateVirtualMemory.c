@@ -409,6 +409,15 @@ ZeroBitsTest(VOID)
     for (ULONG_PTR ZeroBits = 0; Status == STATUS_SUCCESS && ZeroBits <= 32; ZeroBits += 1)
     {
         Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, ZeroBits, &RegionSize, MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
+#ifndef _WIN64
+        /* NT 5.x rejects ZeroBits == 1 on x86, newer versions accept it */
+        if (ZeroBits == 1 && GetNTVersion() < _WIN32_WINNT_VISTA)
+        {
+            ok_eq_hex(Status, STATUS_INVALID_PARAMETER_3);
+            if (Status == STATUS_INVALID_PARAMETER_3)
+                Status = STATUS_SUCCESS;
+        }
+#endif
         ok_bool_true((ULONG_PTR)Base < (MaxPtr >> ZeroBits), "Base must be < (MaxPtr >> ZeroBits)\n");
         ZwFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
         Base = NULL;
