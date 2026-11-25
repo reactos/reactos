@@ -3,25 +3,15 @@
 #include <ndk/kbd.h>
 #include <hidclass.h>
 
-typedef struct tagKBDNLSLAYER
-{
-    USHORT OEMIdentifier;
-    USHORT LayoutInformation;
-    UINT NumOfVkToF;
-    struct _VK_TO_FUNCTION_TABLE *pVkToF;
-    INT NumOfMouseVKey;
-    PUSHORT pusMouseVKey;
-} KBDNLSLAYER, *PKBDNLSLAYER;
- 
 typedef struct tagKBDFILE
 {
     HEAD head;
     struct tagKBDFILE *pkfNext;
     WCHAR awchKF[20];
     HANDLE hBase;
-    struct _KBDTABLES *pKbdTbl;
+    PKBDTABLES pKbdTbl;
     ULONG Size;
-    PKBDNLSLAYER pKbdNlsTbl;
+    PKBDNLSTABLES pKbdNlsTbl;
 } KBDFILE, *PKBDFILE;
 
 typedef struct tagKL
