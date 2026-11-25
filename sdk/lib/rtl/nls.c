@@ -834,6 +834,8 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
 
     if (!NlsMbOemCodePageTag)
     {
+        CHAR OemChar;
+
         /* single-byte code page */
         if (UnicodeSize > (OemSize * sizeof(WCHAR)))
             Size = OemSize;
@@ -846,6 +848,11 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
         for (i = 0; i < Size; i++)
         {
             UpcaseChar = RtlpUpcaseUnicodeChar(*UnicodeString);
+            OemChar = NlsUnicodeToOemTable[UpcaseChar];
+
+            /* A best-fit mapping can yield a lowercase char
+             * (e.g. U+00AE -> 'r' in code page 437), so upcase it too */
+            UpcaseChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[(UCHAR)OemChar]);
             *OemString = NlsUnicodeToOemTable[UpcaseChar];
             OemString++;
             UnicodeString++;
