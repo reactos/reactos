@@ -259,7 +259,7 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
     extended_key_names,
     NULL,
     scancode_to_vk,
-    0x80,                       /* bMaxVSCtoVK */
+    RTL_NUMBER_OF(scancode_to_vk),
     extcode0_to_vk,
     extcode1_to_vk,
     0,                          /* fLocaleFlags */
