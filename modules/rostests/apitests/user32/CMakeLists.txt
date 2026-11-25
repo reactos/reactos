@@ -26,6 +26,7 @@ list(APPEND SOURCE
     GetSetWindowInt.c
     GetSystemMetrics.c
     GetUserObjectInformation.c
+    GetWindowIcon.c
     GetWindowPlacement.c
     GW_ENABLEDPOPUP.c
     InitializeLpkHooks.c
