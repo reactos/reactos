@@ -468,13 +468,3 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
-
-INT WINAPI
-DllMain(
-  PVOID hinstDll,
-  ULONG dwReason,
-  PVOID reserved)
-{
-  return 1;
-}
-

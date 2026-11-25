@@ -64,8 +64,13 @@ extern "C" {
 #define KBDMULTIVK 0x200  /* Multi-key */
 #define KBDSPECIAL 0x400  /* Special key */
 #define KBDNUMPAD  0x800  /* Number-pad */
+#define KBDKANA    0x80   /* Kana modifier (selected by the Kana lock) */
+#define KBDROYA      0x10
+#define KBDLOYA      0x20
+#define KBDGRPSELTAP 0x80
 
 /* Modifier bits */
+#define KBDBASE    0
 #define KBDSHIFT   0x001  /* Shift modifier */
 #define KBDCTRL    0x002  /* Ctrl modifier */
 #define KBDALT     0x004  /* Alt modifier */

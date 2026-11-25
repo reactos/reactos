@@ -27,11 +27,6 @@
 #define KNUMS    (KBDNUMPAD | KBDSPECIAL)
 #define KMEXT    (KBDEXT | KBDMULTIVK)
 
-/* Modifier bit for the Kana state (not in every ndk/kbd.h) */
-#ifndef KBDKANA
-  #define KBDKANA 0x08
-#endif
-
 /* ---- scancode -> VK (bMaxVSCtoVK = 0x80) ---------------------------- */
 ROSDATA USHORT scancode_to_vk[0x80] = {
   /*00*/ VK_EMPTY, VK_ESCAPE, '1', '2',

@@ -23,8 +23,6 @@
   #endif
 #endif
 
-#define KBDKANA 0x08 /* KANA modifier bit */
-
 /* NLSFEProcSwitch: bit i set => NLSFEProc[i] toggles to NLSFEProcAlt */
 #define KBDNLS_SWITCH_BIT(i)  (1 << (i))
 #define KBDNLS_SWITCH_NONE    0

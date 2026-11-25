@@ -22,10 +22,6 @@
   #endif
 #endif
 
-#ifndef KBDKANA
-  #define KBDKANA  0x08  /* Kana modifier bit */
-#endif
-
 #define VK_EMPTY   0xff  /* The non-existent VK */
 
 #define VK_PA_FC   0xfc  /* Unnamed VK used by a few rarely used scancodes */

@@ -28,10 +28,6 @@
 
 #define VK_EMPTY  0xff   /* The non-existent VK */
 
-#ifndef KBDKANA
-  #define KBDKANA   0x08   /* Kana modifier bit */
-#endif
-
 #define KNUMS (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
 #define KMEXT (KBDEXT | KBDMULTIVK)    /* Multi + ext */
 

@@ -26,11 +26,6 @@
 #define KNUMS    (KBDNUMPAD | KBDSPECIAL)
 #define KMEXT    (KBDEXT | KBDMULTIVK)
 
-/* Modifier bit for the Kana state (not in every ndk/kbd.h) */
-#ifndef KBDKANA
-  #define KBDKANA 0x08
-#endif
-
 #ifndef VK_OEM_AX
   #define VK_OEM_AX 0xE1
 #endif
