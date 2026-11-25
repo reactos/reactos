@@ -447,19 +447,29 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     switch(wParam)
     {
         case ICON_BIG:
+            IntDestroyWindowIconSm2(pWnd);
             hIcon = (HICON)lParam;
             break;
         case ICON_SMALL:
+            IntDestroyWindowIconSm2(pWnd);
             hIconSmall = (HICON)lParam;
             break;
         case ICON_SMALL2:
-            ERR("FIXME: Set ICON_SMALL2 support!\n");
+            /* Read-only type, it does not change the window icons */
+            return 0;
         default:
             break;
     }
 
     UserSetProp(pWnd, gpsi->atomIconProp, hIcon, TRUE);
     UserSetProp(pWnd, gpsi->atomIconSmProp, hIconSmall, TRUE);
+
+    if (wParam == ICON_BIG && lParam != 0 && !hIconSmall)
+    {
+        HICON hIconSm2 = IntCreateSmallIconCopy((HICON)lParam);
+        if (hIconSm2)
+            UserSetProp(pWnd, gpsi->atomIconSm2Prop, hIconSm2, TRUE);
+    }
 
     if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
        UserPaintCaption(pWnd, DC_ICON);
@@ -482,8 +492,24 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
             hIconRet = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
             break;
         case ICON_SMALL:
+            hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
+            break;
         case ICON_SMALL2:
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
+            if (!hIconRet)
+            {
+                hIconRet = UserGetProp(pWnd, gpsi->atomIconSm2Prop, TRUE);
+                if (!hIconRet)
+                {
+                    HICON hIcon = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
+                    if (hIcon)
+                    {
+                        hIconRet = IntCreateSmallIconCopy(hIcon);
+                        if (hIconRet)
+                            UserSetProp(pWnd, gpsi->atomIconSm2Prop, hIconRet, TRUE);
+                    }
+                }
+            }
             break;
         DEFAULT_UNREACHABLE;
     }

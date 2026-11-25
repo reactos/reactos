@@ -749,7 +749,7 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
     HICON hIcon;
 
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
-   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
+   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconSm2Prop, TRUE);
 
    if (!hIcon && pWnd->pcls->spicnSm)
        return pWnd->pcls->spicnSm;
