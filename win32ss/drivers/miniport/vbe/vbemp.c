@@ -188,9 +188,12 @@ VBEInitialize(PVOID HwDeviceExtension)
    ULONG Length;
    ULONG ModeCount;
    ULONG SuitableModeCount;
+   ULONG KeptModeCount;
    USHORT ModeTemp;
    ULONG CurrentMode;
+   ULONG ModeIndex;
    PVBE_MODEINFO VbeModeInfo;
+   PVBE_MODEINFO VbeModeTwin;
 
    if (VideoPortIsNoVesa())
    {
@@ -393,6 +396,52 @@ VBEInitialize(PVOID HwDeviceExtension)
 #endif
       }
    }
+
+   /*
+    * Some BIOSes list a 15bpp and a 16bpp mode for the same resolution. Since
+    * VBEQueryMode reports a 15bpp mode as 16bpp, keeping both would result in
+    * duplicate modes. So drop a 15bpp mode when a real 16bpp mode with the same
+    * resolution is available. A 15bpp mode without a 16bpp counterpart is kept,
+    * because VBEQueryMode still reports it as 16bpp, and that is the only
+    * 16bpp mode such BIOS provides.
+    */
+   for (CurrentMode = 0, KeptModeCount = 0;
+        CurrentMode < SuitableModeCount;
+        CurrentMode++)
+   {
+      VbeModeInfo = VBEDeviceExtension->ModeInfo + CurrentMode;
+
+      if (VbeModeInfo->BitsPerPixel == 15 && VbeModeInfo->NumberOfPlanes == 1)
+      {
+         for (ModeIndex = 0; ModeIndex < SuitableModeCount; ModeIndex++)
+         {
+            VbeModeTwin = VBEDeviceExtension->ModeInfo + ModeIndex;
+            if (VbeModeTwin->BitsPerPixel == 16 &&
+                VbeModeTwin->NumberOfPlanes == 1 &&
+                VbeModeTwin->XResolution == VbeModeInfo->XResolution &&
+                VbeModeTwin->YResolution == VbeModeInfo->YResolution)
+            {
+               break;
+            }
+         }
+
+         /* The 15bpp mode duplicates a 16bpp mode, skip it. */
+         if (ModeIndex < SuitableModeCount)
+            continue;
+      }
+
+      /* Move the mode to the end of the compacted list. */
+      if (KeptModeCount != CurrentMode)
+      {
+         VBEDeviceExtension->ModeInfo[KeptModeCount] = *VbeModeInfo;
+         VBEDeviceExtension->ModeNumbers[KeptModeCount] =
+            VBEDeviceExtension->ModeNumbers[CurrentMode];
+      }
+
+      KeptModeCount++;
+   }
+
+   SuitableModeCount = KeptModeCount;
 
 
    if (SuitableModeCount == 0)
