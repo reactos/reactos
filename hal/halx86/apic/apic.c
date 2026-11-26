@@ -756,25 +756,31 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KIRQL OldIrql;
     ASSERT(ApicGetProcessorIrql() == APC_LEVEL);
 
-   /* Enter trap */
+    /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
 
+    /* Save the old IRQL */
+    OldIrql = ApicGetCurrentIrql();
+
 #ifdef APIC_LAZY_IRQL
-    if (!HalBeginSystemInterrupt(APC_LEVEL, APC_VECTOR, &OldIrql))
+    if (OldIrql >= APC_LEVEL)
     {
+        HalBeginSystemInterrupt(APC_LEVEL, APC_VECTOR, &OldIrql);
+
         /* "Spurious" interrupt, exit the interrupt */
         KiEoiHelper(TrapFrame);
     }
 #else
-    /* Save the old IRQL */
-    OldIrql = ApicGetCurrentIrql();
     ASSERT(OldIrql < APC_LEVEL);
 #endif
 
     /* Raise to APC_LEVEL */
     ApicRaiseIrql(APC_LEVEL);
 
-    /* End the interrupt */
+    /*
+     * Keep interrupts disabled until EOI to prevent a cswitch while the
+     * APC vector is still in service
+     */
     ApicSendEOI();
 
     /* Kernel or user APC? */
