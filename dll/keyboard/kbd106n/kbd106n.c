@@ -25,7 +25,6 @@
 
 #define VK_EMPTY  0xff
 #define VK_OEM_RESERVED_EC 0xec
-#define KBDKANA   0x08 /* Kana modifier bit */
 #define KNUMS     (KBDNUMPAD | KBDSPECIAL)
 #define KMEXT     (KBDEXT | KBDMULTIVK)
 
