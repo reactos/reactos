@@ -2428,7 +2428,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         ExpCheckPoolLinks(POOL_FREE_BLOCK(FragmentEntry));
 
         //
-        // Release the pool lock
+        // Check the pool blocks before releasing the pool lock
         //
         ExpCheckPoolBlocks(Entry);
         ExUnlockPool(PoolDesc, OldIrql);
@@ -2452,7 +2452,6 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     // And return the pool allocation
     //
-    ExpCheckPoolBlocks(Entry);
     Entry->PoolTag = Tag;
     return POOL_FREE_BLOCK(Entry);
 }
