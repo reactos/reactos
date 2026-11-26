@@ -576,7 +576,7 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
     /* Release locks */
     KiReleasePrcbLock(Prcb);
     KiReleaseThreadLock(Thread);
-    KiExitDispatcher(Thread->WaitIrql);
+    KiExitDispatcher(Thread->WaitIrql, 0);
 }
 
 VOID

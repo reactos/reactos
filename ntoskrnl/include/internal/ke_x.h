@@ -157,7 +157,7 @@ VOID
 KiReleaseDispatcherLock(IN KIRQL OldIrql)
 {
     /* Just exit the dispatcher */
-    KiExitDispatcher(OldIrql);
+    KiExitDispatcher(OldIrql, 0);
 }
 
 FORCEINLINE
@@ -361,7 +361,7 @@ KiReleaseDispatcherLock(IN KIRQL OldIrql)
                                         LockQueue[LockQueueDispatcherLock]);
 
     /* Then exit the dispatcher */
-    KiExitDispatcher(OldIrql);
+    KiExitDispatcher(OldIrql, 0);
 }
 
 FORCEINLINE

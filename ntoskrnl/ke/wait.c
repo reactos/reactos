@@ -196,7 +196,8 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 //
 VOID
 FASTCALL
-KiExitDispatcher(IN KIRQL OldIrql)
+KiExitDispatcher(_In_ KIRQL OldIrql,
+                 _In_ ULONG Flags)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD Thread, NextThread;
@@ -207,6 +208,15 @@ KiExitDispatcher(IN KIRQL OldIrql)
 
     /* Check if we have deferred threads */
     KiCheckDeferredReadyList(Prcb);
+
+    PendingApc = (Flags & KI_EXIT_DISPATCHER_DELIVER_APC) != 0;
+
+    /* Request an interrupt if direct APC delivery isn't possible */
+    if (PendingApc && (OldIrql != PASSIVE_LEVEL))
+    {
+        HalRequestSoftwareInterrupt(APC_LEVEL);
+        PendingApc = FALSE;
+    }
 
     /* Check if we were called at dispatcher level or higher */
     if (OldIrql >= DISPATCH_LEVEL)
@@ -222,8 +232,8 @@ KiExitDispatcher(IN KIRQL OldIrql)
         goto Quickie;
     }
 
-    /* Make sure there's a new thread scheduled */
-    if (!Prcb->NextThread) goto Quickie;
+    /* Check for APC delivery even if no new thread is scheduled */
+    if (!Prcb->NextThread) goto CheckApcs;
 
     /* Lock the PRCB */
     KiAcquirePrcbLock(Prcb);
@@ -250,14 +260,17 @@ KiExitDispatcher(IN KIRQL OldIrql)
 
     /* Swap threads and check if APCs were pending */
     PendingApc = KiSwapContext(OldIrql, Thread);
+
+CheckApcs:
     if (PendingApc)
     {
+        ASSERT(OldIrql == PASSIVE_LEVEL);
+
         /* Lower only to APC */
         KeLowerIrql(APC_LEVEL);
 
         /* Deliver APCs */
         KiDeliverApc(KernelMode, NULL, NULL);
-        ASSERT(OldIrql == PASSIVE_LEVEL);
     }
 
     /* Lower IRQl back */

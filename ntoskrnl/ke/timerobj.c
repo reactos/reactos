@@ -335,7 +335,7 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     }
 
     /* Exit the dispatcher */
-    KiExitDispatcher(OldIrql);
+    KiExitDispatcher(OldIrql, 0);
 
     /* Return old state */
     return Inserted;

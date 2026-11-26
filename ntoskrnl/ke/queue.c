@@ -340,7 +340,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 /* Increment the count and unlock the dispatcher */
                 Queue->CurrentCount++;
                 KiReleaseDispatcherLockFromSynchLevel();
-                KiExitDispatcher(Thread->WaitIrql);
+                KiExitDispatcher(Thread->WaitIrql, 0);
             }
             else
             {
@@ -426,7 +426,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
 
     /* Unlock Database and return */
     KiReleaseDispatcherLockFromSynchLevel();
-    KiExitDispatcher(Thread->WaitIrql);
+    KiExitDispatcher(Thread->WaitIrql, 0);
     return QueueEntry;
 }
 
@@ -480,7 +480,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     KiReleaseDispatcherLockFromSynchLevel();
 
     /* Exit the dispatcher and return the first entry (if any) */
-    KiExitDispatcher(OldIrql);
+    KiExitDispatcher(OldIrql, 0);
     return FirstEntry;
 }
 

@@ -101,7 +101,7 @@ KiAttachProcess(IN PKTHREAD Thread,
         KiSwapProcess(Process, SavedApcState->Process);
 
         /* Exit the dispatcher */
-        KiExitDispatcher(ApcLock->OldIrql);
+        KiExitDispatcher(ApcLock->OldIrql, 0);
     }
     else
     {
@@ -302,7 +302,7 @@ KeSetAffinityProcess(IN PKPROCESS Process,
 
     /* Release the process lock */
     KiReleaseProcessLockFromSynchLevel(&ProcessLock);
-    KiExitDispatcher(ProcessLock.OldIrql);
+    KiExitDispatcher(ProcessLock.OldIrql, 0);
 
     /* Return previous affinity */
     return OldAffinity;
@@ -514,7 +514,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
     /* Release the process lock */
     KiReleaseProcessLockFromSynchLevel(&ProcessLock);
-    KiExitDispatcher(ProcessLock.OldIrql);
+    KiExitDispatcher(ProcessLock.OldIrql, 0);
 
     /* Return previous priority */
     return OldPriority;
@@ -674,7 +674,7 @@ KeDetachProcess(VOID)
     KiSwapProcess(Thread->ApcState.Process, Process);
 
     /* Exit the dispatcher */
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, 0);
 
     /* Check if we have pending APCs */
     if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])))
@@ -841,7 +841,7 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
     KiSwapProcess(Thread->ApcState.Process, Process);
 
     /* Exit the dispatcher */
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, 0);
 
     /* Check if we have pending APCs */
     if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])))

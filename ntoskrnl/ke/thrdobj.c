@@ -167,7 +167,7 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     /* Release Locks and return the Old State */
     KiReleaseDispatcherLockFromSynchLevel();
     KiReleaseApcLockFromSynchLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, 0);
     return PreviousCount;
 }
 
@@ -209,7 +209,7 @@ KeAlertThread(IN PKTHREAD Thread,
     /* Release the Dispatcher Lock */
     KiReleaseDispatcherLockFromSynchLevel();
     KiReleaseApcLockFromSynchLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, 0);
 
     /* Return the old state */
     return PreviousState;
@@ -297,7 +297,7 @@ KeForceResumeThread(IN PKTHREAD Thread)
 
     /* Release Lock and return the Old State */
     KiReleaseApcLockFromSynchLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, 0);
     return PreviousCount;
 }
 
@@ -310,6 +310,7 @@ KeFreezeAllThreads(VOID)
     PKPROCESS Process = CurrentThread->ApcState.Process;
     PLIST_ENTRY ListHead, NextEntry;
     LONG OldCount;
+    ULONG ExitFlags = 0;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the process */
@@ -355,7 +356,8 @@ KeFreezeAllThreads(VOID)
                 {
                     /* Insert the APC */
                     Current->SuspendApc.Inserted = TRUE;
-                    KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT);
+                    ExitFlags |= KiInsertQueueApc(&Current->SuspendApc,
+                                                  IO_NO_INCREMENT);
                 }
                 else
                 {
@@ -380,7 +382,7 @@ KeFreezeAllThreads(VOID)
 
     /* Release the process lock and exit the dispatcher */
     KiReleaseProcessLockFromSynchLevel(&LockHandle);
-    KiExitDispatcher(LockHandle.OldIrql);
+    KiExitDispatcher(LockHandle.OldIrql, ExitFlags);
 }
 
 ULONG
@@ -421,7 +423,7 @@ KeResumeThread(IN PKTHREAD Thread)
 
     /* Release APC Queue lock and return the Old State */
     KiReleaseApcLockFromSynchLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, 0);
     return PreviousCount;
 }
 
@@ -602,6 +604,7 @@ KeSuspendThread(PKTHREAD Thread)
 {
     KLOCK_QUEUE_HANDLE ApcLock;
     ULONG PreviousCount;
+    ULONG ExitFlags = 0;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -633,7 +636,8 @@ KeSuspendThread(PKTHREAD Thread)
             {
                 /* Not inserted, insert it */
                 Thread->SuspendApc.Inserted = TRUE;
-                KiInsertQueueApc(&Thread->SuspendApc, IO_NO_INCREMENT);
+                ExitFlags = KiInsertQueueApc(&Thread->SuspendApc,
+                                             IO_NO_INCREMENT);
             }
             else
             {
@@ -651,7 +655,7 @@ KeSuspendThread(PKTHREAD Thread)
 
     /* Release Lock and return the Old State */
     KiReleaseApcLockFromSynchLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, ExitFlags);
     return PreviousCount;
 }
 
@@ -711,7 +715,7 @@ KeThawAllThreads(VOID)
 
     /* Release the process lock and exit the dispatcher */
     KiReleaseProcessLockFromSynchLevel(&LockHandle);
-    KiExitDispatcher(LockHandle.OldIrql);
+    KiExitDispatcher(LockHandle.OldIrql, 0);
 
     /* Leave the critical region */
     KeLeaveCriticalRegion();
