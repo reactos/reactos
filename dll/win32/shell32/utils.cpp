@@ -916,11 +916,15 @@ SHTestTokenPrivilegeW(
     }
 
     if (!LookupPrivilegeValueW(NULL, lpName, &Luid))
-        return FALSE;
-
-    dwLength = 0;
-    if (!GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwLength))
         goto Quit;
+
+    /* The size query fails by design, with ERROR_INSUFFICIENT_BUFFER and the size */
+    dwLength = 0;
+    if (!GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwLength) &&
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+        goto Quit;
+    }
 
     pTokenPriv = (PTOKEN_PRIVILEGES)LocalAlloc(LPTR, dwLength);
     if (!pTokenPriv)
