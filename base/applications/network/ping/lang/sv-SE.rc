@@ -9,58 +9,57 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-SYNTAX: ping [-t] [-a] [-n antal] [-l storlek] [-f] [-i TTL] [-v TOS]\n\
-             [-w timeout] [-4] [-6] värddator\n\
+Syntax: ping [-t] [-a] [-n antal] [-l storlek] [-f] [-i TTL] [-v TOS]\n\
+            [-w tidsgräns] [-4] [-6] mål\n\
 \n\
 Alternativ:\n\
-    -t          Ping the specified host until stopped.\n\
-                To see statistics and continue - type Control-Break;\n\
-                To stop - type Control-C.\n\
-    -a          Resolve addresses to hostnames.\n\
+    -t          Pinga den angivna värden tills kommandot avbryts.\n\
+                Skriv Control-Break för att visa statistik och fortsätta.\n\
+                Skriv Control-C för att avbryta.\n\
+    -a          Slå upp adresser till värdnamn.\n\
     -n antal    Antal ekobegäranden som ska skickas.\n\
-    -l storlek  Sändniningsbuffertens storlek.\n\
-    -f          Set Don't Fragment flag in packet (IPv4-only).\n\
-    -i TTL      Time To Live.\n\
-    -v TOS      Type Of Service (IPv4-only. This setting has been deprecated\n\
-                and has no effect on the type of service field in the IP\n\
-                Header).\n\
-    -w timeout  Timeout i millisekunder att vänta på varje svar.\n\
-    -4          Force using IPv4.\n\
-    -6          Force using IPv6.\n\
+    -l storlek  Sändbuffertens storlek.\n\
+    -f          Ange flaggan Don't Fragment i paketet (endast IPv4).\n\
+    -i TTL      Livstid.\n\
+    -v TOS      Tjänsttyp (endast IPv4). Inställningen är föråldrad och\n\
+                påverkar inte tjänsttypsfältet i IP-huvudet.\n\
+    -w tidsgräns Vänta högst angivet antal millisekunder på varje svar.\n\
+    -4          Tvinga användning av IPv4.\n\
+    -6          Tvinga användning av IPv6.\n\
 \n"
 
     IDS_CTRL_BREAK "Control-Break\n"
     IDS_CTRL_C "Control-C\n"
-    IDS_NO_RESOURCES "Inte tillräckliga resurser tillgänliga.\n"
-    IDS_MISSING_ADDRESS "IP address must be specified.\n"
-    IDS_MISSING_VALUE "Value must be supplied for option %s.\n"
+    IDS_NO_RESOURCES "Det finns inte tillräckligt med resurser.\n"
+    IDS_MISSING_ADDRESS "En IP-adress måste anges.\n"
+    IDS_MISSING_VALUE "Ett värde måste anges för alternativet %s.\n"
     IDS_BAD_OPTION "Ogiltigt alternativ %s.\n"
     IDS_BAD_PARAMETER "Ogiltig parameter %s.\n"
-    IDS_BAD_VALUE "Ogiltigt värde för alternativ %s, giltig intervall är från %u till %u.\n"
-    IDS_WRONG_FAMILY "The option %s is only supported for %s.\n"
-    IDS_UNKNOWN_HOST "Ping could not find host %s. Please check the name and try again.\n"
+    IDS_BAD_VALUE "Ogiltigt värde för alternativet %s. Giltigt intervall är %u till %u.\n"
+    IDS_WRONG_FAMILY "Alternativet %s stöds endast för %s.\n"
+    IDS_UNKNOWN_HOST "Ping kunde inte hitta värden %s. Kontrollera namnet och försök igen.\n"
     IDS_PINGING_ADDRESS "\nPingar %s "
     IDS_PINGING_HOSTNAME "\nPingar %s [%s] "
-    IDS_SOURCE_ADDRESS "from %s %s"
-    IDS_PING_SIZE "med %lu bytes data:\n\n"
+    IDS_SOURCE_ADDRESS "från %s %s"
+    IDS_PING_SIZE "med %lu byte data:\n\n"
     IDS_REPLY_FROM "Svar från %s: "
-    IDS_REPLY_BYTES "bytes=%d "
+    IDS_REPLY_BYTES "byte=%d "
     IDS_REPLY_TIME_MS "tid=%lums "
     IDS_REPLY_TIME_0MS "tid<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "Echo reply returned %lu.\n"
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination network unreachable.\n"
-    IDS_REQUEST_TIMED_OUT "Förfrågan gjorde timeout.\n"
-    IDS_TTL_EXPIRED "TTL expired in transit.\n"
-    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"
+    IDS_REPLY_STATUS "Ekosvaret returnerade %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Målvärden kan inte nås.\n"
+    IDS_DEST_NET_UNREACHABLE "Målnätverket kan inte nås.\n"
+    IDS_REQUEST_TIMED_OUT "Tidsgränsen för begäran överskreds.\n"
+    IDS_TTL_EXPIRED "TTL löpte ut under överföringen.\n"
+    IDS_TRANSMIT_FAILED "PING: överföringen misslyckades. (Fel %u)\n"
 
     IDS_STATISTICS "\n\
-Ping statistk för %s:\n\
-    Packet: Sända = %d, Mottagna = %d, Förlorade %d (%d%% förlust),\n"
+Pingstatistik för %s:\n\
+    Paket: Skickade = %d, Mottagna = %d, Förlorade = %d (%d %% förlust),\n"
 
-    IDS_APPROXIMATE_RTT "Ungefärliga slingtider i millisekunder:\n\
-    Minimum = %lums, Maximum = %lums, Genomsnittlig = %lums\n"
+    IDS_APPROXIMATE_RTT "Ungefärliga tur- och returtider i millisekunder:\n\
+    Minsta = %lums, Största = %lums, Genomsnitt = %lums\n"
 
-    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %i\n"
+    IDS_WINSOCK_FAIL "Kunde inte initiera WinSock: %i\n"
 END
