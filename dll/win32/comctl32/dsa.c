@@ -438,6 +438,7 @@ void WINAPI DSA_DestroyCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc,
     DSA_Destroy (hdsa);
 }
 
+#if __WINE_COMCTL32_VERSION == 6
 /**************************************************************************
  * DSA_Clone [COMCTL32.@]
  *
@@ -493,3 +494,4 @@ ULONGLONG WINAPI DSA_GetSize(HDSA hdsa)
 
     return sizeof(*hdsa) + (ULONGLONG)hdsa->nMaxCount*hdsa->nItemSize;
 }
+#endif /* __WINE_COMCTL32_VERSION == 6 */
