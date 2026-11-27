@@ -17,12 +17,27 @@ struct _SEH$$_EXCEPTION_POINTERS
     struct _CONTEXT *ContextRecord;
 };
 
-/* Declare our global trampoline function for filter and unwinder */
+/*
+ * Global trampoline for the filter and unwinder funclets.
+ *
+ * It is entered from two places:
+ *  - From within the guarded function (the normal filter/finally path), which
+ *    already runs with rbp set to the frame pointer and passes it in rax.
+ *  - From __C_specific_handler, which calls the filter/finally entry point with
+ *    the establisher frame in r8. __C_specific_handler is shared MS ABI code
+ *    and knows nothing about PSEH2 funclets, so it leaves no usable rbp.
+ *
+ * The funclet entry code therefore restores the frame pointer from r8 before
+ * jumping here (see _SEH2_EXCEPT / _SEH2_FINALLY below), and passes the frame
+ * address in rax. This keeps the GCC specific funclet ABI entirely on this
+ * side.
+ */
 __asm__(
     ".p2align 4, 0x90\n"
     ".seh_proc __seh2_global_filter_func\n"
     "__seh2_global_filter_func:\n"
-    /* r8 is rbp - frame-offset. Calculate the negative frame-offset */
+    /* rax and rbp are both the frame address, rdx the original stack pointer.
+     * Calculate the frame-offset that turns the latter into the former. */
     "\tsub %rbp, %rax\n"
     /* Save all callee-saved registers that the funclet may clobber */
     "\tpush %rbp\n"
@@ -124,6 +139,8 @@ __seh2$$end_try__:(void)0;                                                      
             __label__ __seh2$$filter_funclet__;                                                 \
             __seh2$$filter__:                                                                   \
             __asm__ __volatile__ goto(                                                          \
+                /* The establisher frame is the function's frame pointer */                     \
+                "\tmovq %%r8, %%rbp\n"                                                          \
                 "\tleaq %l1(%%rip), %%r8\n"                                                     \
                 "\tjmp __seh2_global_filter_func\n"                                             \
                 : /* No output */                                                               \
@@ -177,6 +194,8 @@ __seh2$$begin_except__: __MINGW_ATTRIB_UNUSED;                                  
             __seh2$$finally__: __MINGW_ATTRIB_UNUSED;                                       \
             __asm__ __volatile__ goto(                                                      \
                 "\t\n"                                                                      \
+                /* The establisher frame is the function's frame pointer */                 \
+                "\tmovq %%r8, %%rbp\n"                                                      \
                 "\tleaq %l1(%%rip), %%r8\n"                                                 \
                 "\tjmp __seh2_global_filter_func\n"                                         \
                 : /* No output */                                                           \
