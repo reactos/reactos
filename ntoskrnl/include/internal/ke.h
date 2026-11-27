@@ -246,9 +246,21 @@ VOID
 NTAPI
 KiAdjustQuantumThread(IN PKTHREAD Thread);
 
+//
+// Dispatcher exit flags.
+//
+// KI_EXIT_DISPATCHER_DELIVER_APC requests kernel APC delivery to the
+// current thread. If the original IRQL is PASSIVE_LEVEL, APCs can be
+// delivered directly without requesting a software interrupt.
+//
+#define KI_EXIT_DISPATCHER_DELIVER_APC 0x00000001
+
 VOID
 FASTCALL
-KiExitDispatcher(KIRQL OldIrql);
+KiExitDispatcher(
+    _In_ KIRQL OldIrql,
+    _In_ ULONG Flags
+);
 
 VOID
 FASTCALL
@@ -941,7 +953,7 @@ KiInitSystem(
     VOID
 );
 
-VOID
+ULONG
 FASTCALL
 KiInsertQueueApc(
     IN PKAPC Apc,

@@ -220,7 +220,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             KiReadyThread(WaitThread);
 
             /* Exit the dispatcher */
-            KiExitDispatcher(OldIrql);
+            KiExitDispatcher(OldIrql, 0);
             return;
         }
     }

@@ -72,15 +72,15 @@ KiCheckForKernelApcDelivery(VOID)
  * @param PriorityBoost
  *        Priority Boost to apply to the Thread.
  *
- * @return None
+ * @return Flags to pass to KiExitDispatcher.
  *
  * @remarks The APC will execute at APC_LEVEL for the KernelRoutine registered,
  *          and at PASSIVE_LEVEL for the NormalRoutine registered.
  *
- *          Callers of this routine must have locked the dipatcher database.
+ *          Callers must hold the thread's APC queue lock at SYNCH_LEVEL.
  *
  *--*/
-VOID
+ULONG
 FASTCALL
 KiInsertQueueApc(IN PKAPC Apc,
                  IN KPRIORITY PriorityBoost)
@@ -175,8 +175,8 @@ KiInsertQueueApc(IN PKAPC Apc,
                 /* Check if Special APCs are disabled */
                 if (!Thread->SpecialApcDisable)
                 {
-                    /* They're not, so request the interrupt */
-                    HalRequestSoftwareInterrupt(APC_LEVEL);
+                    /* Request APC delivery on dispatcher exit */
+                    return KI_EXIT_DISPATCHER_DELIVER_APC;
                 }
             }
         }
@@ -270,6 +270,8 @@ KiInsertQueueApc(IN PKAPC Apc,
             KiRequestApcInterrupt(RequestInterrupt, Thread->NextProcessor);
         }
     }
+
+    return 0;
 }
 
 /*++
@@ -740,6 +742,7 @@ KeInsertQueueApc(IN PKAPC Apc,
     PKTHREAD Thread = Apc->Thread;
     KLOCK_QUEUE_HANDLE ApcLock;
     BOOLEAN State = TRUE;
+    ULONG ExitFlags = 0;
     ASSERT_APC(Apc);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -760,12 +763,12 @@ KeInsertQueueApc(IN PKAPC Apc,
         Apc->Inserted = TRUE;
 
         /* Call the Internal Function */
-        KiInsertQueueApc(Apc, PriorityBoost);
+        ExitFlags = KiInsertQueueApc(Apc, PriorityBoost);
     }
 
     /* Release the APC lock and return success */
     KiReleaseApcLockFromSynchLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiExitDispatcher(ApcLock.OldIrql, ExitFlags);
     return State;
 }
 
