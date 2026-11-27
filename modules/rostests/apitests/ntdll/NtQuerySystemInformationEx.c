@@ -707,7 +707,6 @@ static void Test_Generic_Input(
     // Check if the buffer is untouched (except for some info classes, that return data if there is enough space)
     if (((InfoClass == SystemLogicalProcessorInformation) && (ReturnLength > sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION))) ||
         ((InfoClass == SystemProcessorIdleCycleTimeInformation) && (ReturnLength > sizeof(SYSTEM_PROCESSOR_IDLE_CYCLE_TIME_INFORMATION))) ||
-        ((InfoClass == SystemLogicalProcessorAndGroupInformation) && (ReturnLength > sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX))) ||
         ((InfoClass == SystemProcessorCycleTimeInformation) && (ReturnLength > sizeof(SYSTEM_PROCESSOR_CYCLE_TIME_INFORMATION))) ||
         ((InfoClass == SystemProcessorCycleStatsInformation) && (ReturnLength > sizeof(SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION))) ||
         ((InfoClass == SystemNodeDistanceInformation) && (ReturnLength > sizeof(USHORT))) ||
@@ -734,7 +733,6 @@ static void Test_Generic_Input(
     // Check if the buffer is untouched (except for some info classes, that return data if there is enough space)
     if (((InfoClass == SystemLogicalProcessorInformation) && (ReturnLength > sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION))) ||
         ((InfoClass == SystemProcessorIdleCycleTimeInformation) && (ReturnLength > sizeof(SYSTEM_PROCESSOR_IDLE_CYCLE_TIME_INFORMATION))) ||
-        ((InfoClass == SystemLogicalProcessorAndGroupInformation) && (ReturnLength > sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX))) ||
         ((InfoClass == SystemProcessorCycleTimeInformation) && (ReturnLength > sizeof(SYSTEM_PROCESSOR_CYCLE_TIME_INFORMATION))) ||
         ((InfoClass == SystemProcessorCycleStatsInformation) && (ReturnLength > sizeof(SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION))) ||
         ((InfoClass == SystemNodeDistanceInformation) && (ReturnLength > sizeof(USHORT))) ||
@@ -2205,6 +2203,6 @@ START_TEST(NtQuerySystemInformationEx)
     Test_SystemInterruptSteeringInformation(); // 180
     Test_SystemSupportedProcessorArchitectures(); // 181
     Test_SystemCodeIntegritySyntheticCacheInformation(); // 209
-//Test_SystemFeatureConfigurationInformation(); // 210
+Test_SystemFeatureConfigurationInformation(); // 210
 //Test_SystemFeatureConfigurationSectionInformation(); // 211
 }
