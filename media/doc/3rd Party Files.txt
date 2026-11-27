@@ -174,6 +174,12 @@ Used Version: 1.2.6
 License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
 URL: https://code.google.com/archive/p/cmediadrivers/
 
+Title: VirtIO Sound WDM/PortCls driver
+Path: drivers/wdm/audio/drivers/virtiosnd
+Used Version: 0.0.13
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: https://github.com/ralflang/reactos-virtio-snd-drv
+
 Title: HD Audio Driver for Windows 10 / 11 with Skylake -> Raptor Lake DSP support
 Path: drivers/wdm/audio/hdaudbus
 Used Version: git commit 5477b93
