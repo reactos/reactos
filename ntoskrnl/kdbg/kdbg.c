@@ -87,12 +87,10 @@ KdSendPacket(
         PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange = (PDBGKD_ANY_WAIT_STATE_CHANGE)MessageHeader->Buffer;
         if (WaitStateChange->NewState == DbgKdLoadSymbolsStateChange)
         {
-            /* Load or unload symbols */
-            PLDR_DATA_TABLE_ENTRY LdrEntry;
-            if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, -1, &LdrEntry))
-            {
-                KdbSymProcessSymbols(LdrEntry, !WaitStateChange->u.LoadSymbols.UnloadSymbols);
-            }
+            /*
+             * KDBG symbols are managed by the image loader since symbol
+             * processing can't be done at debugger IRQL.
+             */
             return;
         }
         else if (WaitStateChange->NewState == DbgKdExceptionStateChange)

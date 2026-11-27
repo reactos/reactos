@@ -182,9 +182,12 @@ KdbSymPrintAddress(
     IN PCONTEXT Context);
 
 VOID
-KdbSymProcessSymbols(
-    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry,
-    _In_ BOOLEAN Load);
+KdbSymLoadModule(
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+VOID
+KdbSymUnloadModule(
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry);
 
 BOOLEAN
 KdbSymInit(

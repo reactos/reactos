@@ -219,6 +219,17 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
         	break;
         }
 
+#ifdef KDBG
+        /* Use the debugger's module lookup once the module list is initialized */
+        if (Addr > (ULONG_PTR)MmHighestUserAddress && PsLoadedModuleList.Flink)
+        {
+            if (!KdbSymPrintAddress((PVOID)Addr, NULL))
+                DbgPrint("<%p>", (PVOID)Addr);
+            DbgPrint("\n");
+            continue;
+        }
+#endif
+
         /* Get the base for this file */
         if (Addr > (ULONG_PTR)MmHighestUserAddress)
         {

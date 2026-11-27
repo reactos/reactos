@@ -16,6 +16,10 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
+#ifdef KDBG
+#include <kdbg/kdb.h>
+#endif
+
 /* GLOBALS ********************************************************************/
 
 LIST_ENTRY PsLoadedModuleList;
@@ -998,6 +1002,11 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
 
     /* Check if we're still loaded */
     if (LdrEntry->LoadCount) goto Done;
+
+#ifdef KDBG
+    /* Local symbols must be released */
+    KdbSymUnloadModule(LdrEntry);
+#endif
 
     /* We should cleanup... are symbols loaded */
     if (LdrEntry->Flags & LDRP_DEBUG_SYMBOLS_LOADED)
@@ -3496,6 +3505,11 @@ LoaderScan:
         /* Send the notification */
         PspRunLoadImageNotifyRoutines(FileName, NULL, &ImageInfo);
     }
+
+#ifdef KDBG
+    /* Load local symbols before entering the debugger or paging the image */
+    KdbSymLoadModule(LdrEntry);
+#endif
 
 #ifdef __ROS_ROSSYM__
     /* MiCacheImageSymbols doesn't detect rossym */
