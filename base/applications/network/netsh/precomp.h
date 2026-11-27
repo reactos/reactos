@@ -271,6 +271,12 @@ ShowHelperCommand(
 /* interpreter.c */
 
 DWORD
+InterpretCommand(
+    _In_ LPWSTR *argv,
+    _In_ DWORD dwArgCount,
+    _Inout_ PBOOL bDone);
+
+DWORD
 InterpretLine(
     _In_ LPWSTR pszFileName);
 
