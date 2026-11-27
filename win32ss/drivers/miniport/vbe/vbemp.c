@@ -50,6 +50,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
    VIDEO_HW_INITIALIZATION_DATA InitData;
 
+__debugbreak();
    VideoPortZeroMemory(&InitData, sizeof(InitData));
    InitData.HwInitDataSize = sizeof(VIDEO_HW_INITIALIZATION_DATA);
    InitData.HwFindAdapter = VBEFindAdapter;
