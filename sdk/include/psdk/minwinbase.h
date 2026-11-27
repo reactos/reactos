@@ -78,6 +78,17 @@
 #define PROCESS_HEAP_ENTRY_MOVEABLE 16
 #define PROCESS_HEAP_ENTRY_DDESHARE 32
 
+#if (NTDDI_VERSION >= NTDDI_WIN10_NI) || defined(__REACTOS__)
+typedef struct _HEAP_SUMMARY
+{
+    DWORD  cb;
+    SIZE_T cbAllocated;
+    SIZE_T cbCommitted;
+    SIZE_T cbReserved;
+    SIZE_T cbMaxReserve;
+} HEAP_SUMMARY, *PHEAP_SUMMARY, *LPHEAP_SUMMARY;
+#endif // (NTDDI_VERSION >= NTDDI_WIN10_NI) || defined(__REACTOS__)
+
 #define LMEM_FIXED          0x0000
 #define LMEM_MOVEABLE       0x0002
 #define LMEM_NOCOMPACT      0x0010

@@ -28,7 +28,9 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winternl.h"
+#ifndef __REACTOS__
 #include "ddk/ntddk.h"
+#endif
 #include "kernelbase.h"
 #include "wine/list.h"
 #include "wine/asm.h"
@@ -83,6 +85,7 @@ FARPROC WINAPI get_proc_address( HMODULE module, LPCSTR function )
 }
 
 
+#ifndef __REACTOS__
 /******************************************************************
  *      load_library_as_datafile
  */
@@ -180,6 +183,7 @@ static HMODULE load_library( const UNICODE_STRING *libname, DWORD flags )
     RtlReleasePath( load_path );
     return module;
 }
+#endif
 
 
 /****************************************************************************
@@ -196,6 +200,7 @@ DLL_DIRECTORY_COOKIE WINAPI DECLSPEC_HOTPATCH AddDllDirectory( const WCHAR *dir 
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *	DelayLoadFailureHook   (kernelbase.@)
  */
@@ -565,6 +570,7 @@ HMODULE WINAPI DECLSPEC_HOTPATCH LoadLibraryExW( LPCWSTR name, HANDLE file, DWOR
     RtlFreeUnicodeString( &str );
     return module;
 }
+#endif // __REACTOS__
 
 
 /***********************************************************************
@@ -1161,6 +1167,7 @@ void WINAPI DECLSPEC_HOTPATCH AddRefActCtx( HANDLE context )
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *          CreateActCtxW    (kernelbase.@)
  */
@@ -1173,6 +1180,7 @@ HANDLE WINAPI DECLSPEC_HOTPATCH CreateActCtxW( PCACTCTXW ctx )
     if (!set_ntstatus( RtlCreateActivationContext( &context, ctx ))) return INVALID_HANDLE_VALUE;
     return context;
 }
+#endif
 
 
 /***********************************************************************

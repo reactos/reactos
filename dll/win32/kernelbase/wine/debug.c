@@ -49,6 +49,7 @@ static PTOP_LEVEL_EXCEPTION_FILTER top_filter;
 
 void *dummy = RtlUnwind;  /* force importing RtlUnwind from ntdll */
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           CheckRemoteDebuggerPresent   (kernelbase.@)
  */
@@ -410,6 +411,7 @@ __ASM_STDCALL_IMPORT(RaiseException,16)
 #else
 __ASM_GLOBAL_IMPORT(RaiseException)
 #endif
+#endif
 
 /*******************************************************************
  *           RaiseFailFastException  (kernelbase.@)
@@ -420,6 +422,7 @@ void WINAPI DECLSPEC_HOTPATCH RaiseFailFastException( EXCEPTION_RECORD *record, 
     TerminateProcess( GetCurrentProcess(), STATUS_FAIL_FAST_EXCEPTION );
 }
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           SetUnhandledExceptionFilter   (kernelbase.@)
  */
@@ -767,6 +770,7 @@ LONG WINAPI UnhandledExceptionFilter( EXCEPTION_POINTERS *epointers )
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }
+#endif
 
 
 /***********************************************************************
@@ -850,6 +854,7 @@ HRESULT WINAPI /* DECLSPEC_HOTPATCH */ WerUnregisterRuntimeExceptionModule( cons
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  * psapi functions
  ***********************************************************************/
@@ -1669,6 +1674,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetWsChanges( HANDLE process, PSAPI_WS_WATCH_INFOR
     TRACE( "(%p, %p, %ld)\n", process, info, size );
     return set_ntstatus( NtQueryInformationProcess( process, ProcessWorkingSetWatch, info, size, NULL ));
 }
+#endif
 
 
 /***********************************************************************
@@ -1684,6 +1690,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetWsChangesEx( HANDLE process, PSAPI_WS_WATCH_INF
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *         InitializeProcessForWsWatch   (kernelbase.@)
  *         K32InitializeProcessForWsWatch   (kernelbase.@)
@@ -1818,3 +1825,4 @@ cleanup:
     HeapFree( GetProcessHeap(), 0, dynamic_buffer );
     return set_ntstatus( status );
 }
+#endif
