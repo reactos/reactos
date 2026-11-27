@@ -23,7 +23,7 @@ DWORD gdwLayoutToggleKey = 2;
 /* Remembering NLS translation */
 #define NLS_VK_SWALLOW 0xFF
 static BYTE gabNlsMappedVk[256]; /* VK -> Mapped VK. 0 = No NLS translation */
-static BOOL gabNlsKeyDown[256];  /* Is VK pressed? */
+static BOOL gabNlsKeyDown[256];  /* Was VK pressed? */
 
 #include <cjkcode.h>
 
@@ -108,6 +108,7 @@ IntKbdNlsTranslate(
             break;
         }
     }
+
     if (!pF || pF->NLSFEProcType == KBDNLS_TYPE_NULL)
         return TRUE;
 
@@ -129,13 +130,21 @@ IntKbdNlsTranslate(
             gabNlsMappedVk[vk] = NLS_VK_SWALLOW;
             return FALSE;
 
-        case KBDNLS_SEND_PARAM_VK: /* [Alt]+[Hankaku/Zenkaku] */
+        case KBDNLS_SEND_PARAM_VK:
             newVk = (BYTE)pParam->NLSFEProcParam;
             break;
 
-        case KBDNLS_ALPHANUM:  newVk = VK_DBE_ALPHANUMERIC; break;
-        case KBDNLS_HIRAGANA:  newVk = VK_DBE_HIRAGANA;     break;
-        case KBDNLS_KATAKANA:  newVk = VK_DBE_KATAKANA;     break;
+        case KBDNLS_ALPHANUM:
+            newVk = VK_DBE_ALPHANUMERIC;
+            break;
+
+        case KBDNLS_HIRAGANA:
+            newVk = VK_DBE_HIRAGANA;
+            break;
+
+        case KBDNLS_KATAKANA:
+            newVk = VK_DBE_KATAKANA;
+            break;
 
         case KBDNLS_SEND_BASE_VK:
         default:
