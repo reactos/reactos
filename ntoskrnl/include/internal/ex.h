@@ -41,6 +41,9 @@ extern ULONG ExDelayedWorkerThreads;
 extern PVOID ExpDefaultErrorPort;
 extern PEPROCESS ExpDefaultErrorPortProcess;
 
+/* Pool **********************************************************************/
+extern ULONG ExpPoolFlags;
+
 /*
  * NT/Cm Version Info variables
  */
