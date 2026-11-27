@@ -180,8 +180,6 @@ UserProcessDestroy(PEPROCESS Process)
     if (ppiScrnSaver == ppiCurrent)
         ppiScrnSaver = NULL;
 
-    IntFreeImeHotKeys();
-
     if (gpwlCache)
     {
         ExFreePoolWithTag(gpwlCache, USERTAG_WINDOWLIST);
@@ -958,6 +956,7 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
     // TODO: Do more cleanup!
 
+    IntFreeImeHotKeys();
     FreeFontSupport();
     ResetCsrApiPort();
     ResetCsrProcess();
