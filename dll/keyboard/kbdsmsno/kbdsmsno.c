@@ -24,8 +24,8 @@
 #endif
 
 #define VK_EMPTY  0xff                 /* The non-existent VK */
-#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
-#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
+#define KNUMS  (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
+#define KMEXT  (KBDEXT | KBDMULTIVK)    /* Multi + ext */
 
 /* ------------------------------------------------------------------ */
 /* Scancode -> virtual key (0x00 .. 0x7e, bMaxVSCtoVK = 0x7f)         */

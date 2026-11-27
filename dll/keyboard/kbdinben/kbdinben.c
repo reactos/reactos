@@ -27,8 +27,8 @@
 
 #define VK_EMPTY  0xff   /* The non-existent VK */
 
-#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
-#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
+#define KNUMS (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
+#define KMEXT (KBDEXT | KBDMULTIVK)    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
@@ -387,13 +387,3 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
-
-INT WINAPI
-DllMain(
-  PVOID hinstDll,
-  ULONG dwReason,
-  PVOID reserved)
-{
-  return 1;
-}
-

@@ -23,7 +23,6 @@
   #endif
 #endif
 
-#define KBDKANA    0x08
 #define VK_EMPTY   0xff
 #define VK_OEM_FJ_JISHO 0x92
 #define KNUMS      (KBDNUMPAD | KBDSPECIAL)

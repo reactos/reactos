@@ -26,7 +26,6 @@
 #define VK_EMPTY  0xff /* The non-existent VK */
 #define KNUMS (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
 #define KMEXT (KBDEXT | KBDMULTIVK)    /* Multi + ext */
-#define KBDKANA   0x08
 #define VK_OEM_NEC_EQUAL 0x92
 
 /* ------------------------------------------------------------------ */

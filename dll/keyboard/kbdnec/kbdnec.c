@@ -30,11 +30,6 @@
   #define VK_OEM_NEC_EQUAL  0x92  /* '=' key on the NEC numpad */
 #endif
 
-/* Kana modifier (selected by the Kana lock) */
-#ifndef KBDKANA
-  #define KBDKANA  0x08
-#endif
-
 /* ------------------------------------------------------------------ */
 /* Scan code -> virtual key                                           */
 ROSDATA USHORT scancode_to_vk[] = {

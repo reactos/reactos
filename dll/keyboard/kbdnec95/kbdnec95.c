@@ -30,9 +30,6 @@
   #define VK_OEM_NEC_EQUAL 0x92
 #endif
 
-/* Extra modifier: the KANA key (VK_KANA 0x15) is modifier bit 0x08 */
-#define KBDKANA   0x08
-
 /* PC-98 scan code -> VK (0x00 .. 0x7f) */
 ROSDATA USHORT scancode_to_vk[] = {
   /* 00 */ VK_ESCAPE,

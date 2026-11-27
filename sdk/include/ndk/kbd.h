@@ -60,12 +60,17 @@ extern "C" {
 #endif
 
 /* Virtual key flags */
-#define KBDEXT     0x100  /* Extended key code */
-#define KBDMULTIVK 0x200  /* Multi-key */
-#define KBDSPECIAL 0x400  /* Special key */
-#define KBDNUMPAD  0x800  /* Number-pad */
+#define KBDKANA      0x008  /* Kana modifier (selected by the Kana lock) */
+#define KBDROYA      0x010
+#define KBDLOYA      0x020
+#define KBDGRPSELTAP 0x080
+#define KBDEXT       0x100  /* Extended key code */
+#define KBDMULTIVK   0x200  /* Multi-key */
+#define KBDSPECIAL   0x400  /* Special key */
+#define KBDNUMPAD    0x800  /* Number-pad */
 
 /* Modifier bits */
+#define KBDBASE    0
 #define KBDSHIFT   0x001  /* Shift modifier */
 #define KBDCTRL    0x002  /* Ctrl modifier */
 #define KBDALT     0x004  /* Alt modifier */
