@@ -358,14 +358,30 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Check if the process already has this priority */
-    if (Process->BasePriority == Priority) return Process->BasePriority;
-
     /* If the caller gave priority 0, normalize to 1 */
     if (!Priority) Priority = LOW_PRIORITY + 1;
 
     /* Lock the process */
     KiAcquireProcessLockRaiseToSynch(Process, &ProcessLock);
+
+    /* A foreground change can update the quantum without changing priority */
+    if (Process->BasePriority == Priority)
+    {
+        if (Quantum)
+        {
+            Process->QuantumReset = Quantum;
+            for (NextEntry = Process->ThreadListHead.Flink;
+                 NextEntry != &Process->ThreadListHead;
+                 NextEntry = NextEntry->Flink)
+            {
+                Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+                Thread->QuantumReset = Quantum;
+            }
+        }
+
+        KiReleaseProcessLock(&ProcessLock);
+        return Priority;
+    }
 
     /* Acquire the dispatcher lock */
     KiAcquireDispatcherLockAtSynchLevel();
