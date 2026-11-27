@@ -63,6 +63,7 @@ list(APPEND SOURCE
     ntuser/NtUserGetAsyncKeyState.c
     ntuser/NtUserGetClassInfo.c
     ntuser/NtUserGetCursorInfo.c
+    ntuser/NtUserGetDCEx.c
 #    ntuser/NtUserGetIconInfo.c
     ntuser/NtUserGetKeyboardLayoutName.c
     ntuser/NtUserGetThreadState.c
