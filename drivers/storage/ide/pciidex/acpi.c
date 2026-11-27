@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS ATA Bus Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     ACPI interface with SATA ports, IDE controllers and drives
- * COPYRIGHT:   Copyright 2026 <di.sean@protonmail.com>
+ * COPYRIGHT:   Copyright 2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -65,7 +65,8 @@ AtaAcpiEvaluateObject(
     /*
      * Submit an asynchronous evaluation request.
      * Note that _STM should be evaluated while the device queue has been paused,
-     * so we must not cause *any* page faults and use IOCTL_ACPI_EVAL_METHOD.
+     * so we must not cause *any* page faults.
+     * Hence IOCTL_ACPI_EVAL_METHOD is not applicable to us.
      * AtaAcpiEvaluateObject() also has to be non-pageable.
      */
     IoStack = IoGetNextIrpStackLocation(Irp);

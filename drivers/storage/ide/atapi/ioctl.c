@@ -609,7 +609,7 @@ AtaFdoQueryStorageAdapterProperty(
     AdapterDescriptor->MaximumTransferLength = ChanExt->PortData.MaximumTransferLength;
     AdapterDescriptor->MaximumPhysicalPages = ChanExt->PortData.MaximumPhysicalPages;
     AdapterDescriptor->AlignmentMask = ChanExt->Common.Self->AlignmentRequirement;
-    AdapterDescriptor->AdapterUsesPio = !!(ChanExt->PortData.PortFlags && PORT_FLAG_PIO_ONLY);
+    AdapterDescriptor->AdapterUsesPio = !!(ChanExt->PortData.PortFlags & PORT_FLAG_PIO_ONLY);
     AdapterDescriptor->AdapterScansDown = FALSE;
     AdapterDescriptor->CommandQueueing = FALSE; // Disable request tagging
     AdapterDescriptor->AcceleratedTransfer = FALSE;
@@ -690,7 +690,7 @@ AtaFdoHandleGetScsiCapabilities(
     Capabilities->AlignmentMask = ChanExt->Common.Self->AlignmentRequirement;
     Capabilities->TaggedQueuing = FALSE;
     Capabilities->AdapterScansDown = FALSE;
-    Capabilities->AdapterUsesPio = !!(ChanExt->PortData.PortFlags && PORT_FLAG_PIO_ONLY);
+    Capabilities->AdapterUsesPio = !!(ChanExt->PortData.PortFlags & PORT_FLAG_PIO_ONLY);
 
     Irp->IoStatus.Information = sizeof(*Capabilities);
     return STATUS_SUCCESS;
