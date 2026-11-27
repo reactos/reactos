@@ -14,7 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
-BOOLEAN NlsMbCodePageTag = FALSE;
+BYTE NlsMbCodePageTag = 0;
 
 BOOLEAN NlsMbOemCodePageTag = FALSE;
 PUSHORT NlsOemToUnicodeTable = NULL;
@@ -313,6 +313,72 @@ RtlUpcaseUnicodeToOemN(
         *ResultSize = 0;
 
     return STATUS_NOT_IMPLEMENTED;
+}
+
+ULONG
+NTAPI
+RtlxUnicodeStringToOemSize(
+    _In_ PCUNICODE_STRING UnicodeString)
+{
+    ULONG Size;
+
+    /* Convert the Unicode String to Mb Size */
+    RtlUnicodeToMultiByteSize(&Size,
+                              UnicodeString->Buffer,
+                              UnicodeString->Length);
+
+    /* Return the size + the null char */
+    return (Size + sizeof(CHAR));
+}
+
+ULONG
+NTAPI
+RtlxOemStringToUnicodeSize(
+    _In_ PCOEM_STRING OemString)
+{
+    ULONG Size;
+
+    /* Convert the Mb String to Unicode Size */
+    RtlMultiByteToUnicodeSize(&Size,
+                              OemString->Buffer,
+                              OemString->Length);
+
+    /* Return the size + null-char */
+    return (Size + sizeof(WCHAR));
+}
+
+WCHAR
+NTAPI
+RtlAnsiCharToUnicodeChar(
+    _Inout_ PUCHAR *AnsiChar)
+{
+    ULONG Size;
+    NTSTATUS Status;
+    WCHAR UnicodeChar = L' ';
+
+    if (NlsLeadByteInfo)
+    {
+        Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
+    }
+    else
+    {
+        /* Should not be reached in the bootloader */
+        Size = 1;
+    }
+
+    Status = RtlMultiByteToUnicodeN(&UnicodeChar,
+                                    sizeof(WCHAR),
+                                    NULL,
+                                    (PCHAR)*AnsiChar,
+                                    Size);
+
+    if (!NT_SUCCESS(Status))
+    {
+        UnicodeChar = L' ';
+    }
+
+    *AnsiChar += Size;
+    return UnicodeChar;
 }
 
 /* EOF */

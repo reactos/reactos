@@ -31,7 +31,7 @@ typedef struct _LOCALE_ENTRY
 } LOCALE_ENTRY;
 
 // This table is sorted alphabetically to allow binary search
-static const LOCALE_ENTRY RtlpLocaleTable[] =
+const LOCALE_ENTRY RtlpLocaleTable[] =
 {
     { "",               0x0007F }, // LOCALE_INVARIANT
     { "af",             0x00036 },
@@ -505,6 +505,9 @@ static const LOCALE_ENTRY RtlpLocaleTable[] =
 // This table will be sorted by LCID at runtime
 static USHORT RtlpLocaleIndexTable[_ARRAYSIZE(RtlpLocaleTable)];
 
+// From wine locale.c
+extern void locale_init(void);
+
 /**
  * @brief
  * Initializes the locale index table, that maps the LCIDs to their
@@ -531,11 +534,15 @@ RtlpInitializeLocaleTable(VOID)
         RtlpLocaleIndexTable[j] = i;
     }
 
+    if (RtlpGetMode() == UserMode)
+    {
+        locale_init();
+    }
+
     return STATUS_SUCCESS;
 }
 
 _Must_inspect_result_
-static
 ULONG
 FindIndexByLcid(
     _In_ LCID Lcid)
@@ -656,7 +663,6 @@ FindIndexByLocaleName(
 }
 
 _Must_inspect_result_
-static
 BOOLEAN
 CopyAsciizToUnicodeString(
     _Inout_ PUNICODE_STRING UnicodeString,
@@ -697,82 +703,6 @@ IsNeutralLocale(
     }
 
     return FALSE;
-}
-
-NTSTATUS
-NTAPI
-RtlLcidToLocaleName(
-    _In_ LCID Lcid,
-    _Inout_ PUNICODE_STRING LocaleName,
-    _In_ ULONG Flags,
-    _In_ BOOLEAN AllocateDestinationString)
-{
-    ULONG LocaleIndex;
-
-    /* Check for invalid flags */
-    if (Flags & ~0x2)
-    {
-        DPRINT1("RtlLcidToLocaleName: Invalid flags: 0x%lx\n", Flags);
-        return STATUS_INVALID_PARAMETER_3;
-    }
-
-    /* Check if the LocaleName buffer is valid */
-    if ((LocaleName == NULL) || (LocaleName->Buffer == NULL))
-    {
-        DPRINT1("RtlLcidToLocaleName: Invalid buffer\n");
-        return STATUS_INVALID_PARAMETER_2;
-    }
-
-    /* Validate LCID */
-    if (Lcid & ~NLS_VALID_LOCALE_MASK)
-    {
-        DPRINT1("RtlLcidToLocaleName: Invalid LCID: 0x%lx\n", Lcid);
-        return STATUS_INVALID_PARAMETER_1;
-    }
-
-    /* Check if neutral locales were requested */
-    if ((Flags & RTL_LOCALE_ALLOW_NEUTRAL_NAMES) == 0)
-    {
-        /* Check if this is a neutral locale */
-        if (IsNeutralLocale(Lcid))
-        {
-            DPRINT("RtlLcidToLocaleName: Neutral LCID: 0x%lx\n", Lcid);
-            return STATUS_INVALID_PARAMETER_1;
-        }
-    }
-
-    /* Handle special LCIDs */
-    switch (Lcid)
-    {
-        case LOCALE_USER_DEFAULT:
-            Lcid = RtlpUserDefaultLcid;
-            break;
-
-        case LOCALE_SYSTEM_DEFAULT:
-        case LOCALE_CUSTOM_DEFAULT:
-            Lcid = RtlpSystemDefaultLcid;
-            break;
-
-        case LOCALE_CUSTOM_UI_DEFAULT:
-            return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Try to find the locale by LCID */
-    LocaleIndex = FindIndexByLcid(Lcid);
-    if (LocaleIndex == MAXULONG)
-    {
-        DPRINT("RtlLcidToLocaleName: LCID 0x%lx not found\n", Lcid);
-        return STATUS_INVALID_PARAMETER_1;
-    }
-
-    /* Copy the locale name to the buffer */
-    if (!CopyAsciizToUnicodeString(LocaleName, RtlpLocaleTable[LocaleIndex].Locale))
-    {
-        DPRINT("RtlLcidToLocaleName: Buffer too small\n");
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
-    return STATUS_SUCCESS;
 }
 
 _Must_inspect_result_
@@ -835,23 +765,6 @@ RtlpLocaleNameToLcidInternal(
     return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-NTAPI
-RtlLocaleNameToLcid(
-    _In_ PCWSTR LocaleName,
-    _Out_ PLCID Lcid,
-    _In_ ULONG Flags)
-{
-    UNICODE_STRING LocaleNameString;
-
-    /* Convert the string to a UNICODE_STRING */
-    RtlInitUnicodeString(&LocaleNameString, LocaleName);
-
-    /* Forward to internal function */
-    return RtlpLocaleNameToLcidInternal(&LocaleNameString, Lcid, Flags);
-}
-
 _Success_(return != FALSE)
 BOOLEAN
 NTAPI
@@ -896,16 +809,6 @@ RtlCultureNameToLCID(
         return FALSE;
     }
 
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-RtlIsValidLocaleName(
-    _In_ LPCWSTR LocaleName,
-    _In_ ULONG Flags)
-{
-    UNIMPLEMENTED;
     return TRUE;
 }
 

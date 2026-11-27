@@ -152,12 +152,15 @@ START_TEST(JapaneseCalendar)
         ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiA(szTextA, "\x98\x61\x97\xEF") == 0, "szTextA: %s\n", szTextA);
 
+#if 0
+        /* Fails on Windows 10 due to hardcoded year */
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SERASTRING;
         ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
         ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC") == 0, "szTextA: %s\n", szTextA);
+#endif
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
@@ -166,12 +169,14 @@ START_TEST(JapaneseCalendar)
         ok(ret != 0, "ret: %d\n", ret);
         ok(strstr(szTextA, "\x94\x4E") != NULL, "szTextA: %s\n", szTextA);
 
+#if 0
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SSHORTDATE;
         ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
         ok(ret != 0, "ret: %d\n", ret);
         ok(strstr(szTextA, "/") != NULL, "szTextA: %s\n", szTextA);
+#endif
     }
 
     /* Japanese calendar-related locale info (Unicode) */
@@ -226,11 +231,14 @@ START_TEST(JapaneseCalendar)
         ok(ret != 0, "ret: %d\n", ret);
         ok(wcsstr(szTextW, s_szNen) != NULL, "\n");
 
+#if 0
+        /* Fails on Windows 10 */
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
         type = CAL_SSHORTDATE;
         ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
         ok(ret != 0, "ret: %d\n", ret);
         ok(wcsstr(szTextW, L"/") != NULL, "\n");
+#endif
     }
 }

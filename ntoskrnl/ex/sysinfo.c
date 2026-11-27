@@ -2125,6 +2125,36 @@ SSI_DEF(SystemCurrentTimeZoneInformation)
     return ExpSetTimeZoneInformation((PRTL_TIME_ZONE_INFORMATION)Buffer);
 }
 
+/* Class 102 - Dynamic Time Zone Information */
+QSI_DEF(SystemDynamicTimeZoneInformation)
+{
+    *ReqSize = sizeof(RTL_DYNAMIC_TIME_ZONE_INFORMATION);
+
+    if (sizeof(RTL_DYNAMIC_TIME_ZONE_INFORMATION) != Size)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Copy the time zone information struct, excluding dynamic timezone info */
+    memcpy(Buffer,
+           &ExpTimeZoneInfo,
+           sizeof(RTL_TIME_ZONE_INFORMATION));
+
+    return STATUS_SUCCESS;
+}
+
+SSI_DEF(SystemDynamicTimeZoneInformation)
+{
+    /* Check user buffer's size */
+    if (Size < sizeof(RTL_DYNAMIC_TIME_ZONE_INFORMATION))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* TODO: Use the dynamic time zone information registry key */
+    return ExpSetTimeZoneInformation((PRTL_TIME_ZONE_INFORMATION)Buffer);
+}
+
 static
 VOID
 ExpCopyLookasideInformation(
@@ -3075,6 +3105,7 @@ CallQS[] =
     SI_QX(SystemModuleInformationEx),
     SI_QX(SystemProcessorIdleCycleTimeInformation),
     SI_QX(SystemProcessorBrandString),
+    SI_QS(SystemDynamicTimeZoneInformation),
 };
 
 C_ASSERT(SystemBasicInformation == 0);
