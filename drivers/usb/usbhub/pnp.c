@@ -1064,11 +1064,16 @@ USBH_FdoQueryBusRelations(IN PUSBHUB_FDO_EXTENSION HubExtension,
     if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_DO_ENUMERATION))
     {
         // FIXME: this delay makes devices discovery during early boot more reliable
+        // Wait for the root hub's notification (USBHUB_RootHubCallBack), 1 sec. at most
         LARGE_INTEGER Interval;
         Status = STATUS_SUCCESS;
         IoInvalidateDeviceRelations(HubExtension->LowerPDO, BusRelations);
         Interval.QuadPart = -10000LL * 1000; // 1 sec.
-        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+        KeWaitForSingleObject(&HubExtension->RootHubNotificationEvent,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              &Interval);
 
         DPRINT_ENUM("USBH_FdoQueryBusRelations: Skip enumeration\n");
         goto RelationsWorker;
