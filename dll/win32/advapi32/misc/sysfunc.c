@@ -585,63 +585,6 @@ BOOL WINAPI SystemFunction035(LPCSTR lpszDllFilePath)
     return TRUE;
 }
 
-/******************************************************************************
- * SystemFunction036   (ADVAPI32.@)
- *
- * MSDN documents this function as RtlGenRandom and declares it in ntsecapi.h
- *
- * PARAMS
- *  pbBuffer [O] Pointer to memory to receive random bytes.
- *  dwLen    [I] Number of random bytes to fetch.
- *
- * RETURNS
- *  Always TRUE in my tests
- */
-BOOLEAN
-WINAPI
-SystemFunction036(PVOID pbBuffer, ULONG dwLen)
-{
-    ////////////////////////////////////////////////////////////////
-    //////////////////// B I G   W A R N I N G  !!! ////////////////
-    // This function will output numbers based on the tick count. //
-    // It will NOT OUTPUT CRYPTOGRAPHIC-SAFE RANDOM NUMBERS !!!    //
-    ////////////////////////////////////////////////////////////////
-
-    DWORD dwSeed;
-    PBYTE pBuffer;
-    ULONG uPseudoRandom;
-    LARGE_INTEGER time;
-    static ULONG uCounter = 17;
-
-    if(!pbBuffer || !dwLen)
-    {
-        /* This function always returns TRUE, even if invalid parameters were passed. (verified under WinXP SP2) */
-        return TRUE;
-    }
-
-    /* Get the first seed from the performance counter */
-    QueryPerformanceCounter(&time);
-    dwSeed = time.LowPart ^ time.HighPart ^ RtlUlongByteSwap(uCounter++);
-
-    /* We will access the buffer bytewise */
-    pBuffer = (PBYTE)pbBuffer;
-
-    do
-    {
-        /* Use the pseudo random number generator RtlRandom, which outputs a 4-byte value and a new seed */
-        uPseudoRandom = RtlRandom(&dwSeed);
-
-        do
-        {
-            /* Get each byte from the pseudo random number and store it in the buffer */
-            *pBuffer = (BYTE)(uPseudoRandom >> 8 * (dwLen % 3) & 0xFF);
-            ++pBuffer;
-        } while(--dwLen % 3);
-    } while(dwLen);
-
-    return TRUE;
-}
-
 HANDLE KsecDeviceHandle;
 
 static
@@ -727,6 +670,53 @@ KsecDeviceIoControl(
                                    OutputBufferLength);
 
     return Status;
+}
+
+/******************************************************************************
+ * SystemFunction036   (ADVAPI32.@)
+ *
+ * MSDN documents this function as RtlGenRandom and declares it in ntsecapi.h
+ *
+ * PARAMS
+ *  pbBuffer [O] Pointer to memory to receive random bytes.
+ *  dwLen    [I] Number of random bytes to fetch.
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE
+ *
+ * NOTES
+ *  Random bytes come from ksecdd (IOCTL_KSEC_RANDOM_FILL_BUFFER).
+ */
+BOOLEAN
+WINAPI
+SystemFunction036(PVOID pbBuffer, ULONG dwLen)
+{
+    PUCHAR Buffer = pbBuffer;
+    ULONG Chunk;
+    NTSTATUS Status;
+
+    /* Windows returns TRUE for a NULL buffer or zero length */
+    if (!pbBuffer || !dwLen)
+        return TRUE;
+
+    /* Bound the kernel buffer and time spent at raised IRQL per call */
+    while (dwLen > 0)
+    {
+        Chunk = min(dwLen, 0x10000);
+        Status = KsecDeviceIoControl(IOCTL_KSEC_RANDOM_FILL_BUFFER,
+                                     NULL, 0, Buffer, Chunk);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
+
+        Buffer += Chunk;
+        dwLen -= Chunk;
+    }
+
+    return TRUE;
 }
 
 /*

@@ -15,6 +15,7 @@
 
 #include <md4.h>
 #include <md5.h>
+#include <sha1.h>
 #include <tomcrypt.h>
 typedef aes_key AES_KEY, *PAES_KEY;
 typedef des3_key DES3_KEY, *PDES3_KEY;
