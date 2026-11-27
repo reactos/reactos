@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include <strsafe.h>
 
 
 typedef struct _PORT_DATA
@@ -138,16 +139,11 @@ ReadPortSettings(
                               &dwSize);
     RegCloseKey(hKey);
 
-    if (lError != ERROR_SUCCESS)
+    if (lError != ERROR_SUCCESS || dwType != REG_SZ || dwSize > sizeof(szPortData))
     {
-        ERR("RegQueryValueExW failed (Error %lu)\n", lError);
-        return;
-    }
-
-    if ((dwType != REG_SZ) || (dwSize > sizeof(szPortData)))
-    {
-        ERR("Wrong type or size\n");
-        return;
+        TRACE("Using default port settings (error %lu, type %lu, size %lu)\n",
+              lError, dwType, dwSize);
+        StringCchCopyW(szPortData, ARRAYSIZE(szPortData), L"9600,n,8,1");
     }
 
     TRACE("szPortData: '%S'\n", szPortData);
@@ -362,6 +358,8 @@ OnInitDialog(
     HWND hwndControl;
 
     TRACE("OnInitDialog()\n");
+
+    EnableWindow(hwnd, TRUE);
 
     pPortData = (PPORT_DATA)((LPPROPSHEETPAGEW)lParam)->lParam;
     if (pPortData == NULL)

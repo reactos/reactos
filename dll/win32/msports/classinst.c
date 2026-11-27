@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include <strsafe.h>
 
 #include <wchar.h>
 
@@ -701,6 +702,38 @@ GetPortType(IN HDEVINFO DeviceInfoSet,
             PortType = SerialPort;
     }
 
+    if (PortType == UnknownPort)
+    {
+        HKEY hDevKey;
+
+        hDevKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       DICS_FLAG_GLOBAL,
+                                       0,
+                                       DIREG_DEV,
+                                       KEY_READ);
+        if (hDevKey != INVALID_HANDLE_VALUE)
+        {
+            WCHAR szName[16];
+
+            dwSize = sizeof(szName);
+            if (RegQueryValueExW(hDevKey,
+                                 L"PortName",
+                                 NULL,
+                                 NULL,
+                                 (PBYTE)szName,
+                                 &dwSize) == ERROR_SUCCESS)
+            {
+                /* Only accept real port names; anything else stays unknown */
+                if (_wcsnicmp(szName, L"LPT", 3) == 0)
+                    PortType = ParallelPort;
+                else if (_wcsnicmp(szName, L"COM", 3) == 0)
+                    PortType = SerialPort;
+            }
+            RegCloseKey(hDevKey);
+        }
+    }
+
 done:
     if (hKey != NULL)
         RegCloseKey(hKey);
@@ -798,6 +831,84 @@ RemovePort(IN HDEVINFO DeviceInfoSet,
 }
 
 
+static VOID
+ApplySerialPortSettings(IN HDEVINFO DeviceInfoSet,
+                        IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    HKEY hKey;
+    LONG lError;
+    DWORD dwSize;
+    HANDLE hPort;
+    DCB dcb;
+    WCHAR szPortName[8] = {0};
+    WCHAR szKeyName[16] = {0};
+    WCHAR szSettings[64] = {0};
+    WCHAR szDevice[32] = {0};
+
+    /* Get the port name (for example COM3) from the device key */
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DEV,
+                                KEY_READ);
+    if (hKey == INVALID_HANDLE_VALUE)
+        return;
+
+    dwSize = sizeof(szPortName) - sizeof(WCHAR);
+    lError = RegQueryValueExW(hKey, L"PortName", NULL, NULL,
+                              (PBYTE)szPortName, &dwSize);
+    RegCloseKey(hKey);
+    if (lError != ERROR_SUCCESS)
+        return;
+
+    /* Read the saved settings string, for example "9600,n,8,1".
+       First the same way the Port Settings page wrote it. */
+    StringCchPrintfW(szKeyName, ARRAYSIZE(szKeyName), L"%s:", szPortName);
+    if (GetProfileStringW(L"ports", szKeyName, L"", szSettings,
+                          ARRAYSIZE(szSettings) - 1) == 0)
+    {
+        /* Fall back to reading the registry key directly */
+        lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                               L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Ports",
+                               0,
+                               KEY_READ,
+                               &hKey);
+        if (lError != ERROR_SUCCESS)
+            return;
+
+        dwSize = sizeof(szSettings) - sizeof(WCHAR);
+        lError = RegQueryValueExW(hKey, szKeyName, NULL, NULL,
+                                  (PBYTE)szSettings, &dwSize);
+        RegCloseKey(hKey);
+        if (lError != ERROR_SUCCESS)
+            return;
+    }
+
+    if (szSettings[0] == 0)
+        return;
+
+    /* Apply it to the live port */
+    StringCchPrintfW(szDevice, ARRAYSIZE(szDevice), L"\\\\.\\%s", szPortName);
+    hPort = CreateFileW(szDevice,
+                        GENERIC_READ | GENERIC_WRITE,
+                        0,
+                        NULL,
+                        OPEN_EXISTING,
+                        0,
+                        NULL);
+    if (hPort == INVALID_HANDLE_VALUE)
+        return;
+
+    ZeroMemory(&dcb, sizeof(dcb));
+    dcb.DCBlength = sizeof(dcb);
+    if (GetCommState(hPort, &dcb) && BuildCommDCBW(szSettings, &dcb))
+        SetCommState(hPort, &dcb);
+
+    CloseHandle(hPort);
+}
+
+
 DWORD
 WINAPI
 PortsClassInstaller(IN DI_FUNCTION InstallFunction,
@@ -811,6 +922,14 @@ PortsClassInstaller(IN DI_FUNCTION InstallFunction,
     {
         case DIF_INSTALLDEVICE:
             return InstallPort(DeviceInfoSet, DeviceInfoData);
+
+        case DIF_PROPERTYCHANGE:
+            if (DeviceInfoData != NULL &&
+                GetPortType(DeviceInfoSet, DeviceInfoData) == SerialPort)
+            {
+                ApplySerialPortSettings(DeviceInfoSet, DeviceInfoData);
+            }
+            return ERROR_DI_DO_DEFAULT;
 
         case DIF_REMOVE:
             return RemovePort(DeviceInfoSet, DeviceInfoData);
