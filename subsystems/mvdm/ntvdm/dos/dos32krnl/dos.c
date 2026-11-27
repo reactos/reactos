@@ -468,6 +468,58 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Get Allocation Information for Default Drive */
+        case 0x1B:
+        /* Get Allocation Information for Specified Drive */
+        case 0x1C:
+        {
+            CHAR RootPath[] = "?:\\";
+            DWORD SectorsPerCluster;
+            DWORD BytesPerSector;
+            DWORD TotalNumberOfClusters;
+            BYTE Drive;
+            UINT DriveType;
+
+            if (getAH() == 0x1B || getDL() == 0)
+                Drive = Sda->CurrentDrive;
+            else
+                Drive = getDL() - 1;
+
+            if (Drive >= SysVars->NumLocalDrives)
+            {
+                setAL(0xFF);
+                break;
+            }
+
+            RootPath[0] = 'A' + Drive;
+
+            if (!GetDiskFreeSpaceA(RootPath,
+                                  &SectorsPerCluster,
+                                  &BytesPerSector,
+                                  NULL,
+                                  &TotalNumberOfClusters))
+            {
+                setAL(0xFF);
+                break;
+            }
+
+            /* Media ID byte (classic values) */
+            DriveType = GetDriveTypeA(RootPath);
+            if (DriveType == DRIVE_REMOVABLE)
+                DosData->MediaIdByte = 0xF0;
+            else
+                DosData->MediaIdByte = 0xF8; /* Fixed / CD-ROM / RAMDisk / etc */
+
+            setAL((BYTE)min(SectorsPerCluster, 0xFF));
+            setCX(LOWORD(BytesPerSector));
+            setDX(min(TotalNumberOfClusters, 0xFFFF));
+
+            /* DS:BX is the media ID byte in the DOS data segment */
+            setDS(DOS_DATA_SEGMENT);
+            setBX(DOS_DATA_OFFSET(MediaIdByte));
+            break;
+        }
+
         /* NULL Function for CP/M Compatibility */
         case 0x1D:
         case 0x1E:
