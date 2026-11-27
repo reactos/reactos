@@ -352,9 +352,6 @@ SerialPnp(
 			break;
 		}
 		IRP_MN_CANCEL_REMOVE_DEVICE 0x3
-		IRP_MN_STOP_DEVICE 0x4
-		IRP_MN_QUERY_STOP_DEVICE 0x5
-		IRP_MN_CANCEL_STOP_DEVICE 0x6
 		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
 		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
@@ -382,6 +379,58 @@ SerialPnp(
 			}
 
 			break;
+		}
+		case IRP_MN_STOP_DEVICE: /* 0x4 */
+		{
+			WCHAR LinkNameBuffer[32];
+			UNICODE_STRING LinkName;
+
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_STOP_DEVICE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+
+			IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, FALSE);
+
+			if (DeviceExtension->Interrupt)
+			{
+				IoDisconnectInterrupt(DeviceExtension->Interrupt);
+				DeviceExtension->Interrupt = NULL;
+		    }
+
+			_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
+			RtlInitUnicodeString(&LinkName, LinkNameBuffer);
+			IoDeleteSymbolicLink(&LinkName);
+			DeviceExtension->PnpState = dsStopped;
+
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
+		case IRP_MN_QUERY_STOP_DEVICE: /* 0x5 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_STOP_DEVICE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+
+			if (DeviceExtension->IsOpened)
+			{
+				Status = STATUS_UNSUCCESSFUL;
+				break;
+			}
+
+			DeviceExtension->OldPnpState = DeviceExtension->PnpState;
+			DeviceExtension->PnpState = dsStopPending;
+			Status = STATUS_SUCCESS;
+
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
+		case IRP_MN_CANCEL_STOP_DEVICE: /* 0x6 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_CANCEL_STOP_DEVICE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+			DeviceExtension->PnpState = DeviceExtension->OldPnpState;
+			Status = STATUS_SUCCESS;
+
+			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */
 		{
