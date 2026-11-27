@@ -2013,10 +2013,10 @@ LockServiceDatabase(SC_HANDLE hSCManager)
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("RLockServiceDatabase() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 
@@ -3037,10 +3037,10 @@ StartServiceW(SC_HANDLE hService,
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RStartServiceW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return FALSE;
     }
 
@@ -3074,10 +3074,10 @@ UnlockServiceDatabase(SC_LOCK ScLock)
     if (dwError == ERROR_INVALID_HANDLE)
         dwError = ERROR_INVALID_SERVICE_LOCK;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("RUnlockServiceDatabase() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return FALSE;
     }
 
