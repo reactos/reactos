@@ -312,6 +312,7 @@ MouHid_ReadCompletion(
     LONG LastX, LastY;
     MOUSE_INPUT_DATA MouseInputData;
     USHORT Flags;
+    ULONG Index;
 
     /* get device extension */
     DeviceExtension = Context;
@@ -375,11 +376,13 @@ MouHid_ReadCompletion(
         }
     }
 
-    DPRINT("[MOUHID] ReportData %02x %02x %02x %02x %02x %02x %02x\n",
-        DeviceExtension->Report[0] & 0xFF,
-        DeviceExtension->Report[1] & 0xFF, DeviceExtension->Report[2] & 0xFF,
-        DeviceExtension->Report[3] & 0xFF, DeviceExtension->Report[4] & 0xFF,
-        DeviceExtension->Report[5] & 0xFF, DeviceExtension->Report[6] & 0xFF);
+    /* Seven bytes is the width of the previous fixed format string, kept so a
+     * long report does not flood the debug output. ReportLength is the bound
+     * that keeps the dump inside the report buffer. */
+    DPRINT("[MOUHID] ReportData");
+    for (Index = 0; Index < DeviceExtension->ReportLength && Index < 7; Index++)
+        DPRINT(" %02x", DeviceExtension->Report[Index] & 0xFF);
+    DPRINT("\n");
 
     DPRINT("[MOUHID] LastX %ld LastY %ld Flags %x ButtonFlags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.Flags, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
 
