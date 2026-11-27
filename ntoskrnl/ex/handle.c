@@ -281,7 +281,7 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
                         IN PHANDLE_TABLE_ENTRY HandleTableEntry)
 {
     ULONG OldValue, *Free;
-    ULONG LockIndex;
+    PEX_PUSH_LOCK Lock;
     PAGED_CODE();
 
     /* Sanity checks */
@@ -294,20 +294,21 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     /* Mark the handle as free */
     Handle.TagBits = 0;
 
-    /* Check if we're FIFO */
+    /* Default to the delayed free list */
+    Free = &HandleTable->LastFree;
+
+    /* Strict FIFO requires all freed entries to go through LastFree */
     if (!HandleTable->StrictFIFO)
     {
-        /* Select a lock index */
-        LockIndex = Handle.Index % 4;
+        Lock = &HandleTable->HandleTableLock[Handle.Index % 4];
 
-        /* Select which entry to use */
-        Free = (HandleTable->HandleTableLock[LockIndex].Locked) ?
-                &HandleTable->FirstFree : &HandleTable->LastFree;
-    }
-    else
-    {
-        /* No need to worry about locking, take the last entry */
-        Free = &HandleTable->LastFree;
+        /* A thread may still be reading this entry's old freelist link */
+        if (ExTryToAcquirePushLockExclusive(Lock))
+        {
+            /* No old readers remain, so the entry can be reused immediately */
+            ExReleasePushLockExclusive(Lock);
+            Free = &HandleTable->FirstFree;
+        }
     }
 
     /* Start value change loop */
