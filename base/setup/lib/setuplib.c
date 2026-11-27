@@ -1032,17 +1032,35 @@ InitDestinationPaths(
     {
         if (DiskEntry->BiosFound)
         {
+            ULONG HwFixedDiskNumber = DiskEntry->HwFixedDiskNumber;
+            PPARTENTRY SystemPartition = DiskEntry->PartList->SystemPartition;
+
+            /*
+             * The installed system will be started by the BIOS from the
+             * system disk, which then becomes the first BIOS hard disk.
+             * Any disk enumerated before it now is most likely the medium
+             * Setup was started from (e.g. a USB stick, possibly not even
+             * seen by NTOS), which will not be there anymore at that time.
+             * Therefore, number the disks starting from the system disk.
+             */
+            if (SystemPartition &&
+                SystemPartition->DiskEntry->MediaType == FixedMedia &&
+                SystemPartition->DiskEntry->BiosFound &&
+                SystemPartition->DiskEntry->HwFixedDiskNumber <= HwFixedDiskNumber)
+            {
+                HwFixedDiskNumber -= SystemPartition->DiskEntry->HwFixedDiskNumber;
+            }
 #if 1
             Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                              L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
-                             DiskEntry->HwFixedDiskNumber,
+                             HwFixedDiskNumber,
                              PartEntry->OnDiskPartitionNumber);
 #else
             Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                              L"multi(%lu)disk(%lu)rdisk(%lu)partition(%lu)\\",
                              DiskEntry->HwAdapterNumber,
                              DiskEntry->HwControllerNumber,
-                             DiskEntry->HwFixedDiskNumber,
+                             HwFixedDiskNumber,
                              PartEntry->OnDiskPartitionNumber);
 #endif
             DPRINT1("Fixed disk found by BIOS, using MULTI ARC path '%S'\n", PathBuffer);
