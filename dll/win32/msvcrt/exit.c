@@ -303,6 +303,9 @@ void DECLSPEC_NORETURN CDECL _wassert(const wchar_t* str, const wchar_t* file, u
 #else
     _snwprintf(text, sizeof(text), L"File: %ls\nLine: %d\n\nExpression: \"%ls\"", file, line, str);
 #endif
+#ifdef __REACTOS__ /* _snwprintf() does not NUL-terminate on truncation */
+    text[ARRAY_SIZE(text) - 1] = UNICODE_NULL;
+#endif
     DoMessageBoxW(L"Assertion failed!", text);
   }
   else
