@@ -66,6 +66,17 @@ VidBitBlt(
     _In_ ULONG Left,
     _In_ ULONG Top);
 
+#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN8)
+VOID
+NTAPI
+VidBitBltEx(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_reads_bytes_(Height * ((Width + 1) / 2)) PUCHAR Buffer);
+#endif
+
 VOID
 NTAPI
 VidBufferToScreenBlt(

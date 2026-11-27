@@ -1,4 +1,8 @@
 @ stdcall VidBitBlt(ptr long long)
+
+;; Always export this -version=0x602+ routine for easier cross-platform testing.
+@ stdcall VidBitBltEx(long long long long ptr)
+
 @ stdcall VidBufferToScreenBlt(ptr long long long long long)
 @ stdcall VidCleanUp()
 @ stdcall VidDisplayString(str)
