@@ -98,12 +98,16 @@ KeRestoreInterrupts(BOOLEAN WereEnabled)
     if (WereEnabled) _enable();
 }
 
+static const ULONG KxFlushIndividualProcessPagesMaximum = 1024; // Based on Linux tlb_single_page_flush_ceiling
+static const ULONG KxFlushIndividualGlobalPagesMaximum = 1024; // Just a guess
+
 //
 // Invalidates the TLB entry for a specified address
 //
 FORCEINLINE
 VOID
-KeInvalidateTlbEntry(IN PVOID Address)
+KxFlushSingleCurrentTb(
+    _In_ PVOID Address)
 {
     /* Invalidate the TLB entry for this address */
     KeArmInvalidateTlbEntry(Address);
@@ -111,7 +115,29 @@ KeInvalidateTlbEntry(IN PVOID Address)
 
 FORCEINLINE
 VOID
-KeFlushProcessTb(VOID)
+KxFlushRangeCurrentTb(
+    _In_ PVOID Address,
+    _In_ ULONG NumberOfPages)
+{
+    /* Invalidate the TLB entry for each page */
+    for (ULONG i = 0; i < NumberOfPages; i++)
+    {
+        KeArmInvalidateTlbEntry((PVOID)((ULONG_PTR)Address + (i * PAGE_SIZE)));
+    }
+}
+
+FORCEINLINE
+VOID
+KxFlushProcessCurrentTb(
+    VOID)
+{
+    KeArmFlushTlb();
+}
+
+FORCEINLINE
+VOID
+KxFlushEntireCurrentTb(
+    VOID)
 {
     KeArmFlushTlb();
 }

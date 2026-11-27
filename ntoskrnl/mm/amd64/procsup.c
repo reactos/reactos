@@ -85,7 +85,7 @@ MiArchCreateProcessAddressSpace(
     ASSERT(MiAddressToPxi(MmHyperSpaceEnd) >= TableIndex);
 
     /* Setup a PTE for the page directory mappings */
-    TempPte = ValidKernelPte;
+    TempPte = ValidKernelPteLocal;
 
     /* Update the self mapping of the PML4 */
     TableIndex = MiAddressToPxi((PVOID)PXE_SELFMAP);
