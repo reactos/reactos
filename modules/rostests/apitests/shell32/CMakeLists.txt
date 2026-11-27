@@ -46,6 +46,7 @@ list(APPEND SOURCE
     SHParseDisplayName.cpp
     SHRestricted.cpp
     SHShouldShowWizards.cpp
+    SHTestTokenPrivilegeW.cpp
     SHEnumerateUnreadMailAccountsW.cpp
     She.cpp
     #ShellExec_RunDLL.cpp # Broke on Windows
