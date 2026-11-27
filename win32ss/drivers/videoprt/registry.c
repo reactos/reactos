@@ -412,7 +412,7 @@ IntCreateNewRegistryPath(
     static UNICODE_STRING ControlVideoPathName =
         RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\");
     HANDLE DevInstRegKey, SettingsKey, NewKey;
-    UCHAR VideoIdBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + GUID_STRING_LENGTH];
+    UCHAR VideoIdBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + GUID_STRING_LENGTH + sizeof(UNICODE_NULL)];
     UNICODE_STRING VideoIdString;
     UUID VideoId;
     PKEY_VALUE_PARTIAL_INFORMATION ValueInformation ;
@@ -476,6 +476,7 @@ IntCreateNewRegistryPath(
         RtlCopyMemory(ValueInformation->Data,
                       VideoIdString.Buffer,
                       ValueInformation->DataLength);
+        *(PWCHAR)(ValueInformation->Data + ValueInformation->DataLength) = UNICODE_NULL;
 
         /* Free the GUID string */
         RtlFreeUnicodeString(&VideoIdString);
@@ -486,7 +487,7 @@ IntCreateNewRegistryPath(
                                0,
                                REG_SZ,
                                ValueInformation->Data,
-                               ValueInformation->DataLength);
+                               ValueInformation->DataLength + sizeof(UNICODE_NULL));
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "ZwSetValueKey failed, status 0x%lx\n", Status);
@@ -495,10 +496,15 @@ IntCreateNewRegistryPath(
         }
     }
 
-    /* Initialize the VideoId string from the registry data */
+    /* Initialize the VideoId string from the registry data, stripping trailing NULs */
     VideoIdString.Buffer = (PWCHAR)ValueInformation->Data;
     VideoIdString.Length = (USHORT)ValueInformation->DataLength;
     VideoIdString.MaximumLength = VideoIdString.Length;
+    while (VideoIdString.Length >= sizeof(WCHAR) &&
+           VideoIdString.Buffer[VideoIdString.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+    {
+        VideoIdString.Length -= sizeof(WCHAR);
+    }
 
     /* Close the hardware key */
     ObCloseHandle(DevInstRegKey, KernelMode);
