@@ -117,6 +117,29 @@ RtlpInsertDynamicFunctionTable(PDYNAMIC_FUNCTION_TABLE DynamicTable)
     ReleaseDynamicFunctionTableLockExclusive();
 }
 
+#ifdef _M_ARM64
+ULONG
+NTAPI
+RtlpGetFunctionLength(
+    _In_ DWORD64 ImageBase,
+    _In_ PRUNTIME_FUNCTION FunctionEntry);
+#endif
+
+/* ARM64 entries store a length instead of the end address */
+static
+DWORD
+RtlpGetFunctionEndAddress(
+    _In_ PRUNTIME_FUNCTION FunctionEntry,
+    _In_ DWORD64 ImageBase)
+{
+#ifdef _M_ARM64
+    return FunctionEntry->BeginAddress + RtlpGetFunctionLength(ImageBase, FunctionEntry);
+#else
+    UNREFERENCED_PARAMETER(ImageBase);
+    return FunctionEntry->EndAddress;
+#endif
+}
+
 BOOLEAN
 NTAPI
 RtlAddFunctionTable(
@@ -151,7 +174,7 @@ RtlAddFunctionTable(
         dynamicTable->MinimumAddress = min(dynamicTable->MinimumAddress,
                                            FunctionTable[i].BeginAddress);
         dynamicTable->MaximumAddress = max(dynamicTable->MaximumAddress,
-                                           FunctionTable[i].EndAddress);
+                                           RtlpGetFunctionEndAddress(&FunctionTable[i], BaseAddress));
     }
 
     /* Adjust the margins to be absolute addresses */
@@ -314,7 +337,7 @@ RtlpLookupDynamicFunctionEntry(
             {
                 /* Check if this entry contains the address */
                 if ((ipOffset >= functionTable[i].BeginAddress) &&
-                    (ipOffset < functionTable[i].EndAddress))
+                    (ipOffset < RtlpGetFunctionEndAddress(&functionTable[i], dynamicTable->BaseAddress)))
                 {
                     foundEntry = &functionTable[i];
                     *ImageBase = dynamicTable->BaseAddress;
