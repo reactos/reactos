@@ -57,6 +57,7 @@ list(APPEND SOURCE
     generictable.c
     handle.c
     heap.c
+    heap_lfh.c
     heapdbg.c
     heappage.c
     heapuser.c
