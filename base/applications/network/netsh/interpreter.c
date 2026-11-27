@@ -129,7 +129,6 @@ GetContextSubContext(
 }
 
 
-static
 DWORD
 InterpretCommand(
     _In_ LPWSTR *argv,

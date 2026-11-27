@@ -95,7 +95,9 @@ wmain(
     LPCWSTR pszScriptFileName = NULL;
     LPCWSTR pszAliasFileName = NULL;
     LPCWSTR pszContext = NULL;
-    LPWSTR pszCommand = NULL;
+    LPWSTR *ppCommandArgv = NULL;
+    DWORD dwCommandArgc = 0;
+    BOOL bDone = FALSE;
     int index;
     DWORD dwError = ERROR_SUCCESS;
 
@@ -207,16 +209,12 @@ wmain(
                 dwError = ERROR_INVALID_SYNTAX;
                 goto done;
             }
-            else if (pszCommand == NULL)
+            else if (ppCommandArgv == NULL)
             {
-                pszCommand = MergeStrings((LPWSTR*)&argv[index], argc - index);
-                if (pszCommand == NULL)
-                {
-                    dwError = ERROR_NOT_ENOUGH_MEMORY;
-                    PrintError(g_hModule, dwError);
-                    goto done;
-                }
-
+                /* Keep the CRT's argv: re-joining and re-splitting the line drops
+                 * the quotes around values with spaces (name="Intel ... Connection"). */
+                ppCommandArgv = (LPWSTR *)&argv[index];
+                dwCommandArgc = argc - index;
                 break;
             }
         }
@@ -243,9 +241,9 @@ wmain(
     {
         dwError = RunScript(pszScriptFileName);
     }
-    else if (pszCommand != NULL)
+    else if (ppCommandArgv != NULL)
     {
-        dwError = InterpretLine(pszCommand);
+        dwError = InterpretCommand(ppCommandArgv, dwCommandArgc, &bDone);
     }
     else
     {
@@ -256,9 +254,6 @@ done:
     /* FIXME: Cleanup code goes here */
     if (g_pszMachine != NULL)
         HeapFree(GetProcessHeap(), 0, g_pszMachine);
-
-    if (pszCommand != NULL)
-        HeapFree(GetProcessHeap(), 0, pszCommand);
 
     CleanupContext();
     UnloadHelpers();
