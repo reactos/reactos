@@ -10,7 +10,7 @@
 @echo off
 :: title ReactOS ISO Remastering Script
 
-setlocal enabledelayedexpansion
+setlocal enableextensions enabledelayedexpansion
 
 ::
 :: Customizable settings
@@ -54,6 +54,17 @@ if defined TEMP ( if exist "%TEMP%\" goto :TEMP0 )
 :TEMP0
 
 
+:: Parse Arguments
+for %%A in (NOENDPAUSE, INPUT_DIR, OUTPUT_ISO, ISO_WAIT_FOR_KEY, HYBRIDBOOT, DEDUPLICATE) do set %%A=
+:parse_arg
+if /I "%~1"=="/NoEndPause" (set NOENDPAUSE=1&shift&goto parse_arg)
+if /I "%~1"=="/SourceDir" (set "INPUT_DIR=%~2"&shift&shift&goto parse_arg)
+if /I "%~1"=="/OutputIso" (set "OUTPUT_ISO=%~2"&shift&shift&goto parse_arg)
+if /I "%~1"=="/IsoWaitForKey" (set "ISO_WAIT_FOR_KEY=%~2"&shift&shift&goto parse_arg)
+if /I "%~1"=="/Deduplicate" (set "DEDUPLICATE=%~2"&shift&shift&goto parse_arg)
+if /I "%~1"=="/HybridBoot" (set "HYBRIDBOOT=%~2"&shift&shift&goto parse_arg)
+
+
 :: Try to auto-locate MKISOFS and if not, prompt the user for a directory.
 set TOOL_DIR=
 set TOOL_PATH=
@@ -72,10 +83,23 @@ if not defined TOOL_PATH (
 set "MKISOFS=%TOOL_PATH%"
 
 
+if defined INPUT_DIR if exist "%INPUT_DIR%\nul" goto have_srcdir
 set /p INPUT_DIR="Please enter the path of the directory tree to image into the ISO:!\n!"
 echo.
+:have_srcdir
+if defined OUTPUT_ISO (
+	if exist "%OUTPUT_ISO%\nul" (
+		REM Target was a directory, invent a filename
+		set _=ReactOS.%date%-%time:~,8%.iso
+		set _=!_: =!
+		set _=!_:/=.!
+		set OUTPUT_ISO=%OUTPUT_ISO%.\!_::=.!
+	)
+	goto have_dstiso
+)
 set /p OUTPUT_ISO="Please enter the file path of the ISO image that will be created:!\n!"
 echo.
+:have_dstiso
 
 
 :: Retrieve the full paths to the 'isombr', 'isoboot', 'isobtrt' and 'efisys' files
@@ -85,8 +109,9 @@ set isobtrt_file=loader/isobtrt.bin
 set efisys_file=loader/efisys.bin
 
 set ISOBOOT_PATH=%isoboot_file%
+if defined ISO_WAIT_FOR_KEY (set "DEFCHOICE=/T 0 /D %ISO_WAIT_FOR_KEY:~0,1%") else set "DEFCHOICE="
 ::CHOICE /c 12 /n /m "Please choose the ISO boot file: 1) isoboot.bin ; 2) isobtrt.bin!\n![default: 1]: "
-CHOICE /c YN /n /m "Do you want the ReactOS media to wait for a key-press before booting [Y,N]? "
+CHOICE %DEFCHOICE% /c YN /n /m "Do you want the ReactOS media to wait for a key-press before booting [Y,N]? "
 echo.
 if errorlevel 2 set ISOBOOT_PATH=%isobtrt_file%
 
@@ -108,7 +133,8 @@ echo.
 
 
 set DUPLICATES_ONCE=
-CHOICE /c YN /n /m "Do you want to store duplicated files only once (reduces the size!\n!of the ISO image) [Y,N]? "
+if defined DEDUPLICATE (set "DEFCHOICE=/T 0 /D %DEDUPLICATE:~,1%") else set "DEFCHOICE="
+CHOICE %DEFCHOICE% /c YN /n /m "Do you want to store duplicated files only once (reduces the size!\n!of the ISO image) [Y,N]? "
 echo.
 if %ERRORLEVEL% equ 1 set DUPLICATES_ONCE=-duplicates-once
 
@@ -172,7 +198,8 @@ if not defined TOOL_PATH (
 set "ISOHYBRID=%TOOL_PATH%"
 
 
-CHOICE /c YN /n /m "Do you want to post-process the ISO image to allow hybrid booting!\n!as a CD-ROM or as a hard disk [Y,N]? "
+if defined HYBRIDBOOT (set "DEFCHOICE=/T 0 /D %HYBRIDBOOT:~,1%") else set "DEFCHOICE="
+CHOICE %DEFCHOICE% /c YN /n /m "Do you want to post-process the ISO image to allow hybrid booting!\n!as a CD-ROM or as a hard disk [Y,N]? "
 echo.
 if %ERRORLEVEL% neq 1 goto :Success
 
@@ -194,8 +221,13 @@ if errorlevel 1 (
 
 :Success
 echo Success^^!
+verify > NUL
 :Quit
-endlocal
-echo Press any key to quit...
-pause > NUL
-exit /b
+set ERRORLEVEL=%ERRORLEVEL%
+if not defined NOENDPAUSE (
+    echo Press any key to quit...
+    pause > NUL
+)
+if defined systemroot path=%systemroot%\system32;%path%
+:: NOTE: Do NOT add a blank new line after this exit command!
+cmd.exe /C exit>NUL %ERRORLEVEL%
