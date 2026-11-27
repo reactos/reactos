@@ -167,9 +167,12 @@ IntInitializeVideoAddressSpace(VOID)
     NTSTATUS Status;
     HANDLE PhysMemHandle;
     PVOID BaseAddress;
+    PVOID BiosBase = NULL;
+    PVOID LowMemBase = NULL;
+    PVOID PhysZeroBase = NULL;
+    volatile PVOID NullAddress = NULL;
     LARGE_INTEGER Offset;
     SIZE_T ViewSize;
-    CHAR IVTAndBda[1024 + 256];
 
     /* We should only do that for CSRSS */
     ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
@@ -220,18 +223,16 @@ IntInitializeVideoAddressSpace(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Couldn't map physical memory (%x)\n", Status);
-        ZwClose(PhysMemHandle);
-        return Status;
+        goto Cleanup;
     }
-
-    /* Close physical memory section handle */
-    ZwClose(PhysMemHandle);
+    BiosBase = BaseAddress;
 
     if (BaseAddress != (PVOID)0xa0000)
     {
         DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
                 BaseAddress);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto Cleanup;
     }
 
     /* Allocate some low memory to use for the non-BIOS
@@ -248,22 +249,53 @@ IntInitializeVideoAddressSpace(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
-        return Status;
+        goto Cleanup;
     }
+    LowMemBase = (BaseAddress == NULL) ? (PVOID)0x1 : BaseAddress;
+
     if (BaseAddress != (PVOID)0x0)
     {
         DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
                 BaseAddress);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto Cleanup;
     }
 
-    /* Get the real mode IVT and BDA from the kernel */
-    Status = NtVdmControl(VdmInitialize, IVTAndBda);
+    /* Copy the real mode IVT and BDA from physical page 0 */
+    Offset.QuadPart = 0;
+    ViewSize = PAGE_SIZE;
+    Status = ZwMapViewOfSection(PhysMemHandle,
+                                NtCurrentProcess(),
+                                &PhysZeroBase,
+                                0,
+                                ViewSize,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_READONLY);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtVdmControl failed (status %x)\n", Status);
-        return Status;
+        DPRINT1("Couldn't map physical page 0 (%x)\n", Status);
+        goto Cleanup;
     }
+
+    _SEH2_TRY
+    {
+        RtlMoveMemory(NullAddress, PhysZeroBase, PAGE_SIZE);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Couldn't copy first page (%x)\n", Status);
+    }
+    _SEH2_END;
+
+    ZwUnmapViewOfSection(NtCurrentProcess(), PhysZeroBase);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    ZwClose(PhysMemHandle);
 
     /* Protect the V86 address space after this */
     ProtectLowV86Mem();
@@ -271,6 +303,17 @@ IntInitializeVideoAddressSpace(VOID)
     /* Return success */
     VDMAddressSpaceInitialized = TRUE;
     return STATUS_SUCCESS;
+
+Cleanup:
+    if (LowMemBase != NULL)
+    {
+        ViewSize = 0;
+        ZwFreeVirtualMemory(NtCurrentProcess(), &LowMemBase, &ViewSize, MEM_RELEASE);
+    }
+    if (BiosBase != NULL)
+        ZwUnmapViewOfSection(NtCurrentProcess(), BiosBase);
+    ZwClose(PhysMemHandle);
+    return Status;
 }
 
 #endif // _M_IX86
