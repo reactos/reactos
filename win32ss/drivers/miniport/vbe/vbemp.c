@@ -167,6 +167,38 @@ VBESortModes(PVBE_DEVICE_EXTENSION DeviceExtension)
 }
 
 /*
+ * VBEHasMode16bpp
+ *
+ * Tells whether the mode list holds a 16bpp mode with the same resolution as
+ * the one passed in. VBEQueryMode reports a 15bpp mode as 16bpp, so such a
+ * mode makes the 15bpp one a duplicate in the display properties list.
+ */
+
+static BOOLEAN
+VBEHasMode16bpp(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   ULONG ModeCount,
+   PVBE_MODEINFO VbeModeInfo)
+{
+   ULONG ModeIndex;
+   PVBE_MODEINFO VbeModeTwin;
+
+   for (ModeIndex = 0; ModeIndex < ModeCount; ModeIndex++)
+   {
+      VbeModeTwin = DeviceExtension->ModeInfo + ModeIndex;
+      if (VbeModeTwin->BitsPerPixel == 16 &&
+          VbeModeTwin->NumberOfPlanes == 1 &&
+          VbeModeTwin->XResolution == VbeModeInfo->XResolution &&
+          VbeModeTwin->YResolution == VbeModeInfo->YResolution)
+      {
+         return TRUE;
+      }
+   }
+
+   return FALSE;
+}
+
+/*
  * VBEInitialize
  *
  * Performs the first initialization of the adapter, after the HAL has given
@@ -188,6 +220,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    ULONG Length;
    ULONG ModeCount;
    ULONG SuitableModeCount;
+   ULONG KeptModeCount;
    USHORT ModeTemp;
    ULONG CurrentMode;
    PVBE_MODEINFO VbeModeInfo;
@@ -393,6 +426,40 @@ VBEInitialize(PVOID HwDeviceExtension)
 #endif
       }
    }
+
+   /*
+    * Some BIOSes list a 15bpp and a 16bpp mode for the same resolution. Since
+    * VBEQueryMode reports a 15bpp mode as 16bpp, keeping both would result in
+    * duplicate modes. So drop a 15bpp mode when a real 16bpp mode with the same
+    * resolution is available. A 15bpp mode without a 16bpp counterpart is kept,
+    * because VBEQueryMode still reports it as 16bpp, and that is the only
+    * 16bpp mode such BIOS provides.
+    */
+   KeptModeCount = 0;
+   for (CurrentMode = 0; CurrentMode < SuitableModeCount; CurrentMode++)
+   {
+      VbeModeInfo = VBEDeviceExtension->ModeInfo + CurrentMode;
+
+      /* The 15bpp mode duplicates a 16bpp mode, skip it. */
+      if (VbeModeInfo->BitsPerPixel == 15 &&
+          VbeModeInfo->NumberOfPlanes == 1 &&
+          VBEHasMode16bpp(VBEDeviceExtension, SuitableModeCount, VbeModeInfo))
+      {
+         continue;
+      }
+
+      /* Move the mode to the end of the compacted list. */
+      if (KeptModeCount != CurrentMode)
+      {
+         VBEDeviceExtension->ModeInfo[KeptModeCount] = *VbeModeInfo;
+         VBEDeviceExtension->ModeNumbers[KeptModeCount] =
+            VBEDeviceExtension->ModeNumbers[CurrentMode];
+      }
+
+      KeptModeCount++;
+   }
+
+   SuitableModeCount = KeptModeCount;
 
 
    if (SuitableModeCount == 0)
