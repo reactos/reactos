@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/dnsapi/dnsapi/context.c
- * PURPOSE:     DNSAPI functions built on the ADNS library.
+ * PURPOSE:     DNSAPI context handles.
  * PROGRAMER:   Art Yerkes
  * UPDATE HISTORY:
  *              12/15/03 -- Created
@@ -40,7 +40,6 @@ DnsAcquireContextHandle_W(DWORD CredentialsFlags,
     if(CredentialsFlags)
     {
         PWINDNS_CONTEXT Context;
-        int adns_status;
 
         /* For now, don't worry about the user's identity. */
         Context = (PWINDNS_CONTEXT)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(WINDNS_CONTEXT));
@@ -51,21 +50,9 @@ DnsAcquireContextHandle_W(DWORD CredentialsFlags,
             return ERROR_OUTOFMEMORY;
         }
 
-        /* The real work here is to create an adns_state that will help us
-         * do what we want to later. */
-        adns_status = adns_init(&Context->State, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
-
-        if(adns_status != adns_s_ok)
-        {
-            *ContextHandle = 0;
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
-            return DnsIntTranslateAdnsToDNS_STATUS(adns_status);
-        }
-        else
-        {
-            *ContextHandle = (HANDLE)Context;
-            return ERROR_SUCCESS;
-        }
+        Context->CredentialsFlags = CredentialsFlags;
+        *ContextHandle = (HANDLE)Context;
+        return ERROR_SUCCESS;
     }
     else
     {
@@ -117,8 +104,5 @@ DnsAcquireContextHandle_A(DWORD CredentialFlags,
 void WINAPI
 DnsReleaseContextHandle(HANDLE ContextHandle)
 {
-    PWINDNS_CONTEXT Context = (PWINDNS_CONTEXT)ContextHandle;
-
-    adns_finish(Context->State);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ContextHandle);
 }
