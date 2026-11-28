@@ -34,6 +34,11 @@ NTSTATUS
 NTAPI
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+#if !defined(SARCH_XBOX) && !defined(SARCH_PC98)
+    /* Bus drivers get the interrupt translators of their bridges from the HAL */
+    HalGetInterruptTranslator = HalpGetInterruptTranslator;
+#endif
+
     /* There is no ACPI on these HALs */
     return STATUS_SUCCESS;
 }

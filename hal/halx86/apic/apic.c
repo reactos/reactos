@@ -220,9 +220,21 @@ ApicReadIORedirectionEntry(
     return HalpIoApicShadow[Input];
 }
 
+/**
+ * @brief
+ * Makes a vector pending in the local APIC of the current processor.
+ *
+ * @param[in] Vector
+ * The vector to request.
+ *
+ * @remarks
+ * A fixed command has to assert. Some implementations drop a de-asserting one,
+ * which would leave the IRR wait below spinning.
+ */
 FORCEINLINE
 VOID
-ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
+ApicRequestSelfInterrupt(
+    _In_ UCHAR Vector)
 {
     ULONG Flags;
     APIC_INTERRUPT_COMMAND_REGISTER Icr;
@@ -241,7 +253,8 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
     Icr.LongLong = 0;
     Icr.Vector = Vector;
     Icr.MessageType = APIC_MT_Fixed;
-    Icr.TriggerMode = TriggerMode;
+    Icr.Level = APIC_LEVEL_Assert;
+    Icr.TriggerMode = APIC_TGM_Edge;
     Icr.DestinationShortHand = APIC_DSH_Self;
 
     /* Disable interrupts so that we can change IRR without being interrupted */
@@ -543,15 +556,24 @@ HalpGetRootInterruptVector(
             /* Loop allowed IRQL range */
             for (Irql = CLOCK_LEVEL - 1; Irql >= CMCI_LEVEL; Irql--)
             {
+                /* Profile level is not a device level, and on x86 several
+                   device IRQLs share one priority. Each priority is tried once */
+                if ((IrqlToTpr(Irql) >= IrqlToTpr(PROFILE_LEVEL)) ||
+                    (IrqlToTpr(Irql) == IrqlToTpr(Irql + 1)))
+                {
+                    continue;
+                }
+
                 /* Calculate the vactor */
                 Vector = IrqlToTpr(Irql) + Offset;
 
                 /* Check if the vector is free */
                 if (HalpVectorToIrq(Vector) == APIC_FREE_VECTOR)
                 {
-                    /* Found one, allocate the interrupt */
+                    /* Found one, allocate the interrupt. The IRQL is the one
+                       the vector's priority maps to, as later lookups report */
                     Vector = HalpAllocateSystemInterrupt(BusInterruptLevel, Vector);
-                    *OutIrql = Irql;
+                    *OutIrql = HalpVectorToIrql(Vector);
                     goto Exit;
                 }
             }
@@ -569,6 +591,18 @@ Exit:
     ASSERT(HalpDefaultInterruptAffinity);
 
     return Vector;
+}
+
+/* Returns the IRQL a device vector runs at */
+KIRQL
+NTAPI
+HalConvertDeviceIdtToIrql(
+    _In_ ULONG IdtEntry)
+{
+    if (IdtEntry > 0xFF)
+        return PASSIVE_LEVEL;
+
+    return HalpVectorToIrql((UCHAR)IdtEntry);
 }
 
 /**
@@ -847,7 +881,7 @@ FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Irql)
 {
     /* Convert irql to vector and request an interrupt */
-    ApicRequestSelfInterrupt(IrqlToSoftVector(Irql), APIC_TGM_Edge);
+    ApicRequestSelfInterrupt(IrqlToSoftVector(Irql));
 }
 
 VOID
@@ -1068,9 +1102,6 @@ HalBeginSystemInterrupt(
     /* Check if this interrupt is allowed */
     if (CurrentIrql >= Irql)
     {
-        IOAPIC_REDIRECTION_REGISTER RedirReg;
-        UCHAR Index;
-
         /* It is not, set the real Irql in the TPR! */
         ApicWrite(APIC_TPR, IrqlToTpr(CurrentIrql));
 
@@ -1080,26 +1111,14 @@ HalBeginSystemInterrupt(
         /* End this interrupt */
         ApicSendEOI();
 
-        /* Get the irq for this vector */
-        Index = HalpVectorToIndex[Vector];
+        /* This is an input of a controller, a reserved source or a message */
+        ASSERT((HalpVectorToIndex[Vector] < HalpMaxGsi) ||
+               (HalpVectorToIndex[Vector] == APIC_RESERVED_VECTOR) ||
+               (HalpVectorToIndex[Vector] == APIC_MSI_VECTOR));
 
-        /* Check if it's valid */
-        if (Index < HalpMaxGsi)
-        {
-            /* Read the I/O redirection entry */
-            RedirReg = ApicReadIORedirectionEntry(Index);
-
-            /* Re-request the interrupt to be handled later */
-            ApicRequestSelfInterrupt(Vector, (UCHAR)RedirReg.TriggerMode);
-       }
-       else
-       {
-            /* This should be a reserved or message-signaled vector! */
-            ASSERT((Index == APIC_RESERVED_VECTOR) || (Index == APIC_MSI_VECTOR));
-
-            /* Re-request the interrupt to be handled later */
-            ApicRequestSelfInterrupt(Vector, APIC_TGM_Edge);
-       }
+        /* The EOI above already released the input, so re-request the vector
+           here to be handled once the Irql allows it */
+        ApicRequestSelfInterrupt(Vector);
 
         /* Pretend it was a spurious interrupt */
         return FALSE;

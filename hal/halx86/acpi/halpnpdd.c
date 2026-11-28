@@ -157,6 +157,18 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    IN PINTERFACE Interface,
                    OUT PULONG Length)
 {
+    /* On the PIC HAL the SCI is reported as a line, the HAL bus devices translate it */
+    if (IsEqualIID(InterfaceType, &GUID_TRANSLATOR_INTERFACE_STANDARD))
+    {
+        if (((CM_RESOURCE_TYPE)(ULONG_PTR)InterfaceSpecificData == CmResourceTypeInterrupt) &&
+            (HalpInterruptControllerType == HALP_INTERRUPT_CONTROLLER_PIC))
+        {
+            return HalpQueryPicLineTranslator(Interface, InterfaceBufferSize, Length);
+        }
+
+        return STATUS_NOT_SUPPORTED;
+    }
+
     if (IsEqualIID(InterfaceType, &GUID_ACPI_REGS_INTERFACE_STANDARD))
     {
         DPRINT1("HalpQueryInterface(GUID_ACPI_REGS_INTERFACE_STANDARD) is UNIMPLEMENTED\n");
@@ -363,7 +375,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR Descriptor;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
-    ULONG i;
+    ULONG i, Size;
     PAGED_CODE();
 
     /* Only the ACPI PDO has requirements */
@@ -375,10 +387,10 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
 
         ASSERT(RequirementsList->AlternativeLists == 1);
 
-        /* Allocate the resourcel ist */
-        ResourceList = ExAllocatePoolWithTag(PagedPool,
-                                             sizeof(CM_RESOURCE_LIST),
-                                             TAG_HAL);
+        /* Allocate the resource list */
+        Size = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors) +
+               RequirementsList->List[0].Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+        ResourceList = ExAllocatePoolWithTag(PagedPool, Size, TAG_HAL);
         if (!ResourceList )
         {
             /* Fail, no memory */
@@ -388,7 +400,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Initialize it */
-        RtlZeroMemory(ResourceList, sizeof(CM_RESOURCE_LIST));
+        RtlZeroMemory(ResourceList, Size);
         ResourceList->Count = 1;
 
         /* Setup the list fields */
@@ -401,27 +413,31 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* Setup the first descriptor */
         PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
-        /* Find the requirement descriptor for the SCI */
+        /* The boot configuration is every interrupt of the requirements */
         for (i = 0; i < RequirementsList->List[0].Count; i++)
         {
-            /* Get this descriptor */
             Descriptor = &RequirementsList->List[0].Descriptors[i];
-            if (Descriptor->Type == CmResourceTypeInterrupt)
-            {
-                /* Copy requirements descriptor into resource descriptor */
-                PartialDesc->Type = CmResourceTypeInterrupt;
-                PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
-                PartialDesc->Flags = Descriptor->Flags;
-                ASSERT(Descriptor->u.Interrupt.MinimumVector ==
-                       Descriptor->u.Interrupt.MaximumVector);
-                PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
+            if (Descriptor->Type != CmResourceTypeInterrupt)
+                continue;
+
+            PartialDesc->Type = CmResourceTypeInterrupt;
+            PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
+            PartialDesc->Flags = Descriptor->Flags;
+            ASSERT(Descriptor->u.Interrupt.MinimumVector ==
+                   Descriptor->u.Interrupt.MaximumVector);
+
+            PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
+            PartialDesc->u.Interrupt.Affinity = (KAFFINITY)-1;
+
+            /* An APIC HAL describes IDT entries, a PIC HAL the SCI line */
+            if (HalpInterruptControllerType == HALP_INTERRUPT_CONTROLLER_APIC)
+                PartialDesc->u.Interrupt.Level =
+                    HalConvertDeviceIdtToIrql(Descriptor->u.Interrupt.MinimumVector);
+            else
                 PartialDesc->u.Interrupt.Level = Descriptor->u.Interrupt.MinimumVector;
-                PartialDesc->u.Interrupt.Affinity = 0xFFFFFFFF;
 
-                ResourceList->List[0].PartialResourceList.Count++;
-
-                break;
-            }
+            PartialDesc++;
+            ResourceList->List[0].PartialResourceList.Count++;
         }
 
         /* Return resources and success */
@@ -664,9 +680,9 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 DPRINT("Querying interface for FDO\n");
                 Status = HalpQueryInterface(DeviceObject,
                                             IoStackLocation->Parameters.QueryInterface.InterfaceType,
-                                            IoStackLocation->Parameters.QueryInterface.Size,
-                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
                                             IoStackLocation->Parameters.QueryInterface.Version,
+                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
+                                            IoStackLocation->Parameters.QueryInterface.Size,
                                             IoStackLocation->Parameters.QueryInterface.Interface,
                                             (PVOID)&Irp->IoStatus.Information);
                 break;
@@ -763,9 +779,9 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 DPRINT("Querying interface for PDO\n");
                 Status = HalpQueryInterface(DeviceObject,
                                             IoStackLocation->Parameters.QueryInterface.InterfaceType,
-                                            IoStackLocation->Parameters.QueryInterface.Size,
-                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
                                             IoStackLocation->Parameters.QueryInterface.Version,
+                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
+                                            IoStackLocation->Parameters.QueryInterface.Size,
                                             IoStackLocation->Parameters.QueryInterface.Interface,
                                             (PVOID)&Irp->IoStatus.Information);
                 break;
