@@ -205,7 +205,8 @@ MMixerOpenWave(
     IN LPWAVEFORMATEX WaveFormat,
     IN PIN_CREATE_CALLBACK CreateCallback,
     IN PVOID Context,
-    OUT PHANDLE PinHandle);
+    OUT PHANDLE PinHandle,
+    OUT PKSDATARANGE_AUDIO OutDataRange);
 
 MIXER_STATUS
 MMixerGetWavePosition(
