@@ -2310,8 +2310,8 @@
 @ stub conj
 @ stub conjf
 @ stub conjl
-@ cdecl -stub copysign(double double)
-@ cdecl -stub copysignf(float float)
+@ cdecl copysign(double double)
+@ cdecl copysignf(float float)
 @ cdecl -stub copysignl(double double) copysign
 @ cdecl cos(double)
 @ cdecl -arch=!i386 cosf(float)
@@ -2385,11 +2385,11 @@
 @ cdecl fma(double double double)
 @ cdecl fmaf(float float float)
 @ cdecl fmal(double double double) fma
-@ cdecl -stub fmax(double double)
-@ cdecl -stub fmaxf(float float)
+@ cdecl fmax(double double)
+@ cdecl fmaxf(float float)
 @ cdecl fmaxl(double double) fmax
-@ cdecl -stub fmin(double double)
-@ cdecl -stub fminf(float float)
+@ cdecl fmin(double double)
+@ cdecl fminf(float float)
 @ cdecl fminl(double double) fmin
 @ cdecl fmod(double double)
 @ cdecl -arch=!i386 fmodf(float float)

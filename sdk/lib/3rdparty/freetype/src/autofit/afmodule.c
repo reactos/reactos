@@ -537,8 +537,6 @@
     AF_LoaderRec *loader = malloc(sizeof(*loader));
     if (!hints || !loader)
     {
-        free(hints);
-        free(loader);
         error = FT_Err_Out_Of_Memory;
         goto Exit;
     }
