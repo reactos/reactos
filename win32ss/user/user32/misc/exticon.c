@@ -611,8 +611,6 @@ static UINT ICO_ExtractIconExW(
 
 #ifdef __REACTOS__
                     icon = CreateIconFromResourceEx(imageData, cbTotal, sig == 1, 0x00030000, cx[index], cy[index], flags);
-                    if (fIconEx && sig == 1)
-                        iconCount = 1;
 #else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #endif
@@ -626,13 +624,19 @@ static UINT ICO_ExtractIconExW(
                         else
                             DestroyIcon(icon);
 
+#ifndef __REACTOS__
                         iconCount = 1;
                         break;
+#endif
                     }
                 }
             }
         }
+#ifdef __REACTOS__
+        ret = 1;
+#else
         ret = iconCount;	/* return number of retrieved icons */
+#endif
     }
 /* end ico file */
 
@@ -711,8 +715,13 @@ static UINT ICO_ExtractIconExW(
 	  }
 
 	  /* assure we don't get too much */
+#ifdef __REACTOS__
+      if( nIcons > iconDirCount - nIconIndex + 1 ) // + 1 (these are zero based)
+        nIcons = iconDirCount - nIconIndex + 1;
+#else
 	  if( nIcons > iconDirCount - nIconIndex )
 	    nIcons = iconDirCount - nIconIndex;
+#endif
 
 	  /* starting from specified index */
 	  xresent = (const IMAGE_RESOURCE_DIRECTORY_ENTRY*)(icongroupresdir+1) + nIconIndex;
@@ -745,6 +754,12 @@ static UINT ICO_ExtractIconExW(
 	    goto end;		/* failure */
 	  }
 
+#ifdef __REACTOS__
+      /* If doing pairs and nIcons is an odd number */
+      if (cx2 && cy2 && nIcons % 2 == 1)
+          nIcons++;
+
+#endif
 	  for (i=0; i<nIcons; i++)
 	  {
 	    const IMAGE_RESOURCE_DIRECTORY *xresdir;
@@ -834,9 +849,22 @@ static UINT ICO_ExtractIconExW(
 	      RetPtr[i]=0;
 	      continue;
 	    }
+#ifdef __REACTOS__
+        if (cx2 && cy2 && nIcons % 2 == 0 && i % 2 == 1)
+        {
+            /* Handling pair icons */
+            RetPtr[i] = CreateIconFromResourceEx(idata, idataent->Size, TRUE, 0x00030000, cx2, cy2, flags);
+        }
+        else
+        {
+            /* Handling individual icons */
+            RetPtr[i] = CreateIconFromResourceEx(idata, idataent->Size, TRUE, 0x00030000, cx1, cy1, flags);
+        }
+#else
 	    RetPtr[i] = CreateIconFromResourceEx(idata, idataent->Size, TRUE, 0x00030000, cx1, cy1, flags);
             if (cx2 && cy2)
                 RetPtr[++i] = CreateIconFromResourceEx(idata, idataent->Size, TRUE, 0x00030000, cx2, cy2, flags);
+#endif
 	  }
 	  ret = i;	/* return number of retrieved icons */
 	}			/* if(sig == IMAGE_NT_SIGNATURE) */
