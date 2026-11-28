@@ -448,21 +448,31 @@ IntTranslateNumpadKey(WORD wVk)
 }
 
 /*
- * IntGetModBits
- *
- * Gets layout specific modification bits, for example KBDSHIFT, KBDCTRL, KBDALT
+ * Gets layout specific modification bits, for example KBDSHIFT, KBDCTRL, KBDALT, KBDKANA.
+ * VK_KANA is a lock key (like Caps Lock), so its modifier bit is taken from the lock state.
  */
-static
-DWORD
-IntGetModBits(PKBDTABLES pKbdTbl, PBYTE pKeyState)
+static DWORD
+IntGetModBits(
+    _In_ PKBDTABLES pKbdTbl,
+    _In_ PBYTE pKeyState)
 {
     DWORD i, dwModBits = 0;
 
     /* DumpKeyState( KeyState ); */
 
     for (i = 0; pKbdTbl->pCharModifiers->pVkToBit[i].Vk; i++)
-        if (IS_KEY_DOWN(pKeyState, pKbdTbl->pCharModifiers->pVkToBit[i].Vk))
+    {
+        BYTE vk = pKbdTbl->pCharModifiers->pVkToBit[i].Vk;
+        BOOL bActive;
+
+        if (vk == VK_KANA)
+            bActive = IS_KEY_LOCKED(pKeyState, VK_KANA);
+        else
+            bActive = IS_KEY_DOWN(pKeyState, vk);
+
+        if (bActive)
             dwModBits |= pKbdTbl->pCharModifiers->pVkToBit[i].ModBits;
+    }
 
     TRACE("Current Mod Bits: %lx\n", dwModBits);
 
