@@ -504,7 +504,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
     BOOL CharIsValid, StringIsValid = TRUE;
     const WCHAR InvalidChar = 0xFFFD;
 
-    if (Flags != 0 && Flags != MB_ERR_INVALID_CHARS)
+    if (Flags & ~(MB_ERR_INVALID_CHARS))
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
@@ -1011,7 +1011,7 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
     INT TempLength;
     DWORD Char;
 
-    if (Flags)
+    if (Flags & ~(WC_ERR_INVALID_CHARS))
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
