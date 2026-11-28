@@ -112,6 +112,7 @@ list(APPEND SOURCE
     RtlFirstFreeAce.c
     RtlFls.c
     RtlGenerate8dot3Name.c
+    RtlGetElementGenericTableAvl.c
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
     RtlGetFullPathName_UstrEx.c

@@ -80,6 +80,10 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
 
         /* Copy user buffer */
         RtlCopyMemory(UserData, Buffer, BufferSize);
+
+        /* Invalidate ordered element cache */
+        Table->WhichOrderedElement = 0;
+        Table->OrderedPointer = NULL;
     }
     else
     {
@@ -278,15 +282,65 @@ RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 RtlGetElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
-                             IN ULONG I)
+                             IN ULONG Index)
 {
-    UNIMPLEMENTED;
-	return NULL;
+    ULONG ElementCount = Table->NumberGenericTableElements;
+    ULONG NextIndex = Index + 1;
+    PRTL_BALANCED_LINKS Node;
+    ULONG CurrentIndex;
+
+    /* Out of range or empty table */
+    if (Index == MAXULONG || NextIndex > ElementCount)
+        return NULL;
+
+    /* Fast path means it's already sitting on the requested element */
+    if (Table->OrderedPointer && Table->WhichOrderedElement == NextIndex)
+    {
+        return &((PTABLE_ENTRY_HEADER)Table->OrderedPointer)->UserData;
+    }
+
+    /* Decide where to start the walk */
+    if (Table->OrderedPointer &&
+        Table->WhichOrderedElement &&
+        Table->WhichOrderedElement < NextIndex)
+    {
+        /* Continue forward from the cached node */
+        Node = Table->OrderedPointer;
+        CurrentIndex = Table->WhichOrderedElement;
+    }
+    else
+    {
+        /* Start from the leftmost node */
+        Node = RtlRightChildAvl(&Table->BalancedRoot);
+        if (!Node)
+            return NULL;
+
+        while (RtlLeftChildAvl(Node))
+            Node = RtlLeftChildAvl(Node);
+
+        CurrentIndex = 1;
+    }
+
+    /* Walk successors until we reach the desired index */
+    while (CurrentIndex < NextIndex)
+    {
+        Node = RtlRealSuccessorAvl(Node);
+        if (!Node)
+            return NULL;
+
+        CurrentIndex++;
+    }
+
+    /* Update cache */
+    Table->OrderedPointer = Node;
+    Table->WhichOrderedElement = NextIndex;
+
+    return &((PTABLE_ENTRY_HEADER)Node)->UserData;
 }
 
 /*
