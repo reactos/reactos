@@ -1,0 +1,220 @@
+/*
+ * PROJECT:     ReactOS Telnet Service
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Telnet service
+ * COPYRIGHT:   Copyright 2026 Aravinda Samarathunga (I-A-S)
+ */
+
+#pragma once
+
+#include "tcpserver.hpp"
+#include "session.hpp"
+
+class TelnetSessionHandler: public TCPServerSessionHandler, public ITelnetSessionHandler
+{
+    static constexpr size_t MAX_TEXT_LINE_LENGTH = 8000;
+    static constexpr size_t MAX_SUBNEGO_PAYLOAD_LENGTH = 255;
+    static constexpr size_t MAX_CREDENTIAL_LENGTH = 256;
+    static constexpr uint32_t MAX_FAILED_LOGIN_ATTEMPTS = 3;
+
+    enum class ECommand: uint8_t
+    {
+        xEOF = 236,
+        SUSP = 237,
+        ABORT = 238,
+        EOR = 239,
+        SE = 240,
+        NOP = 241,
+        DM = 242,
+        BRK = 243,
+        IP = 244,
+        AO = 245,
+        AYT = 246,
+        EC = 247,
+        EL = 248,
+        GA = 249,
+        SB = 250,
+        WILL = 251,
+        WONT = 252,
+        DO = 253,
+        DONT = 254,
+        IAC = 255,
+    };
+
+    enum class EOption: uint8_t
+    {
+        BINARY = 0,
+        ECHO = 1,
+        SGA = 3,
+        TM = 6,
+
+        TTYPE = 24,
+        NAWS = 31,
+    };
+
+    enum class EParserState: uint8_t
+    {
+        TEXT,
+        AFTER_IAC,
+        AFTER_VERB,
+        AFTER_SB,
+        SUBNEGO_PAYLOAD,
+        SUBNEGO_AFTER_IAC,
+        MALFORMED_SUBNEGO,
+        MALFORMED_SUBNEGO_AFTER_IAC,
+    };
+
+    enum class ENegotiableOption: uint8_t
+    {
+        NO,
+        YES,
+        WANTYES,
+        WANTNO,
+    };
+
+    enum class EState: uint8_t
+    {
+        INVALID,
+        WAITING_FOR_USERNAME,
+        WAITING_FOR_PASSWORD,
+        ACTIVE_SESSION,
+    };
+
+    enum class ETTypeOption: uint8_t
+    {
+        IS = 0,
+        SEND = 1,
+    };
+
+private:
+    void handle_text(const uint8_t* data, int length);
+    void handle_text_line(const std::string& line);
+    void handle_command(ECommand cmd);
+    void handle_option_command(ECommand verb, EOption option);
+    bool handle_negotiable_option(bool handled_by_us, ECommand verb, ENegotiableOption& state, EOption option);
+    void handle_subnegotiation(EOption option, const uint8_t* params, uint8_t length);
+
+    void erase_line();
+    void erase_char();
+
+    size_t count_chars_in_text_line_buffer();
+
+private:
+    inline bool should_echo();
+    inline void flush_echo_buffer();
+    inline void send_option_command(ECommand verb, EOption option);
+
+    inline void set_state_to_waiting_for_username();
+    inline void set_state_to_waiting_for_password();
+    inline void set_state_to_active_session();
+
+public:
+    TelnetSessionHandler();
+    ~TelnetSessionHandler();
+
+    void on_connect() override;
+
+    void on_disconnect() override;
+
+    void on_data(const uint8_t* data, int length) override;
+
+public:
+    inline void close_session() override;
+
+    inline void send_string(const char* str) override;
+    void send_text(const uint8_t* data, int length) override;
+
+    void clear_text_line_buffer() override;
+    
+    inline bool has_available_send_space() override;
+
+    inline HANDLE get_send_space_available_event() const override;
+
+private:
+    uint8_t m_parser_state_data{};
+    std::vector<uint8_t> m_sb_buffer{};
+    EParserState m_parser_state{EParserState::TEXT};
+    bool m_dropping_utf8_remain{};
+
+    CRITICAL_SECTION m_out_text_cs{};
+    bool m_last_out_was_cr{};
+    std::vector<uint8_t> m_out_text_buffer{};
+
+    EState m_state{EState::INVALID};
+    
+    ENegotiableOption m_nopt_echo{};
+    ENegotiableOption m_nopt_naws{};
+    ENegotiableOption m_nopt_ttype{};
+
+    bool m_text_last_byte_was_cr{};
+    std::string m_text_line_buffer{};
+
+    std::vector<uint8_t> m_echo_buffer{};
+
+    std::string m_username{};
+    uint32_t m_failed_login_attempt_count{};
+
+    uint16_t m_window_width{80};
+    uint16_t m_window_height{24};
+
+    char m_ttype[41]{""};
+    bool m_accepting_new_ttype{};
+
+    TelnetSession* m_active_session{};
+};
+
+void TelnetSessionHandler::flush_echo_buffer()
+{
+    if (m_echo_buffer.empty())
+        return;
+    send_text(m_echo_buffer.data(), (int)m_echo_buffer.size());
+    m_echo_buffer.clear();
+}
+
+void TelnetSessionHandler::send_string(const char* str)
+{
+    send_text((const uint8_t*)str, (int)strlen(str));
+}
+
+void TelnetSessionHandler::send_option_command(ECommand verb, EOption option)
+{
+    uint8_t data[3] = { (uint8_t)ECommand::IAC, (uint8_t)verb, (uint8_t)option, };
+    send_data(data, sizeof(data));
+}
+
+bool TelnetSessionHandler::should_echo()
+{
+    return (m_nopt_echo == ENegotiableOption::YES) && (m_state != EState::WAITING_FOR_PASSWORD);
+}
+
+void TelnetSessionHandler::set_state_to_waiting_for_username()
+{
+    m_state = EState::WAITING_FOR_USERNAME;
+    send_string("server login: ");
+}
+
+void TelnetSessionHandler::set_state_to_waiting_for_password()
+{
+    m_state = EState::WAITING_FOR_PASSWORD;
+    send_string("password: ");
+}
+
+void TelnetSessionHandler::set_state_to_active_session()
+{
+    m_state = EState::ACTIVE_SESSION;
+}
+
+void TelnetSessionHandler::close_session()
+{
+    disconnect();
+}
+
+bool TelnetSessionHandler::has_available_send_space()
+{
+    return TCPServerSessionHandler::has_available_send_space();
+}
+
+HANDLE TelnetSessionHandler::get_send_space_available_event() const
+{
+    return TCPServerSessionHandler::get_send_space_available_event();
+}
