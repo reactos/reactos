@@ -263,8 +263,14 @@ DWORD ScmSetServiceGroup(PSERVICE lpService,
 DWORD ScmAcquireServiceStartLock(IN BOOL IsServiceController,
                                  OUT LPSC_RPC_LOCK lpLock);
 DWORD ScmReleaseServiceStartLock(IN OUT LPSC_RPC_LOCK lpLock);
-VOID ScmQueryServiceLockStatusW(OUT LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus);
-VOID ScmQueryServiceLockStatusA(OUT LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus);
+DWORD ScmQueryServiceLockStatusW(
+    _Out_writes_bytes_(cbBufSize) LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
+    _In_ DWORD cbBufSize,
+    _Out_ LPDWORD pcbBytesNeeded);
+DWORD ScmQueryServiceLockStatusA(
+    _Out_writes_bytes_(cbBufSize) LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
+    _In_ DWORD cbBufSize,
+    _Out_ LPDWORD pcbBytesNeeded);
 
 
 /* rpcserver.c */
