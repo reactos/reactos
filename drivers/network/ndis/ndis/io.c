@@ -832,6 +832,11 @@ NdisMReadDmaCounter(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+  if (!AdapterObject) {
+    NDIS_DbgPrint(MIN_TRACE, ("DMA adapter not initialized, returning 1\n"));
+    return 1;
+  }
+
   return AdapterObject->DmaOperations->ReadDmaCounter(AdapterObject);
 }
 
@@ -848,6 +853,11 @@ NdisMGetDmaAlignment(
   PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)Adapter->NdisMiniportBlock.SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (!AdapterObject) {
+    NDIS_DbgPrint(MIN_TRACE, ("DMA adapter not initialized, returning 1\n"));
+    return 1;
+  }
 
   return AdapterObject->DmaOperations->GetDmaAlignment(AdapterObject);
 }
@@ -1177,7 +1187,7 @@ NdisMInitializeScatterGatherDma(
  */
 {
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
-    ULONG MapRegisters;
+    ULONG MapRegisters = 0;
     DEVICE_DESCRIPTION DeviceDesc;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -1202,7 +1212,14 @@ NdisMInitializeScatterGatherDma(
          IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
 
     if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
+    {
+        /* DbgPrint, not NDIS_DbgPrint: the latter is compiled out in release builds */
+        DbgPrint("NdisMInitializeScatterGatherDma: IoGetDmaAdapter failed (MapRegisters=%lu, BusNumber=%lu, InterfaceType=%lu)\n",
+                 MapRegisters,
+                 (ULONG)Adapter->NdisMiniportBlock.BusNumber,
+                 (ULONG)Adapter->NdisMiniportBlock.BusType);
         return NDIS_STATUS_RESOURCES;
+    }
 
     /* FIXME: Right now we just use this as a place holder */
     Adapter->NdisMiniportBlock.ScatterGatherListSize = 1;

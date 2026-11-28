@@ -8,6 +8,7 @@ add_subdirectory(example)
 add_subdirectory(fltmgr)
 add_subdirectory(hidparse)
 add_subdirectory(kernel32)
+add_subdirectory(ndis_dma)
 add_subdirectory(ntos_cc)
 add_subdirectory(ntos_io)
 add_subdirectory(ntos_mm)
@@ -167,6 +168,7 @@ list(APPEND KMTEST_SOURCE
     hidparse/HidP_user.c
     kernel32/FileAttributes_user.c
     kernel32/FindFile_user.c
+    ndis_dma/ndis_dma_user.c
     ntos_cc/CcCopyRead_user.c
     ntos_cc/CcCopyWrite_user.c
     ntos_cc/CcMapData_user.c
@@ -207,6 +209,7 @@ add_dependencies(kmtest_drivers
     ioreadwrite_drv
     kernel32_drv
     mmmaplockedpagesspecifycache_drv
+    ndis_dma_drv
     ntcreatesection_drv
     poirp_drv
     tcpip_drv
