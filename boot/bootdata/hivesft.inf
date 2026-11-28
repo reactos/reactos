@@ -131,6 +131,13 @@ HKLM,"SOFTWARE\Classes\https","URL Protocol",0x00000000,""
 ;see http
 ;HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
 HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
+; URL prefixes used by the shell to complete short URLs
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\URL","DefaultPrefix",0x00000000,"http://"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\URL\Prefixes","ftp",0x00000000,"ftp://"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\URL\Prefixes","gopher",0x00000000,"gopher://"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\URL\Prefixes","home",0x00000000,"http://"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\URL\Prefixes","mosaic",0x00000000,"http://"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\URL\Prefixes","www",0x00000000,"http://"
 
 ; Register system default web browser
 HKLM,"SOFTWARE\Clients\StartMenuInternet","",0x00000000,"IEXPLORE.EXE"

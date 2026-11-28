@@ -548,6 +548,13 @@ HKCR,"themefile\shell\open\command","",0x00020000,"%SystemRoot%\system32\rundll3
 
 ; URL shortcuts (e.g. used in Favorites folder of IExplorer)
 HKCR,".url","",0x00000000,"InternetShortcut"
+HKCR,"InternetShortcut","",0x00000000,"Internet Shortcut"
+HKCR,"InternetShortcut","EditFlags",0x00010001,0x00000002
+HKCR,"InternetShortcut","IsShortcut",0x00000000,""
+HKCR,"InternetShortcut","NeverShowExt",0x00000000,""
+HKCR,"InternetShortcut","CLSID",0x00000000,"{FBF23B40-E3F0-101B-8488-00AA003E56F8}"
+HKCR,"InternetShortcut\DefaultIcon","",0x00020000,"%SystemRoot%\system32\url.dll,0"
+HKCR,"InternetShortcut\shell\open\command","",0x00000000,"rundll32.exe ieframe.dll,OpenURL ""%1"""
 
 ; Wave Sounds
 HKCR,".wav","",0x00000000,"SoundRec"
