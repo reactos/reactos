@@ -104,17 +104,20 @@ function testPutText2() {
     elem.text = "exec_cnt++;"; /* forces evaluation, but src will be executed */
     ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
     ok(extern_cnt === 6, "< extern_cnt = " + extern_cnt + " expected 6");
+    elem.text = "exec_cnt++;"; /* forces evaluation, but src will be executed */
+    ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
+    ok(extern_cnt === 7, "< extern_cnt = " + extern_cnt + " expected 6");
 
     elem = document.createElement("script");
     exec_cnt = 0;
     elem.text = "exec_cnt++;";
     ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
     elem.src = "externscr.js";
-    ok(extern_cnt === 6, "extern_cnt = " + extern_cnt + " expected 6");
+    ok(extern_cnt === 7, "extern_cnt = " + extern_cnt + " expected 7");
 
     document.body.appendChild(elem);
     ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
-    ok(extern_cnt === 7, "extern_cnt = " + extern_cnt + " expected 7");
+    ok(extern_cnt === 8, "extern_cnt = " + extern_cnt + " expected 8");
 }
 
 document.body.onload = function() {

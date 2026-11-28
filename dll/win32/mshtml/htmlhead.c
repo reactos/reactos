@@ -18,11 +18,19 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLTitleElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLTitleElement IHTMLTitleElement_iface;
+#ifdef __REACTOS__
+};
+#else
 } HTMLTitleElement;
+#endif
 
 static inline HTMLTitleElement *impl_from_IHTMLTitleElement(IHTMLTitleElement *iface)
 {
@@ -177,11 +185,19 @@ HRESULT HTMLTitleElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem
     return S_OK;
 }
 
+#ifdef __REACTOS__
+struct HTMLHeadElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLHeadElement IHTMLHeadElement_iface;
+#ifdef __REACTOS__
+};
+#else
 } HTMLHeadElement;
+#endif
 
 static inline HTMLHeadElement *impl_from_IHTMLHeadElement(IHTMLHeadElement *iface)
 {
