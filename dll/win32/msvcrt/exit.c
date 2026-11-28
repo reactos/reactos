@@ -298,7 +298,14 @@ void DECLSPEC_NORETURN CDECL _wassert(const wchar_t* str, const wchar_t* file, u
      ((MSVCRT_error_mode == _OUT_TO_DEFAULT) && (MSVCRT_app_type == 2)))
   {
     wchar_t text[2048];
+#ifdef __REACTOS__ /* Import fix from Wine-11.19 */
+    _snwprintf(text, ARRAY_SIZE(text), L"File: %ls\nLine: %d\n\nExpression: \"%ls\"", file, line, str);
+#else
     _snwprintf(text, sizeof(text), L"File: %ls\nLine: %d\n\nExpression: \"%ls\"", file, line, str);
+#endif
+#ifdef __REACTOS__ /* _snwprintf() does not NUL-terminate on truncation */
+    text[ARRAY_SIZE(text) - 1] = UNICODE_NULL;
+#endif
     DoMessageBoxW(L"Assertion failed!", text);
   }
   else
