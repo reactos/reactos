@@ -1466,6 +1466,11 @@ static void test_NtMapViewOfSection(void)
     status = NtMapViewOfSection(mapping, process, &ptr2, 21, 0, &offset, &size, 1, 0, PAGE_READWRITE);
     ok(status == STATUS_NO_MEMORY || status == STATUS_INVALID_PARAMETER,
        "NtMapViewOfSection returned %08lx\n", status);
+#ifdef __REACTOS__
+    /* Don't leak the view, the file can't be deleted while it is mapped */
+    if (status == STATUS_SUCCESS)
+        NtUnmapViewOfSection(process, ptr2);
+#endif
 
     /* 22 zero bits is invalid */
     ptr2 = NULL;
@@ -1474,6 +1479,10 @@ static void test_NtMapViewOfSection(void)
     status = NtMapViewOfSection(mapping, process, &ptr2, 22, 0, &offset, &size, 1, 0, PAGE_READWRITE);
     ok(status == STATUS_INVALID_PARAMETER_4 || status == STATUS_INVALID_PARAMETER,
        "NtMapViewOfSection returned %08lx\n", status);
+#ifdef __REACTOS__
+    if (status == STATUS_SUCCESS)
+        NtUnmapViewOfSection(process, ptr2);
+#endif
 
     /* zero bits > 31 should be considered as a leading zeroes bitmask on 64bit and WoW64 */
     ptr2 = NULL;
@@ -1607,6 +1616,10 @@ static void test_NtMapViewOfSection(void)
         todo_wine
         ok(status == STATUS_INVALID_PARAMETER_9 || status == STATUS_INVALID_PARAMETER,
            "NtMapViewOfSection returned %08lx\n", status);
+#ifdef __REACTOS__
+        if (status == STATUS_SUCCESS)
+            NtUnmapViewOfSection(process, ptr2);
+#endif
     }
 
     status = NtUnmapViewOfSection(process, ptr);
