@@ -17,6 +17,7 @@
 #else
 #define argv __argv
 #endif
+#define argc __argc
 
 HINSTANCE hInstance = NULL;
 HWND hTrackBar = NULL;
@@ -32,6 +33,7 @@ LPTSTR szFilter = NULL;
 WORD wDeviceId = 0;
 BOOL bRepeat = FALSE;
 BOOL bIsSingleWindow = FALSE;
+BOOL bCloseAfterPlay = FALSE;
 UINT MaxFilePos = 0;
 RECT PrevWindowPos;
 
@@ -890,7 +892,7 @@ CloseMediaFile(HWND hwnd)
 }
 
 static VOID
-OpenMediaFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpType)
+OpenMediaFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpType, BOOL bPlay)
 {
     MCIERROR mciError;
 
@@ -907,7 +909,8 @@ OpenMediaFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpType)
         return;
     }
 
-    StartPlayback(hwnd);
+    if (bPlay)
+        StartPlayback(hwnd);
 }
 
 static DWORD
@@ -1165,7 +1168,7 @@ OpenFileDialog(HWND hwnd, DWORD dwFilterIndex, LPTSTR lpType)
     if (!GetOpenFileName(&OpenFileName))
         return;
 
-    OpenMediaFile(hwnd, OpenFileName.lpstrFile, lpType);
+    OpenMediaFile(hwnd, OpenFileName.lpstrFile, lpType, TRUE);
 }
 
 static VOID
@@ -1222,7 +1225,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             drophandle = (HDROP)wParam;
             DragQueryFile(drophandle, 0, droppedfile, ARRAYSIZE(droppedfile));
             DragFinish(drophandle);
-            OpenMediaFile(hwnd, droppedfile, NULL);
+            OpenMediaFile(hwnd, droppedfile, NULL, TRUE);
             break;
         }
 
@@ -1234,6 +1237,11 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 if (bRepeat)
                 {
                     StartPlayback(hwnd);
+                }
+                else if (bCloseAfterPlay)
+                {
+                    /* Playback finished and /close was requested on startup */
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
                 }
             }
             break;
@@ -1460,6 +1468,64 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, Message, wParam, lParam);
 }
 
+typedef struct _CMDLINE_OPTIONS
+{
+    LPTSTR lpFileName; /* The filename is the first non-switch argument if any */
+    BOOL bPlay;        /* /play or -play: Open and start playback */
+    BOOL bOpen;        /* /open or -open: Open but don't start playback */
+    BOOL bClose;       /* /close or -close: Close the player once /play reached end */
+} CMDLINE_OPTIONS, *PCMDLINE_OPTIONS;
+
+/*
+ * Parses the command line into a CMDLINE_OPTIONS structure.
+ *
+ * Switch prefixes are either '/' or '-' and switch names are
+ * case insensitive. The first argument which is not a switch is taken as
+ * the file name to open.
+ *
+ * Returns TRUE if all arguments were recognized. FALSE means at least one unknown switch.
+ */
+static BOOL
+ParseCmdline(INT nArgc, LPTSTR *lpArgv, PCMDLINE_OPTIONS pOptions)
+{
+    INT i;
+
+    ZeroMemory(pOptions, sizeof(*pOptions));
+
+    for (i = 1; i < nArgc; i++)
+    {
+        if (lpArgv[i][0] == _T('/') || lpArgv[i][0] == _T('-'))
+        {
+            LPTSTR lpSwitch = &lpArgv[i][1];
+
+            if (_tcsicmp(lpSwitch, _T("play")) == 0)
+            {
+                pOptions->bPlay = TRUE;
+            }
+            else if (_tcsicmp(lpSwitch, _T("open")) == 0)
+            {
+                pOptions->bOpen = TRUE;
+            }
+            else if (_tcsicmp(lpSwitch, _T("close")) == 0)
+            {
+                pOptions->bClose = TRUE;
+            }
+            else
+            {
+                /* Unknown switch */
+                return FALSE;
+            }
+        }
+        else if (pOptions->lpFileName == NULL)
+        {
+            /* The file name */
+            pOptions->lpFileName = lpArgv[i];
+        }
+    }
+
+    return TRUE;
+}
+
 INT WINAPI
 _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 {
@@ -1469,6 +1535,9 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     MSG msg;
     DWORD dwError;
     HANDLE hAccel;
+    CMDLINE_OPTIONS Options;
+
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
     hInstance = hInst;
 
@@ -1535,13 +1604,23 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    if (*lpCmdLine == _T('"'))
+    if (ParseCmdline(argc, argv, &Options) && Options.lpFileName != NULL)
     {
-        OpenMediaFile(hwnd, argv[1], NULL);
-    }
-    else
-    {
-        OpenMediaFile(hwnd, lpCmdLine, NULL);
+        BOOL bPlay = !Options.bOpen;
+
+        /*
+         * This flag is stored and evaluated when playback finishes (MM_MCINOTIFY)
+         * The player will close.
+         */
+        bCloseAfterPlay = (Options.bClose && bPlay);
+
+        /* /play with a filename behaves like a filename without explicitly specifying /play.
+         * An explicit "open" means only open, don't play
+         */
+        OpenMediaFile(hwnd, Options.lpFileName, NULL, bPlay);
+
+        if (Options.bClose && (!bCloseAfterPlay || wDeviceId == 0))
+            PostMessage(hwnd, WM_CLOSE, 0, 0);
     }
 
     /* Message Loop */
