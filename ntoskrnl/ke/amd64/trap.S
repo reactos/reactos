@@ -694,6 +694,10 @@ PUBLIC KiIpiInterrupt
 
     int 3
 
+    /* Go back to the old irql */
+    movzx rax, byte ptr [rbp + KTRAP_FRAME_PreviousIrql]
+    mov cr8, rax
+
     /* Return */
     ExitTrap (TF_SAVE_ALL or TF_IRQL)
 .ENDP
