@@ -234,6 +234,8 @@ BEGIN
     IDS_ROMANIAN_STANDARD_LAYOUT "Ρουμάνικα (Standard)"
     IDS_RUSSIAN_LAYOUT "Ρώσικα"
     IDS_RUSSIAN_TYPEWRITER_LAYOUT "Ρώσικα (Typewriter)"
+    IDS_SAMI_EXTENDED_FINLAND_SWEDEN_LAYOUT "Sami Extended Finland-Sweden"
+    IDS_SAMI_EXTENDED_NORWAY_LAYOUT "Sami Extended Norway"
     IDS_SERBIAN_CYRILLIC_LAYOUT "Σέρβικα (Κυριλλικά)"
     IDS_SERBIAN_LATIN_LAYOUT "Σέρβικα (Λατινικά)"
     IDS_SLOVAK_LAYOUT "Σλοβακικά"
