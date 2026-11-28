@@ -48,6 +48,12 @@ BOOLEAN
 IntDestroyCurIconObject(
     _In_ PVOID Object);
 
+HICON FASTCALL
+IntCreateSmallIconCopy(HICON hIcon);
+
+VOID FASTCALL
+IntDestroyWindowIconSm2(PWND pWnd);
+
 VOID FASTCALL
 IntCleanupCurIconCache(PPROCESSINFO Win32Process);
 

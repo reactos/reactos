@@ -284,7 +284,7 @@ UserPaintCaption(PWND pwnd, INT Flags)
 }
 
 LRESULT FASTCALL
-DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
+DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
 {
     HICON hIconRet;
     if ( wParam > ICON_SMALL2 )
@@ -298,8 +298,18 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
             hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp, TRUE);
             break;
         case ICON_SMALL:
+            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, TRUE);
+            break;
         case ICON_SMALL2:
             hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, TRUE);
+            if (!hIconRet)
+            {
+                LRESULT lResult = 0;
+                /* The small copy and its cache are owned by the server */
+                NtUserMessageCall(UserHMGetHandle(pWnd), WM_GETICON, wParam, lParam,
+                                  (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
+                return lResult;
+            }
             break;
         default:
             break;
@@ -503,7 +513,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_GETICON:
         {
-           return DefWndGetIcon(pWnd, wParam, lParam);
+           return DefWndGetIcon(pWnd, wParam, lParam, bUnicode);
         }
 
         case WM_HELP:

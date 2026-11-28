@@ -727,6 +727,8 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    IntUnlinkWindow(Window);
 
+   IntDestroyWindowIconSm2(Window);
+
    if (Window->PropListItems)
    {
       UserRemoveWindowProps(Window);

@@ -1094,6 +1094,7 @@ typedef struct tagSERVERINFO
     UINT uiShellMsg;
     MBSTRING MBStrings[MAX_MB_STRINGS];
     ATOM atomIconSmProp;
+    ATOM atomIconSm2Prop;
     ATOM atomIconProp;
     ATOM atomContextHelpIdProp;
     ATOM atomFrostedWindowProp;

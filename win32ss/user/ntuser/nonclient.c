@@ -749,26 +749,38 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
     HICON hIcon;
 
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
-   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
-
-   if (!hIcon && pWnd->pcls->spicnSm)
-       return pWnd->pcls->spicnSm;
-   if (!hIcon && pWnd->pcls->spicn)
-       return pWnd->pcls->spicn;
-
-   // WARNING: Wine code has this test completely wrong. The following is how
-   // Windows behaves for windows having the WS_EX_DLGMODALFRAME style set:
-   // it does not use the default icon! And it does not check for DS_MODALFRAME.
-   if (!hIcon && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME))
-   {
-      hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
-      if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
-   }
+   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconSm2Prop, TRUE);
    if (hIcon)
    {
        pIcon = (PCURICON_OBJECT)UserGetObjectNoErr(gHandleTable,
                                                    hIcon,
                                                    TYPE_CURSOR);
+   }
+
+   /* A property can hold a handle the application has already destroyed, so a
+      failed lookup falls back to the class icons below instead of drawing
+      nothing at all */
+   if (pIcon)
+       return pIcon;
+
+   if (pWnd->pcls->spicnSm)
+       return pWnd->pcls->spicnSm;
+   if (pWnd->pcls->spicn)
+       return pWnd->pcls->spicn;
+
+   // WARNING: Wine code has this test completely wrong. The following is how
+   // Windows behaves for windows having the WS_EX_DLGMODALFRAME style set:
+   // it does not use the default icon! And it does not check for DS_MODALFRAME.
+   if (!(pWnd->ExStyle & WS_EX_DLGMODALFRAME))
+   {
+      hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
+      if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
+      if (hIcon)
+      {
+          pIcon = (PCURICON_OBJECT)UserGetObjectNoErr(gHandleTable,
+                                                      hIcon,
+                                                      TYPE_CURSOR);
+      }
    }
    return pIcon;
 }

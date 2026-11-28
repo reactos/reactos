@@ -50,6 +50,7 @@ InitUserAtoms(VOID)
     gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
     gpsi->atomIconSmProp = IntAddGlobalAtom(L"SysICS", TRUE);
+    gpsi->atomIconSm2Prop = IntAddGlobalAtom(L"SysICS2", TRUE);
     gpsi->atomIconProp   = IntAddGlobalAtom(L"SysIC", TRUE);
 
     gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
