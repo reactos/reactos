@@ -18,14 +18,25 @@ bool bAutoroute = false;
 void NewGame(void)
 {
     TRACE("ENTER NewGame()\n");
+    DWORD previousRound = ScoreRoundOptions();
+    FinishScoreRound(false);
+    StopAutoFinish();
+    StopWinAnimation(false);
+    if (PromptScoreName() == IDCANCEL || !IsWindow(hwndMain)) return;
     int i, j;
+    LONG base = 0;
 
     if (GetScoreMode() == SCORE_VEGAS)
     {
-        if ((dwOptions & OPTION_KEEP_SCORE) && (dwPrevMode == SCORE_VEGAS))
-            lScore = lScore - 52;
-        else
-            lScore = -52;
+        if (dwOptions & OPTION_KEEP_SCORE)
+        {
+            if ((previousRound & (OPTION_SCORE_STD | OPTION_SCORE_VEGAS)) == OPTION_SCORE_VEGAS &&
+                (previousRound & OPTION_THREE_CARDS) == (dwOptions & OPTION_THREE_CARDS))
+                base = lScore;
+            else
+                ReadVegasBalance(dwOptions, &base);
+        }
+        lScore = base - 52;
 
         if (dwOptions & OPTION_THREE_CARDS)
             dwWasteTreshold = 2;
@@ -43,6 +54,7 @@ void NewGame(void)
         lScore = 0;
     }
 
+    StartScoreRound(base);
     dwTime = 0;
     dwWasteCount = 0;
     LastId = 0;
@@ -180,7 +192,7 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj, CardStack &dragcards)
         }
         else if (GetScoreMode() == SCORE_VEGAS)
         {
-            lScore = lScore >= -47 ? lScore - 5 : -52;
+            lScore = lScore - 5;
         }
     }
 
@@ -296,9 +308,10 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
     stackobj.GetFaceDirection(&numfacedown);
 
     //if all face-down, then make top card face-up
-    if(stackobj.NumCards() == numfacedown)
+    if(numfacedown > 0 && stackobj.NumCards() == numfacedown)
     {
-        if(numfacedown > 0) numfacedown--;
+        SetFlipUndo(stackobj.Id(), numfacedown);
+        numfacedown--;
         stackobj.SetFaceDirection(CS_FACE_DOWNUP, numfacedown);
         stackobj.Redraw();
 
@@ -307,7 +320,6 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
             lScore = lScore + 5;
             UpdateStatusBar();
         }
-        ClearUndo();
     }
 
     LastId = stackobj.Id();
@@ -362,34 +374,21 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 
     if(fGameOver)
     {
+        StopAutoFinish();
         KillTimer(hwndMain, IDT_PLAYTIMER);
         PlayTimer = 0;
 
-        if ((dwOptions & OPTION_SHOW_TIME) && (GetScoreMode() == SCORE_STD))
+        if ((dwOptions & OPTION_SHOW_TIME) && (GetScoreMode() == SCORE_STD) && dwTime)
         {
             lScore = lScore + (700000 / dwTime);
         }
 
+        FinishScoreRound(true);
         UpdateStatusBar();
         ClearUndo();
 
-        MessageBox(SolWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
-
-        for(int i = 0; i < 4; i++)
-        {
-            pSuitStack[i]->Flash(11, 100);
-        }
-
-        if( IDYES == MessageBox(SolWnd, MsgDeal, szAppName, MB_YESNO | MB_ICONQUESTION) )
-        {
-            NewGame();
-        }
-        else
-        {
-            SolWnd.EmptyStacks();
-
-            fGameStarted = false;
-        }
+        fGameStarted = false;
+        QueueWinAnimation();
     }
 
     TRACE("EXIT SuitStackAddProc()\n");
@@ -504,6 +503,12 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER DeckClickProc()\n");
+
+    // An exhausted or unavailable stock is not a move.
+    if (!stackobj.NumCards() &&
+        (!activepile.NumCards() ||
+         (GetScoreMode() == SCORE_VEGAS && dwWasteCount >= dwWasteTreshold)))
+        return;
 
     SetPlayTimer();
 

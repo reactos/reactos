@@ -18,7 +18,7 @@ extern "C" void         WINAPI FreeLibrary16( HINSTANCE );
 
 void PaintRect(HDC hdc, RECT *rect, COLORREF col);
 
-void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
+static void LoadCardBitmapResources(HINSTANCE hCardDll, int *pwidth, int *pheight)
 {
     HBITMAP   hBitmap;
     HDC          hdcCard = NULL;
@@ -57,17 +57,9 @@ void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
         BitBlt(__hdcCardBitmaps, i*width, 0, width, height, hdcCard, 0, 0, SRCCOPY);
         SelectObject(hdcCard, hOld);
 
-        //Now draw a black border around each card...
-        xpos = i*width;
-        MoveToEx(__hdcCardBitmaps, xpos+2, 0, 0);
-        LineTo(__hdcCardBitmaps, xpos+width - 3, 0);
-        LineTo(__hdcCardBitmaps, xpos+width - 1, 2);
-        LineTo(__hdcCardBitmaps, xpos+width - 1, height - 3);    //vertical
-        LineTo(__hdcCardBitmaps, xpos+width - 3, height - 1);
-        LineTo(__hdcCardBitmaps, xpos+2, height - 1);
-        LineTo(__hdcCardBitmaps, xpos+0, height - 3);
-        LineTo(__hdcCardBitmaps, xpos+0, 2);
-        LineTo(__hdcCardBitmaps, xpos+2, 0);
+        xpos = i * width;
+        FrameCardShape(__hdcCardBitmaps, xpos, 0, width, height,
+                       CardCornerRadius(width, height), RGB(0, 0, 0));
 
         DeleteObject(hBitmap);
     }
@@ -77,6 +69,66 @@ void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
     *pwidth = width;
     *pheight = height;
 
+}
+
+/* Use the DLL API so that its user-selected deck and dimensions are honored.
+ * Resource loading remains available for legacy libraries without that API. */
+static void LoadCardBitmapsFromLibrary(HINSTANCE library, int *width, int *height)
+{
+    typedef BOOL (WINAPI *InitProc)(int *, int *);
+    typedef BOOL (WINAPI *DrawProc)(HDC, int, int, int, int, COLORREF);
+    typedef VOID (WINAPI *TermProc)(void);
+    InitProc init = (InitProc)GetProcAddress(library, "cdtInit");
+    DrawProc draw = (DrawProc)GetProcAddress(library, "cdtDraw");
+    TermProc term = (TermProc)GetProcAddress(library, "cdtTerm");
+
+    if (!init || !draw || !term)
+    {
+        LoadCardBitmapResources(library, width, height);
+        return;
+    }
+
+    if (!init(width, height))
+    {
+        PostQuitMessage(1);
+        return;
+    }
+
+    HDC screen = GetDC(NULL);
+    __hdcCardBitmaps = CreateCompatibleDC(screen);
+    __hbmCardBitmaps = CreateCompatibleBitmap(screen, *width * NUMCARDBITMAPS, *height);
+    ReleaseDC(NULL, screen);
+    if (__hdcCardBitmaps && __hbmCardBitmaps)
+    {
+        HGDIOBJ old = SelectObject(__hdcCardBitmaps, __hbmCardBitmaps);
+        for (int i = 0; i < NUMCARDBITMAPS; ++i)
+        {
+            // Faces use rank/suit order; other images use their resource number.
+            if (!draw(__hdcCardBitmaps, i * *width, 0, i < 52 ? i : i + 1,
+                      (i < 52 ? 0 : 1) | 0x80000000, RGB(255, 255, 255)))
+            {
+                SelectObject(__hdcCardBitmaps, old);
+                DeleteObject(__hbmCardBitmaps);
+                DeleteDC(__hdcCardBitmaps);
+                __hbmCardBitmaps = NULL;
+                __hdcCardBitmaps = NULL;
+                PostQuitMessage(1);
+                break;
+            }
+            if (i != 52 && i < 66)
+                FrameCardShape(__hdcCardBitmaps, i * *width, 0, *width, *height,
+                               CardCornerRadius(*width, *height), RGB(0, 0, 0));
+        }
+    }
+    else
+    {
+        DeleteObject(__hbmCardBitmaps);
+        DeleteDC(__hdcCardBitmaps);
+        __hbmCardBitmaps = NULL;
+        __hdcCardBitmaps = NULL;
+        PostQuitMessage(1);
+    }
+    term();
 }
 
 void LoadCardBitmaps(void)
@@ -113,7 +165,7 @@ void LoadCardBitmaps(void)
             return;
         }
 
-        LoadCardBitmapsFromLibrary(hCardDll, &__cardwidth, &__cardheight);
+        LoadCardBitmapResources(hCardDll, &__cardwidth, &__cardheight);
 
         FreeLibrary16(hCardDll);
     }
@@ -175,71 +227,24 @@ void GetSinkCols(COLORREF crBase, COLORREF *fg, COLORREF *bg, COLORREF *sh1, COL
 
 HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, COLORREF col, int width, int height)
 {
-    HANDLE hold, hpold;
     HBITMAP hbm = CreateCompatibleBitmap(hdcCompat, width, height);
-
-    HPEN hpfg, hpbg, hpsh, hpsh2;
-
-    RECT rect;
+    // The placeholder DC retains this bitmap for subsequent DrawCard calls.
+    SelectObject(hdc, hbm);
+    RECT rect = {0, 0, width, height};
     COLORREF fg, bg, shadow, shadow2;
+    int radius = CardCornerRadius(width, height);
 
     GetSinkCols(col, &fg, &bg, &shadow, &shadow2);
-
-    hold = SelectObject(hdc, hbm);
-
-    //fill with a solid base colour
-    SetRect(&rect, 0,0,width,height);
     PaintRect(hdc, &rect, MAKE_PALETTERGB(bg));
-
-    //draw the outline
-    hpfg = CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(fg));
-    hpbg = CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(bg));
-    hpsh = CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(shadow));
-    hpsh2= CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(shadow2));
-
-    hpold = SelectObject(hdc, hpsh);
-    MoveToEx(hdc, 2, 0, NULL);
-    LineTo  (hdc, width-3,0);
-    LineTo  (hdc, width-1, 2);
-
-    SelectObject(hdc, hpold);
-    hpold = SelectObject(hdc, hpsh2);
-    LineTo  (hdc, width-1, height-3);    //vertical
-    LineTo  (hdc, width-3, height-1);
-    LineTo  (hdc, 2, height-1);
-    LineTo  (hdc, 0, height-3);
-    SelectObject(hdc, hpold);
-    hpold = SelectObject(hdc, hpsh);
-
-    //MoveToEx( hdc, 0, height-3,0);
-    LineTo  (hdc, 0, 2);
-    LineTo  (hdc, 2, 0);
-
-    SelectObject(hdc, hpold);
-
-    //draw the highlight (vertical)
-    hpold = SelectObject(hdc, hpfg);
-    MoveToEx(hdc, width - 2, 3, NULL);
-    LineTo  (hdc, width - 2, height - 2);
-
-    //(horz)
-    MoveToEx(hdc, width - 3, height-2, NULL);
-    LineTo  (hdc, 3, height-2);
-    SelectObject(hdc, hpold);
-
-    //draw the background
-    InflateRect(&rect, -2, -2);
-    DrawCheckedRect(hdc, &rect, MAKE_PALETTERGB(bg), MAKE_PALETTERGB(fg));
-
-    //overwrite the top-left background pixel
-    SetPixel(hdc, 2, 2, MAKE_PALETTERGB(bg));
-
-    DeleteObject(hpsh);
-    DeleteObject(hpsh2);
-    DeleteObject(hpfg);
-    DeleteObject(hpbg);
-
-
+    int saved = ClipCardShape(hdc, 1, 1, width - 2, height - 2, max(0, radius - 1));
+    if (saved)
+    {
+        InflateRect(&rect, -1, -1);
+        DrawCheckedRect(hdc, &rect, MAKE_PALETTERGB(bg), MAKE_PALETTERGB(fg));
+        RestoreDC(hdc, saved);
+    }
+    FrameCardShape(hdc, 0, 0, width, height, radius, MAKE_PALETTERGB(shadow));
+    FrameCardShape(hdc, 1, 1, width - 2, height - 2, max(0, radius - 1), MAKE_PALETTERGB(shadow2));
     return hbm;
 }
 
