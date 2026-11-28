@@ -224,6 +224,12 @@ Used Version: 2.2.0
 License: Modified BSD License (drivers/network/tcpip/lwip/COPYING)
 URL: https://savannah.nongnu.org/projects/lwip/
 
+Title: FNET
+Path: sdk/lib/3rdparty/fnet
+Used Version: 4.7.1 (1a4d001f233ab1eae4c484205b77f71848205f00)
+License: Apache-2.0 (https://spdx.org/licenses/Apache-2.0.html)
+URL: https://github.com/butok/FNET
+
 Title: FreeType
 Path: sdk/lib/3rdparty/freetype
 Used Version: 2.10.0

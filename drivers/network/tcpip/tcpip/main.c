@@ -16,6 +16,9 @@
 
 #include <dispatch.h>
 #include <fileobjs.h>
+#ifdef TCPIP_USE_FNET
+#include <fnet_ros_port.h>
+#endif
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;
@@ -370,7 +373,12 @@ TiDispatchOpenClose(
 
     //DbgPrint("Leaving. Status is (0x%X)\n", Status);
 
-    return IRPFinish( Irp, Status );
+    Status = IRPFinish( Irp, Status );
+#ifdef TCPIP_USE_FNET
+    /* Deliver what this request caused (the peer's side of a loopback close, say) before returning */
+    FnetPortDrainUpcalls();
+#endif
+    return Status;
 }
 
 
@@ -473,6 +481,9 @@ TiDispatchInternal(
     if( Complete )
         IRPFinish( Irp, Status );
 
+#ifdef TCPIP_USE_FNET
+    FnetPortDrainUpcalls();
+#endif
     return Status;
 }
 
