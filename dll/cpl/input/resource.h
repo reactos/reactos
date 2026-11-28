@@ -210,6 +210,8 @@
 #define IDS_PASHTO_AFGHANISTAN_LAYOUT                  5159
 #define IDS_NEPALI_LAYOUT                              5169
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
+#define IDS_ASSAMESE_INSCRIPT_LAYOUT                   5177
+#define IDS_BENGALI_INSCRIPT_LAYOUT                    5178
 #define IDS_BURMESE_LAYOUT                             5202
 #define IDS_PERSIAN_STANDARD_LAYOUT                    5213
 #define IDS_UKRAINIAN_STUDENT_LAYOUT                   5994 /* FIXME: See also boot/bootdata/hivesys.inf */
