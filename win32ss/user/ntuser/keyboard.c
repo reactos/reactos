@@ -20,6 +20,11 @@ DWORD gdwLanguageToggleKey = 1;
 static INT gLayoutToggleKeyState = 0;
 DWORD gdwLayoutToggleKey = 2;
 
+/* Remembering NLS translation */
+#define NLS_VK_SWALLOW 0xFF
+static BYTE gabNlsMappedVk[256]; /* VK -> Mapped VK. 0 = No NLS translation */
+static BOOL gabNlsKeyDown[256];  /* Was VK pressed? */
+
 #include <cjkcode.h>
 
 /* State for Alt+Numpad character entry */
@@ -42,6 +47,117 @@ typedef struct _KEYBOARD_INFO
 } KEYBOARD_INFO, *PKEYBOARD_INFO;
 
 /* FUNCTIONS *****************************************************************/
+
+static BYTE FASTCALL
+IntNlsGetModIndex(VOID)
+{
+    BYTE idx = 0;
+    if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+        idx |= KBDSHIFT;
+    if (IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
+        idx |= KBDCTRL;
+    if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU))
+        idx |= KBDALT;
+    return idx;
+}
+
+static BOOL FASTCALL
+IntKbdNlsTranslate(
+    _In_ PKL pKl,
+    _In_ BOOL bIsDown,
+    _Out_ WORD *pwVk)
+{
+    PKBDNLSTABLES pNls = pKl->spkf->pKbdNlsTbl;
+    BYTE vk = (BYTE)*pwVk, idx, newVk = 0, m;
+    PVK_F pF = NULL;
+    PVK_FPARAM pParam;
+    ULONG i;
+
+    if (!bIsDown)
+    {
+        m = gabNlsMappedVk[vk];
+        gabNlsKeyDown[vk] = FALSE;
+        gabNlsMappedVk[vk] = 0;
+        if (!m)
+            return TRUE;
+        if (m == NLS_VK_SWALLOW)
+            return FALSE;
+        *pwVk = m;
+        return TRUE;
+    }
+
+    if (gabNlsKeyDown[vk])
+    {
+        m = gabNlsMappedVk[vk];
+        if (m == NLS_VK_SWALLOW)
+            return FALSE;
+        if (m)
+            *pwVk = m;
+        return TRUE;
+    }
+    gabNlsKeyDown[vk] = TRUE;
+
+    if (!pNls || !pNls->NumOfVkToF)
+        return TRUE;
+
+    for (i = 0; i < pNls->NumOfVkToF; ++i)
+    {
+        if (pNls->pVkToF[i].Vk == vk)
+        {
+            pF = &pNls->pVkToF[i];
+            break;
+        }
+    }
+
+    if (!pF || pF->NLSFEProcType == KBDNLS_TYPE_NULL)
+        return TRUE;
+
+    idx = IntNlsGetModIndex();
+    idx &= (KBDSHIFT | KBDCTRL | KBDALT); /* Drop KBDKANA flag */
+    pParam = (pF->NLSFEProcCurrent == KBDNLS_INDEX_ALT) ? &pF->NLSFEProcAlt[idx]
+                                                        : &pF->NLSFEProc[idx];
+
+    /* Toggle type (Normal <--> Alt)? */
+    if (pF->NLSFEProcType == KBDNLS_TYPE_TOGGLE && (pF->NLSFEProcSwitch & (1 << idx)))
+    {
+        pF->NLSFEProcCurrent = (pF->NLSFEProcCurrent == KBDNLS_INDEX_NORMAL)
+                               ? KBDNLS_INDEX_ALT : KBDNLS_INDEX_NORMAL;
+    }
+
+    switch (pParam->NLSFEProcIndex)
+    {
+        case KBDNLS_NOEVENT:
+            gabNlsMappedVk[vk] = NLS_VK_SWALLOW;
+            return FALSE;
+
+        case KBDNLS_SEND_PARAM_VK:
+            newVk = (BYTE)pParam->NLSFEProcParam;
+            break;
+
+        case KBDNLS_ALPHANUM:
+            newVk = VK_DBE_ALPHANUMERIC;
+            break;
+
+        case KBDNLS_HIRAGANA:
+            newVk = VK_DBE_HIRAGANA;
+            break;
+
+        case KBDNLS_KATAKANA:
+            newVk = VK_DBE_KATAKANA;
+            break;
+
+        case KBDNLS_SEND_BASE_VK:
+        default:
+            break;
+    }
+
+    if (newVk && newVk != vk)
+    {
+        gabNlsMappedVk[vk] = newVk;
+        *pwVk = newVk;
+    }
+    return TRUE;
+}
 
 static NTSTATUS NTAPI
 KeyboardDeviceCallout(
@@ -332,21 +448,31 @@ IntTranslateNumpadKey(WORD wVk)
 }
 
 /*
- * IntGetModBits
- *
- * Gets layout specific modification bits, for example KBDSHIFT, KBDCTRL, KBDALT
+ * Gets layout specific modification bits, for example KBDSHIFT, KBDCTRL, KBDALT, KBDKANA.
+ * VK_KANA is a lock key (like Caps Lock), so its modifier bit is taken from the lock state.
  */
-static
-DWORD
-IntGetModBits(PKBDTABLES pKbdTbl, PBYTE pKeyState)
+static DWORD
+IntGetModBits(
+    _In_ PKBDTABLES pKbdTbl,
+    _In_ PBYTE pKeyState)
 {
     DWORD i, dwModBits = 0;
 
     /* DumpKeyState( KeyState ); */
 
     for (i = 0; pKbdTbl->pCharModifiers->pVkToBit[i].Vk; i++)
-        if (IS_KEY_DOWN(pKeyState, pKbdTbl->pCharModifiers->pVkToBit[i].Vk))
+    {
+        BYTE vk = pKbdTbl->pCharModifiers->pVkToBit[i].Vk;
+        BOOL bActive;
+
+        if (vk == VK_KANA)
+            bActive = IS_KEY_LOCKED(pKeyState, VK_KANA);
+        else
+            bActive = IS_KEY_DOWN(pKeyState, vk);
+
+        if (bActive)
             dwModBits |= pKbdTbl->pCharModifiers->pVkToBit[i].ModBits;
+    }
 
     TRACE("Current Mod Bits: %lx\n", dwModBits);
 
@@ -1545,6 +1671,16 @@ UserProcessKeyboardInput(
         if ((wVk & KBDNUMPAD) && IS_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK))
         {
             wVk = IntTranslateNumpadKey(wVk & 0xFF);
+        }
+
+        /* VK translation by NLS (Far-East) tables. E1 (Pause/Break) key is an exception. */
+        if (!(pKbdInputData->Flags & KEY_E1) && pKl->spkf->pKbdNlsTbl)
+        {
+            WORD wNlsVk = wVk & 0xFF;
+            if (!IntKbdNlsTranslate(pKl, !(pKbdInputData->Flags & KEY_BREAK), &wNlsVk))
+                return; /* KBDNLS_NOEVENT */
+            if (wNlsVk != (wVk & 0xFF))
+                wVk = wNlsVk;
         }
 
         /* Send keyboard input */
